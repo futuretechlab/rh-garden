@@ -1,0 +1,6 @@
+dist-newstyle/
+formal/.lake/
+.elan-codex/
+.cabal-local/
+*.tmp
+*.bak

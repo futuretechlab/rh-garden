@@ -1,0 +1,42 @@
+cabal-version:      2.4
+name:               rh-garden
+version:            0.1.0.0
+synopsis:           Typed representation-graph proof search for the Riemann Hypothesis
+category:           Mathematics
+build-type:         Simple
+license:            BSD-3-Clause
+
+library
+  hs-source-dirs:     src
+  exposed-modules:
+      RHGarden.Algebra
+      RHGarden.Core
+      RHGarden.Evidence
+      RHGarden.Mobius
+      RHGarden.Registry
+      RHGarden.Representation
+      RHGarden.Search
+  build-depends:
+      base >=4.14 && <5,
+      containers >=0.6
+  default-language:   Haskell2010
+  ghc-options:        -Wall -Wcompat
+
+executable rh-garden
+  main-is:            Main.hs
+  hs-source-dirs:     app
+  build-depends:
+      base >=4.14 && <5,
+      rh-garden
+  default-language:   Haskell2010
+  ghc-options:        -Wall -Wcompat
+
+test-suite rh-garden-test
+  type:                exitcode-stdio-1.0
+  main-is:             TestMain.hs
+  hs-source-dirs:      test
+  build-depends:
+      base >=4.14 && <5,
+      rh-garden
+  default-language:    Haskell2010
+  ghc-options:         -Wall -Wcompat

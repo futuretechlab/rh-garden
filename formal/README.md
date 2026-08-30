@@ -1,0 +1,166 @@
+# RH Garden formal layer
+
+This Lake project pins mathlib `v4.33.0` and uses the Lean toolchain named by
+`lean-toolchain` (`leanprover/lean4:v4.33.0`). It imports
+`Mathlib.NumberTheory.LSeries.RiemannZeta` and uses mathlib's own
+`RiemannHypothesis`; it does not redefine that proposition.
+
+Run:
+
+```text
+lake build
+```
+
+The Lean files and the successful kernel build are authoritative. The Haskell
+`formal-status` command is navigation metadata, not a proof checker.
+
+## Checked declarations
+
+`RHGarden/MathlibAPI.lean` compile-time checks the requested upstream names:
+`riemannZeta`, `completedRiemannZeta`, `completedRiemannZeta₀`,
+`differentiable_completedZeta₀`, `completedRiemannZeta₀_one_sub`,
+`completedRiemannZeta_one_sub`, `completedRiemannZeta_eq`, and
+`RiemannHypothesis`.
+
+`RHGarden/Xi.lean`:
+
+- `riemannXi_zero`
+- `riemannXi_one`
+- `differentiable_riemannXi`
+- `riemannXi_one_sub`
+- `riemannXi_eq_completedRiemannZeta`
+
+`RHGarden/Mobius.lean`:
+
+- `liMobius_eq_one_sub_liStandard`
+- `riemannXi_liMobius_eq_liStandard`
+
+`RHGarden/CriticalLine.lean`:
+
+- `XiT_neg`
+- `xiRiemannHypothesis_iff_XiTZerosReal`
+- `riemannHypothesis_iff_XiTZerosReal`
+
+`RHGarden/ZetaZeros.lean`:
+
+- `gamma_half_add_one_ne_zero_of_nontrivial`
+- `zetaXiDenominator_ne_zero_of_nontrivial`
+- `zetaXiNumerator_eq_zero_of_riemannZeta_eq_zero`
+- `two_mul_riemannXi_eq_mul_zetaXiNumerator`
+- `riemannXi_eq_zero_of_nontrivial_riemannZeta_zero`
+- `IsNontrivialZetaZero.riemannXi_eq_zero`
+- `riemannHypothesis_iff_nontrivialZero_re`
+- `riemannZeta_eq_zero_of_riemannXi_eq_zero`
+- `completedRiemannZeta_ne_zero_of_riemannZeta_ne_zero`
+- `riemannXi_pos_odd_ne_zero`
+- `riemannXi_trivialZetaPoint_ne_zero`
+- `isNontrivialZetaZero_of_riemannXi_eq_zero`
+- `riemannXi_eq_zero_iff_nontrivialZetaZero`
+- `riemannHypothesis_iff_xiRiemannHypothesis`
+
+`RHGarden/LiFormal.lean`:
+
+- `liMobiusSeries_constantCoeff`
+- `liMobiusSeries_coeff_zero`
+- `liMobiusSeries_coeff_succ`
+- `liMobiusSeries_coeff`
+- `one_add_liMobiusSeries`
+- `geometricSeries_eq_inv_one_sub_X`
+- `one_add_liMobiusSeries_eq_inv_one_sub_X`
+- `normalizedXiTaylor_constantCoeff`
+- `differentiable_normalizedXiAtOne`
+- `analyticAt_normalizedXiAtOne`
+- `normalizedXiAtOne_hasFPowerSeriesAt`
+- `normalizedXiFPowerSeries_coeff`
+- `normalizedXiTaylor_hasSum`
+- `analyticAt_liMobius`
+- `analyticAt_analyticLiXi`
+- `liMobiusFPowerSeries_coeff_zero`
+- `liMobiusFPowerSeries_coeff_succ`
+- `liMobiusFPowerSeries_coeff_eq_powerSeries`
+- `liMobius_hasFPowerSeriesAt`
+- `analyticLiXi_hasFPowerSeriesAt_comp`
+- `analyticLiXiFMS_eq_derivativeTaylor`
+- `analyticLiXiPowerSeries_coeff`
+- `analyticLiXiPowerSeries_constantCoeff`
+- `analyticLiXiPowerSeries_isUnit`
+- `analyticLiXiPowerSeries_mul_inv`
+- `certifiedLiXiSeries_hasSum`
+- `liXiSeries_constantCoeff`
+- `liXiSeries_isUnit`
+- `liXiSeries_mul_inv`
+- `cubicXiAfterFormalMobius_coeff_zero`
+- `cubicXiAfterFormalMobius_coeff_one`
+- `cubicXiAfterFormalMobius_coeff_two`
+- `cubicXiAfterFormalMobius_coeff_three`
+- `cubicXiAfterFormalMobius_inv_coeff_zero`
+- `cubicXiAfterFormalMobius_inv_coeff_one`
+- `cubicXiAfterFormalMobius_inv_coeff_two`
+- `cubicLiFormalCoefficient_zero`
+- `cubicLiFormalCoefficient_one`
+- `cubicLiFormalCoefficient_two`
+
+The formal Li layer defines `normalizedXiTaylor` from iterated derivatives,
+`liXiSeries` by formal substitution, and `liFormalLogDerivative` as
+`derivative(G) * G⁻¹`. The separate `normalizedXiFPowerSeries` is the analytic
+certificate: Lean proves it has the same scalar coefficients as
+`normalizedXiTaylor` and converges locally to `normalizedXiAtOne`. A bare
+`PowerSeries` still carries no convergence information. Lean also checks the
+analyticity at zero of the Möbius coordinate and its composition with normalized
+xi. The remaining identification of `PowerSeries.subst` with analytic FMS
+composition, equality with an independently defined classical Li sequence,
+real-valuedness, and Li's RH criterion remain unproved locally and therefore
+`LiteratureCertified` where registered.
+
+The certified composed route does not depend on a general interoperability
+theorem. `liMobiusFPowerSeries` explicitly has coefficients `0,1,1,...` and is
+certified for `z/(1-z)`. Composing its certificate with
+`normalizedXiFPowerSeries`, then using uniqueness of local FMS expansions,
+produces `liXiFPowerSeries`. `certifiedLiXiSeries` is the coefficient adapter
+used by the authoritative formal logarithmic derivative. The older
+`liXiSeries = normalizedXiTaylor.subst liMobiusSeries` remains present as a
+second algebraic encoding; its equality with `certifiedLiXiSeries` is an open
+interoperability lemma and is not labeled `LeanChecked`.
+
+`RHGarden/LiClassical.lean` now introduces three independent analytic notions:
+the local logarithm germs, `liGeneratingCoefficient`, and Li's normalized
+original derivative expression `normalizedClassicalLiCoefficient`. Lean checks
+that the latter equals its shifted-coordinate form
+`shiftedClassicalLiCoefficient`; this is only affine translation and does not
+identify it with the generating sequence. The Taylor FMS for `liLocalLog` and
+the composed FMS for `liGeneratingLog` both have local analytic certificates,
+and uniqueness identifies the latter with its derivative Taylor FMS.
+
+`RHGarden/LiCombinatorics.lean` proves the general finite identity
+
+```text
+[X^(n+1)] H(X/(1-X)) = [X^(n+1)] (1+X)^n H(X)
+```
+
+for every complex `PowerSeries H` with zero constant coefficient. It also
+proves equality of the corresponding generating and original formal
+functionals. The remaining boundary is a specific scalar-coefficient adapter
+between the analytically composed FMS for `liGeneratingLog` and
+`liLocalLogTaylor.subst liMobiusSeries`. Until that adapter is proved,
+`liGeneratingCoefficient = normalizedClassicalLiCoefficient` remains
+`LiteratureCertified`, as does removal of the normalization factor two.
+
+`RHGarden/PowerSeriesAPI.lean` records the pinned API. In mathlib v4.33.0,
+composition is `PowerSeries.subst` under `PowerSeries.HasSubst`, not a method
+named `comp`; field inversion uses `PowerSeries.inv`/`(·)⁻¹`.
+
+The global pointwise correspondence
+`riemannXi s = 0 ↔ IsNontrivialZetaZero s`, the RH/xi formulation, and the
+RH/`XiT` formulation are checked equivalences of open propositions. They do not
+prove any of those propositions.
+
+## Open targets
+
+- Prove one of the equivalent RH formulations. No endpoint is discharged.
+- Define classical Li coefficients independently using local analytic data and
+  prove their equality with `liFormalCoefficient`; no such definition is
+  currently claimed.
+- A Lean derivative theorem for `liMobius`. The rational identity is checked by
+  Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
+
+No proof of RH is claimed.

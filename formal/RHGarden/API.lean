@@ -1,0 +1,11 @@
+import RHGarden.CriticalLine
+
+#check riemannZeta_ne_zero_of_one_le_re
+#check riemannZeta_def_of_ne_zero
+#check completedRiemannZeta_one_sub
+#check RHGarden.riemannXi_one_sub
+#check RHGarden.riemannXi_eq_completedRiemannZeta
+#check RHGarden.riemannXi_zero
+#check RHGarden.riemannXi_one
+#check RHGarden.riemannZeta_eq_zero_of_riemannXi_eq_zero
+#check RHGarden.IsNontrivialZetaZero.riemannXi_eq_zero
