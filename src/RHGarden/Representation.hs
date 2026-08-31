@@ -25,6 +25,7 @@ data Representation
   = XiFunction
   | XiDivisor
   | XiRadialZeroCutoff
+  | XiHeightZeroCutoff
   | XiZeros
   | NontrivialZetaZero
   | XiZero
@@ -57,6 +58,7 @@ data SRepresentation (r :: Representation) where
   SXiFunction :: SRepresentation 'XiFunction
   SXiDivisor :: SRepresentation 'XiDivisor
   SXiRadialZeroCutoff :: SRepresentation 'XiRadialZeroCutoff
+  SXiHeightZeroCutoff :: SRepresentation 'XiHeightZeroCutoff
   SXiZeros :: SRepresentation 'XiZeros
   SNontrivialZetaZero :: SRepresentation 'NontrivialZetaZero
   SXiZero :: SRepresentation 'XiZero
@@ -90,6 +92,7 @@ representationValue :: SRepresentation r -> Representation
 representationValue SXiFunction = XiFunction
 representationValue SXiDivisor = XiDivisor
 representationValue SXiRadialZeroCutoff = XiRadialZeroCutoff
+representationValue SXiHeightZeroCutoff = XiHeightZeroCutoff
 representationValue SXiZeros = XiZeros
 representationValue SNontrivialZetaZero = NontrivialZetaZero
 representationValue SXiZero = XiZero
@@ -121,6 +124,7 @@ representationLabel :: Representation -> String
 representationLabel XiFunction = "completed xi function xi(s)"
 representationLabel XiDivisor = "locally finite xi divisor with analytic multiplicities"
 representationLabel XiRadialZeroCutoff = "radial xi-zero Multiset cutoff |rho|<=T"
+representationLabel XiHeightZeroCutoff = "Lagarias xi-zero Multiset cutoff |Im rho|<=T"
 representationLabel XiZeros = "multiset of nontrivial xi zeros"
 representationLabel NontrivialZetaZero = "a nontrivial Riemann-zeta zero s"
 representationLabel XiZero = "the corresponding zero xi(s)=0"
@@ -129,8 +133,8 @@ representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"
 representationLabel LiGeneratingSeries = "Li generating series sum_{n>=1} lambda_n z^(n-1)"
 representationLabel LiSequence = "Li coefficient sequence (lambda_n)_{n>=1}"
-representationLabel LiStarPartialSums = "Lagarias radial Li star partial sums"
-representationLabel LiStarConvergence = "Lagarias radial star-convergence proposition"
+representationLabel LiStarPartialSums = "Lagarias height-ordered Li star partial sums"
+representationLabel LiStarConvergence = "Lagarias height-ordered star-convergence proposition"
 representationLabel LiZeroSumSequence = "conditionally star-convergent Li zero-sum sequence"
 representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
 representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Weil/Li cutoff values"

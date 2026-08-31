@@ -214,7 +214,7 @@ liClassicalRef = Reference
 xiCutoffRef :: Reference
 xiCutoffRef = Reference
   { refShort = "RHGarden.XiZeroCutoff"
-  , refCitation = "Lean divisor, multiplicity, radial cutoff, and partial-sum definitions in formal/RHGarden/XiZeroCutoff.lean; lake build is authoritative."
+  , refCitation = "Lean divisor, multiplicity, distinct radial/height cutoffs, and height-ordered partial sums in formal/RHGarden/XiZeroCutoff.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference
@@ -286,29 +286,37 @@ divisorToRadialCutoff :: RuntimeRepresentationEdge
 divisorToRadialCutoff = eraseRepresentationEdge $ representationEdge
   SXiDivisor SXiRadialZeroCutoff "restrict divisor to |rho|<=T"
   ExactRepresentation leanCheckedTrust 1 xiCutoffRef
-  "RHGarden.xiZeroCutoff repeats every supported point by xiMultiplicity; count_xiZeroCutoff verifies the exact count."
+  "RHGarden.xiZeroRadialCutoff repeats every supported point by xiMultiplicity; count_xiZeroRadialCutoff verifies the exact radial count."
   (NoReconstruction "A single bounded cutoff does not reconstruct the global divisor.")
   Nothing
 
-radialCutoffToStarPartial :: RuntimeRepresentationEdge
-radialCutoffToStarPartial = eraseRepresentationEdge $ representationEdge
-  SXiRadialZeroCutoff SLiStarPartialSums "evaluate finite Li zero sums"
+divisorToHeightCutoff :: RuntimeRepresentationEdge
+divisorToHeightCutoff = eraseRepresentationEdge $ representationEdge
+  SXiDivisor SXiHeightZeroCutoff "restrict divisor to |Im rho|<=T"
   ExactRepresentation leanCheckedTrust 1 xiCutoffRef
-  "RHGarden.liStarPartial is finiteLiZeroValue on the genuine multiplicity-aware radial cutoff."
+  "RHGarden.xiZeroHeightCutoff is Lagarias's multiplicity-aware height ordering; its support is finite by the unconditional critical-strip bound."
+  (NoReconstruction "A single bounded-height cutoff does not reconstruct the global divisor.")
+  Nothing
+
+heightCutoffToStarPartial :: RuntimeRepresentationEdge
+heightCutoffToStarPartial = eraseRepresentationEdge $ representationEdge
+  SXiHeightZeroCutoff SLiStarPartialSums "evaluate Lagarias height-ordered Li sums"
+  ExactRepresentation leanCheckedTrust 1 xiCutoffRef
+  "RHGarden.liStarPartial is finiteLiZeroValue on the genuine multiplicity-aware height cutoff."
   (ExactInverse "The indexed partial-sum object retains its cutoff parameter and integer index.")
   Nothing
 
-radialCutoffToFiniteWeil :: RuntimeRepresentationEdge
-radialCutoffToFiniteWeil = eraseRepresentationEdge $ representationEdge
-  SXiRadialZeroCutoff SFiniteWeilCutoffValues "apply finite Weil-Li algebra to radial cutoffs"
+heightCutoffToFiniteWeil :: RuntimeRepresentationEdge
+heightCutoffToFiniteWeil = eraseRepresentationEdge $ representationEdge
+  SXiHeightZeroCutoff SFiniteWeilCutoffValues "apply finite Weil-Li algebra to height cutoffs"
   ExactRepresentation leanCheckedTrust 1 xiCutoffRef
-  "RHGarden.xiZeroCutoff_valid supplies the pole exclusions required by finiteWeilScalar_liTest."
+  "RHGarden.xiZeroHeightCutoff_valid and xiZeroHeightCutoff_reflectionStable instantiate the finite diagonal 2Re identity."
   (NoReconstruction "Finite scalar values do not reconstruct the cutoff multiset.")
   Nothing
 
 starPartialToConvergence :: RuntimeRepresentationEdge
 starPartialToConvergence = eraseRepresentationEdge $ representationEdge
-  SLiStarPartialSums SLiStarConvergence "prove radial star convergence"
+  SLiStarPartialSums SLiStarConvergence "prove height-ordered star convergence"
   EquivalentTheorem literatureCertifiedTrust 5 weilRef
   "LiStarConvergesTo is defined as Tendsto atTop; no convergence theorem is registered."
   (ExactInverse "A proved convergence proposition identifies the limit of the full partial-sum net.")
@@ -525,8 +533,8 @@ conjecturalPositiveFactorization = eraseRepresentationEdge $ representationEdge
 representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
-  , xiToZeros, xiToDivisor, divisorToRadialCutoff, radialCutoffToStarPartial
-  , radialCutoffToFiniteWeil, starPartialToConvergence
+  , xiToZeros, xiToDivisor, divisorToRadialCutoff, divisorToHeightCutoff
+  , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , classicalLiToStarConvergence, starConvergenceToWeil
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs
