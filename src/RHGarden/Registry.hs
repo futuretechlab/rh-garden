@@ -217,6 +217,12 @@ xiCutoffRef = Reference
   , refCitation = "Lean divisor, multiplicity, radial/height cutoffs, zeta/xi multiplicity adapters, and height-window counts in formal/RHGarden/XiZeroCutoff.lean and ZetaMultiplicity.lean; lake build is authoritative."
   }
 
+liStarConditionalRef :: Reference
+liStarConditionalRef = Reference
+  { refShort = "RHGarden.LiStarConvergence"
+  , refCitation = "Conditional Lean theorems in formal/RHGarden/LiStarConvergence.lean; XiLocalZeroCountBound remains open."
+  }
+
 classicalLiIdentityRef :: Reference
 classicalLiIdentityRef = Reference
   { refShort = "Li 1997 logarithmic-derivative identity"
@@ -320,6 +326,33 @@ starPartialToConvergence = eraseRepresentationEdge $ representationEdge
   EquivalentTheorem literatureCertifiedTrust 5 weilRef
   "LiStarConvergesTo is defined as Tendsto atTop; no convergence theorem is registered."
   (ExactInverse "A proved convergence proposition identifies the limit of the full partial-sum net.")
+  Nothing
+
+localCountToReciprocalSquare :: RuntimeRepresentationEdge
+localCountToReciprocalSquare = eraseRepresentationEdge $ representationEdge
+  SXiLocalZeroCountBound SReciprocalSquareSummability
+  "derive reciprocal-square summability from unit-window counts"
+  SufficientReduction leanCheckedTrust 1 liStarConditionalRef
+  "xi_reciprocal_sq_summable is checked with XiLocalZeroCountBound as an explicit premise."
+  (NoReconstruction "Summability does not recover a local zero-count estimate.")
+  Nothing
+
+reciprocalSquareToStar :: RuntimeRepresentationEdge
+reciprocalSquareToStar = eraseRepresentationEdge $ representationEdge
+  SReciprocalSquareSummability SReciprocalStarConvergence
+  "use conjugation pairing and critical-strip bounds"
+  SufficientReduction leanCheckedTrust 1 liStarConditionalRef
+  "The reciprocal shell is real and dominated by the reciprocal-square tail."
+  (NoReconstruction "First-moment convergence does not recover the local count.")
+  Nothing
+
+localCountToLiStar :: RuntimeRepresentationEdge
+localCountToLiStar = eraseRepresentationEdge $ representationEdge
+  SXiLocalZeroCountBound SLiStarConvergence
+  "derive every integer-indexed Li star limit"
+  SufficientReduction leanCheckedTrust 1 liStarConditionalRef
+  "liStarConvergence_of_localZeroCount combines pairing, higher powers, binomial expansion, and reflection."
+  (NoReconstruction "Existence of the limits does not recover the local count bound.")
   Nothing
 
 classicalLiToStarConvergence :: RuntimeRepresentationEdge
@@ -535,6 +568,7 @@ representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
   , xiToZeros, xiToDivisor, divisorToRadialCutoff, divisorToHeightCutoff
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
+  , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs

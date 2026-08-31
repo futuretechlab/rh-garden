@@ -193,3 +193,27 @@ reciprocal-square summability argument is small enough to adapt independently.
 The remaining special step is the `n=1` paired cancellation argument. Separately, the
 infinite Weil form needs absolute-convergence control. The broader bottleneck remains a certified, non-circular
 universal positivity theorem; this sprint claims none.
+
+## Conditional Li star convergence layer
+
+The local-count consequence layer is now Lean checked as an implication:
+
+```text
+[OPEN] XiLocalZeroCountBound
+  -> ReciprocalSquareSummability
+  -> ReciprocalStarConvergence
+  -> positive-index G_n star convergence
+  -> negative-index convergence by exact height-cutoff reflection
+```
+
+`RHGarden.liStarConvergence_of_localZeroCount` proves that the single explicit
+premise implies existence of every integer-indexed Lagarias height star limit.
+The proof groups multiplicities into integer-height windows, treats the bounded
+region separately, uses conjugation to turn the first reciprocal moment into a
+real absolutely dominated sum, and uses a finite binomial expansion for each
+`G_n`. The Apache-2.0 provenance header records the adapted generic argument.
+
+This does not prove `XiLocalZeroCountBound`. It also does not identify any star
+limit with `classicalLiCoefficient`; that remains a separate logarithmic-
+derivative/Hadamard analytic boundary. The next isolated implementation gate is
+therefore the upstream-compatible unit-height zero-count theorem.

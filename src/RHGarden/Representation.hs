@@ -35,6 +35,9 @@ data Representation
   | LiGeneratingSeries
   | LiSequence
   | LiStarPartialSums
+  | XiLocalZeroCountBound
+  | ReciprocalSquareSummability
+  | ReciprocalStarConvergence
   | LiStarConvergence
   | LiZeroSumSequence
   | WeilLiTestFunctions
@@ -68,6 +71,9 @@ data SRepresentation (r :: Representation) where
   SLiGeneratingSeries :: SRepresentation 'LiGeneratingSeries
   SLiSequence :: SRepresentation 'LiSequence
   SLiStarPartialSums :: SRepresentation 'LiStarPartialSums
+  SXiLocalZeroCountBound :: SRepresentation 'XiLocalZeroCountBound
+  SReciprocalSquareSummability :: SRepresentation 'ReciprocalSquareSummability
+  SReciprocalStarConvergence :: SRepresentation 'ReciprocalStarConvergence
   SLiStarConvergence :: SRepresentation 'LiStarConvergence
   SLiZeroSumSequence :: SRepresentation 'LiZeroSumSequence
   SWeilLiTestFunctions :: SRepresentation 'WeilLiTestFunctions
@@ -102,6 +108,9 @@ representationValue SLogXiMobius = LogXiMobius
 representationValue SLiGeneratingSeries = LiGeneratingSeries
 representationValue SLiSequence = LiSequence
 representationValue SLiStarPartialSums = LiStarPartialSums
+representationValue SXiLocalZeroCountBound = XiLocalZeroCountBound
+representationValue SReciprocalSquareSummability = ReciprocalSquareSummability
+representationValue SReciprocalStarConvergence = ReciprocalStarConvergence
 representationValue SLiStarConvergence = LiStarConvergence
 representationValue SLiZeroSumSequence = LiZeroSumSequence
 representationValue SWeilLiTestFunctions = WeilLiTestFunctions
@@ -134,6 +143,9 @@ representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"
 representationLabel LiGeneratingSeries = "Li generating series sum_{n>=1} lambda_n z^(n-1)"
 representationLabel LiSequence = "Li coefficient sequence (lambda_n)_{n>=1}"
 representationLabel LiStarPartialSums = "Lagarias height-ordered Li star partial sums"
+representationLabel XiLocalZeroCountBound = "open unit-height xi-zero multiplicity bound"
+representationLabel ReciprocalSquareSummability = "multiplicity-weighted reciprocal-square summability"
+representationLabel ReciprocalStarConvergence = "conjugate-paired reciprocal star convergence"
 representationLabel LiStarConvergence = "Lagarias height-ordered star-convergence proposition"
 representationLabel LiZeroSumSequence = "conditionally star-convergent Li zero-sum sequence"
 representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
