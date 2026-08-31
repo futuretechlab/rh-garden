@@ -1,7 +1,9 @@
 # zeta-23-lean compatibility reconnaissance
 
-Status: reference-only reconnaissance. No upstream theorem is imported into the
-RH Garden build, and no trust classification is upgraded by this note.
+Status: the small completed-zeta/zeta analytic-order seam has now been adapted
+and checked natively in RH Garden stable Lean. The Riemann--von Mangoldt and
+partial-fraction stacks remain reference-only, and no trust classification is
+upgraded merely from their upstream existence.
 
 ## Reference revision and pins
 
@@ -85,7 +87,8 @@ The representation correspondence is:
 | `Ncount t (t+1)` | sum of `xiMultiplicity` in that window | prove a `finsum`/finite-sum equality from the preceding two adapters |
 | symmetric star cutoff `|ρ.im| ≤ T` | `xiZeroHeightCutoff T` | assemble positive and negative windows only after the local window-count adapter; no change to cutoff semantics |
 
-The central missing adapter is therefore not set membership but multiplicity:
+The central multiplicity adapter is now LeanChecked in
+`RHGarden.ZetaMultiplicity`:
 
 ```text
 (analyticOrderAt riemannZeta ρ).toNat
@@ -93,6 +96,11 @@ The central missing adapter is therefore not set membership but multiplicity:
 ```
 
 under the nontrivial-zero/open-strip hypotheses.
+
+The same module defines the half-open window Multiset/count and proves
+`xiHeightWindowMultiplicityCount_eq_zeta`. Consequently
+`XiLocalZeroCountBound` now has exactly the conclusion shape of upstream's
+`zeta_local_zero_count`, but remains unproved in RH Garden.
 
 ## Dependency feasibility
 
@@ -199,3 +207,39 @@ Only after that theorem builds in RH Garden should the graph edge be upgraded.
 The next implementation after local counting should extract absolute
 convergence for reciprocal powers `k ≥ 2`; the paired `Σ 1/ρ` limit remains a
 separate analytic milestone.
+
+## Partial-fraction route comparison
+
+`Zeta23.WeilEF.zeta_logDeriv_partial_fraction` is in
+`Zeta23/WeilEF/Landau.lean`. It produces, for `|t| ≥ 6`, a finite set of zeta
+zeros in a fixed disk about `2+it`, bounds their total analytic multiplicity by
+`C log(|t|+3)`, and approximates `logDeriv riemannZeta s` by the finite sum
+`Σ mρ/(s-ρ)` on a smaller disk. It is a local finite sum: not a `tsum`, not a
+height-symmetric limit, and not a packaged conditionally convergent reciprocal
+zero sum.
+
+Its transitive upstream closure is 17 modules and about 7,630 lines. It does
+not use `RvM.LocalCount`, but does use the substantial
+`FromPNTPlus.StrongPNTPrefix`, zeta-growth, residue-calculus, and zeta-bounds
+stack. The numeric theorem
+`Zeta23.WeilEF.zeta_logDeriv_partial_fraction_explicit` in `Effective.lean`
+has a 36-module, approximately 14,016-line closure and that module also imports
+local counting and contour/gamma machinery.
+
+By comparison, `Zeta23.RvM.LocalCount` has a 21-module, approximately
+7,846-line closure. Although the non-explicit partial-fraction closure is four
+modules smaller, it does not close the global paired `Σ 1/ρ` limit and hence is
+not a cheaper Li-star route.
+
+The generic core `zero_sum_inv_sq_gen` is much cheaper than its file-level
+closure suggests. The full `ZeroSummability.lean` import closure is 38 modules
+and about 12,043 lines because the file also contains zeta-specific and
+explicit-formula specializations. The generic proof itself occupies roughly
+the first 160 lines and needs only elementary integer-weight summability,
+finite-sum grouping, a small abstract local-window-count interface, and the
+zero-coordinate bookkeeping. It can be adapted independently once
+`XiLocalZeroCountBound` is available. `zero_sum_limit`, by contrast, has a
+53-module, approximately 17,142-line file closure because it imports contour
+and explicit-formula infrastructure; its underlying monotone finite-set
+exhaustion argument is elementary but is specialized to upstream's decaying
+Fourier test functions.

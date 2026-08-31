@@ -214,7 +214,7 @@ liClassicalRef = Reference
 xiCutoffRef :: Reference
 xiCutoffRef = Reference
   { refShort = "RHGarden.XiZeroCutoff"
-  , refCitation = "Lean divisor, multiplicity, distinct radial/height cutoffs, and height-ordered partial sums in formal/RHGarden/XiZeroCutoff.lean; lake build is authoritative."
+  , refCitation = "Lean divisor, multiplicity, radial/height cutoffs, zeta/xi multiplicity adapters, and height-window counts in formal/RHGarden/XiZeroCutoff.lean and ZetaMultiplicity.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference

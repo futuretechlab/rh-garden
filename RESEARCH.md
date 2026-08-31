@@ -176,9 +176,20 @@ upgrade Weil positivity, Li positivity, or RH.
 
 Real-valuedness of every `classicalLiCoefficient` is now Lean checked from xi
 conjugation symmetry and local principal-log symmetry at `s=1`. `LiPositive`
-is defined on the real sequence but remains unproved. The next formal boundary
-is star convergence of the divisor-defined height partial sums, beginning with
-the Riemann--von Mangoldt height-counting estimate and the `n=1` cancellation
-argument. Separately, the
+is defined on the real sequence but remains unproved. The zeta/xi multiplicity
+seam and the exact half-open height-window count representation are now also
+Lean checked in `RHGarden.ZetaMultiplicity`. The proposition
+`XiLocalZeroCountBound` is deliberately unproved; the equivalent zeta theorem
+is externally formalized by Anthropic's Apache-2.0 `zeta-23-lean` artifact at
+the revision recorded in `ZETA23_COMPATIBILITY.md`.
+
+The next formal boundary is integrating or selectively adapting that local
+height-count theorem. Reconnaissance found that upstream's local
+logarithmic-derivative partial fraction has a slightly smaller raw dependency
+closure but supplies only a finite disk-local approximation, not the paired
+height limit needed for `Σ 1/ρ`; it is therefore not presently a cheaper
+star-convergence route. Once the local count is available, the generic
+reciprocal-square summability argument is small enough to adapt independently.
+The remaining special step is the `n=1` paired cancellation argument. Separately, the
 infinite Weil form needs absolute-convergence control. The broader bottleneck remains a certified, non-circular
 universal positivity theorem; this sprint claims none.
