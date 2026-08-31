@@ -141,9 +141,17 @@ for every complex `PowerSeries H` with zero constant coefficient. It also
 proves equality of the corresponding generating and original formal
 functionals. `RHGarden/LiComposition.lean` counts compositions by length via
 separator sets, proves the specialized scalar FMS/PowerSeries Mobius adapter,
-and derives `liGeneratingCoefficient_eq_normalizedClassical`. This
-representation edge is now `LeanChecked`; removal of the normalization factor
-two remains `LiteratureCertified`.
+and derives `liGeneratingCoefficient_eq_normalizedClassical`.
+
+`RHGarden/LiNormalization.lean` independently defines the standard classical
+coefficient `classicalLiCoefficient` using `log (riemannXi s)`. It proves the
+standard xi-log is analytic at one, identifies its logarithmic derivative with
+the normalized xi-log derivative on a neighborhood, and shows their difference
+is locally constant. The `(n+1)`-st derivative of the resulting term `C*s^n`
+vanishes. Consequently `normalizedClassicalLiCoefficient_eq_classical` and
+`liGeneratingCoefficient_eq_classical` are `LeanChecked`; no global complex-log
+additivity theorem is used. Real-valuedness of this complex-valued definition
+remains a separate open bridge.
 
 `RHGarden/PowerSeriesAPI.lean` records the pinned API. In mathlib v4.33.0,
 composition is `PowerSeries.subst` under `PowerSeries.HasSubst`, not a method
@@ -157,9 +165,9 @@ prove any of those propositions.
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
-- Define classical Li coefficients independently using local analytic data and
-  prove their equality with `liFormalCoefficient`; no such definition is
-  currently claimed.
+- Prove `classicalLiCoefficient` is real-valued. This is intentionally separate
+  from its now-checked identification with the normalized and generating
+  coefficient sequences.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 

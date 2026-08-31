@@ -10,3 +10,4 @@ import RHGarden.AnalyticTaylorAPI
 import RHGarden.LiClassical
 import RHGarden.LiCombinatorics
 import RHGarden.LiComposition
+import RHGarden.LiNormalization

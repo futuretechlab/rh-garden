@@ -207,8 +207,8 @@ liFormalRef = Reference
 
 liClassicalRef :: Reference
 liClassicalRef = Reference
-  { refShort = "RHGarden.LiClassical / RHGarden.LiCombinatorics"
-  , refCitation = "Lean definitions and theorems in formal/RHGarden/LiClassical.lean and LiCombinatorics.lean; lake build is authoritative."
+  { refShort = "RHGarden Li formalization"
+  , refCitation = "Lean definitions and theorems in formal/RHGarden/LiClassical.lean, LiCombinatorics.lean, LiComposition.lean, and LiNormalization.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference
@@ -300,13 +300,23 @@ zerosToLi = eraseRepresentationEdge $ representationEdge
 
 liToWeil :: RuntimeRepresentationEdge
 liToWeil = eraseRepresentationEdge $ representationEdge
-  SLiSequence SWeilQuadraticValues "Li/Weil functional correspondence"
+  SClassicalLiSequence SWeilQuadraticValues "classical Li/Weil functional correspondence"
   EquivalentTheorem literatureCertifiedTrust 3 weilRef
   "Associate the specified test functions' Weil quadratic-functional values to generalized Li coefficients."
   (ReconstructionUpTo "Only the registered family of Weil test-function values is represented.")
   (Just (PropertyTransport
     AllLiCoefficientsNonnegative WeilFormNonnegative
     "For the registered Li test-function family, coefficient nonnegativity is transported to nonnegativity of those Weil functional values; no unconditional positive factorization is asserted."))
+
+weilToLi :: RuntimeRepresentationEdge
+weilToLi = eraseRepresentationEdge $ representationEdge
+  SWeilQuadraticValues SClassicalLiSequence "Weil/classical Li functional correspondence"
+  EquivalentTheorem literatureCertifiedTrust 3 weilRef
+  "Recover the classical Li coefficients from the registered Weil test-function values."
+  (ReconstructionUpTo "Only the registered family of Weil test-function values is represented.")
+  (Just (PropertyTransport
+    WeilFormNonnegative AllLiCoefficientsNonnegative
+    "Positivity transport is only for the registered test-function family and remains literature-certified."))
 
 xiToTaylorData :: RuntimeRepresentationEdge
 xiToTaylorData = eraseRepresentationEdge $ representationEdge
@@ -391,9 +401,17 @@ generatingToNormalizedClassical = eraseRepresentationEdge $ representationEdge
 normalizedToClassicalLi :: RuntimeRepresentationEdge
 normalizedToClassicalLi = eraseRepresentationEdge $ representationEdge
   SNormalizedClassicalLiSequence SClassicalLiSequence "remove the xi normalization factor 2"
-  EquivalentTheorem literatureCertifiedTrust 1 liRef
-  "Local branch-conscious invariance of positive-order Li derivatives under multiplying xi by 2 has not yet been formalized."
-  (ExactInverse "The expected equality is coefficientwise, but it is not registered as LeanChecked.")
+  EquivalentTheorem leanCheckedTrust 1 liClassicalRef
+  "RHGarden.normalizedClassicalLiCoefficient_eq_classical proves coefficientwise equality using local logarithmic derivatives and a locally constant difference."
+  (ExactInverse "Both independently defined sequences have the same indexed coefficients by a Lean-checked theorem.")
+  Nothing
+
+classicalToNormalizedLi :: RuntimeRepresentationEdge
+classicalToNormalizedLi = eraseRepresentationEdge $ representationEdge
+  SClassicalLiSequence SNormalizedClassicalLiSequence "restore the xi normalization factor 2"
+  EquivalentTheorem leanCheckedTrust 1 liClassicalRef
+  "Reverse orientation of RHGarden.normalizedClassicalLiCoefficient_eq_classical."
+  (ExactInverse "Both independently defined sequences have the same indexed coefficients by a Lean-checked theorem.")
   Nothing
 
 negativeToStandardMobiusXi :: RuntimeRepresentationEdge
@@ -426,11 +444,11 @@ representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
   , xiToZeros, nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
-  , zerosToLi, liToWeil
+  , zerosToLi, liToWeil, weilToLi
   , xiToTaylorData, mobiusToFormalSeries, formalTaylorComposition
   , formalMobiusCompositionInput, formalLogDerivative, formalCoefficientExtraction
   , formalToClassicalLi, certifiedXiToGeneratingLog, generatingLogToSequence
-  , generatingToNormalizedClassical, normalizedToClassicalLi
+  , generatingToNormalizedClassical, normalizedToClassicalLi, classicalToNormalizedLi
   , negativeToStandardMobiusXi, standardToNegativeMobiusXi
   ]
 

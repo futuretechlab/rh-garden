@@ -41,6 +41,7 @@ data Representation
   | LiGeneratingSequence
   | NormalizedClassicalLiSequence
   | ClassicalLiSequence
+  | ClassicalLiRealSequence
   | NegativeMobiusXi
   | StandardLiMobiusXi
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
@@ -65,6 +66,7 @@ data SRepresentation (r :: Representation) where
   SLiGeneratingSequence :: SRepresentation 'LiGeneratingSequence
   SNormalizedClassicalLiSequence :: SRepresentation 'NormalizedClassicalLiSequence
   SClassicalLiSequence :: SRepresentation 'ClassicalLiSequence
+  SClassicalLiRealSequence :: SRepresentation 'ClassicalLiRealSequence
   SNegativeMobiusXi :: SRepresentation 'NegativeMobiusXi
   SStandardLiMobiusXi :: SRepresentation 'StandardLiMobiusXi
 
@@ -90,6 +92,7 @@ representationValue SLiGeneratingLog = LiGeneratingLog
 representationValue SLiGeneratingSequence = LiGeneratingSequence
 representationValue SNormalizedClassicalLiSequence = NormalizedClassicalLiSequence
 representationValue SClassicalLiSequence = ClassicalLiSequence
+representationValue SClassicalLiRealSequence = ClassicalLiRealSequence
 representationValue SNegativeMobiusXi = NegativeMobiusXi
 representationValue SStandardLiMobiusXi = StandardLiMobiusXi
 
@@ -113,6 +116,7 @@ representationLabel LiGeneratingLog = "local analytic log of 2*xi(1/(1-z))"
 representationLabel LiGeneratingSequence = "derivative coefficients of the local Li generating log"
 representationLabel NormalizedClassicalLiSequence = "Li original-derivative sequence for normalized xi"
 representationLabel ClassicalLiSequence = "independently defined classical Li coefficient sequence"
+representationLabel ClassicalLiRealSequence = "classical Li coefficients with proved real-valuedness"
 representationLabel NegativeMobiusXi = "xi(-z/(1-z)) viewpoint"
 representationLabel StandardLiMobiusXi = "xi(1/(1-z)) viewpoint"
 

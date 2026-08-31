@@ -66,8 +66,20 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph LiGeneratingSequence NormalizedClassicalLiSequence of
       Just _ -> True
       Nothing -> False
-  check "normalization-by-2 remains a separate literature boundary" $
-    shortestRepresentationRoute KernelMode representationGraph NormalizedClassicalLiSequence ClassicalLiSequence == Nothing
+  check "normalization-by-2 is LeanChecked locally" $
+    case shortestRepresentationRoute KernelMode representationGraph NormalizedClassicalLiSequence ClassicalLiSequence of
+      Just _ -> True
+      Nothing -> False
+  check "generating-to-standard classical Li route is fully LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph LiGeneratingSequence ClassicalLiSequence of
+      Just _ -> True
+      Nothing -> False
+  check "standard and normalized classical Li sequences are LeanChecked equivalent" $
+    case shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence NormalizedClassicalLiSequence of
+      Just _ -> True
+      Nothing -> False
+  check "real-valued classical Li sequence remains a distinct open representation" $
+    shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence ClassicalLiRealSequence == Nothing
   let evidence = checkLagariasPrefix 100
   check "finite Lagarias result remains Evidence, not Proof" $
     checkedThrough evidence == 100 && not (submissionReady (Nothing :: Maybe (Proof 'RH)))
