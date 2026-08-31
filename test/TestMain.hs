@@ -84,6 +84,12 @@ main = do
       Nothing -> False
   check "Li-to-Weil test-function corridor remains literature-only" $
     shortestRepresentationRoute KernelMode representationGraph ClassicalLiRealSequence WeilLiTestFunctions == Nothing
+  check "finite Weil-Li algebra is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph WeilLiTestFunctions FiniteWeilCutoffValues of
+      Just _ -> True
+      Nothing -> False
+  check "finite-to-infinite Weil limit remains literature-only" $
+    shortestRepresentationRoute KernelMode representationGraph FiniteWeilCutoffValues WeilQuadraticValues == Nothing
   let evidence = checkLagariasPrefix 100
   check "finite Lagarias result remains Evidence, not Proof" $
     checkedThrough evidence == 100 && not (submissionReady (Nothing :: Maybe (Proof 'RH)))

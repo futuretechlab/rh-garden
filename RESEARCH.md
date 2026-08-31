@@ -106,10 +106,14 @@ The next research corridor is deliberately staged:
 
 ```text
 ClassicalLiRealSequence
-  -> WeilLiTestFunctions
+  -> LiZeroSumSequence
+  -> FiniteWeilCutoffValues
   -> WeilQuadraticValues
   -> WeilPositive
   -> RiemannHypothesis
+
+WeilLiTestFunctions
+  -> FiniteWeilCutoffValues
 ```
 
 The later spectral research corridor is:
@@ -128,6 +132,15 @@ conventions are recorded in `LAGARIAS_WEIL.md`. He obtains an RH criterion throu
 ([arXiv:math/0404394](https://arxiv.org/abs/math/0404394)). This is published
 provenance for the Li/Weil correspondence, not a LeanChecked edge.
 
+The finite algebraic core is now Lean checked in `RHGarden.WeilFinite`: (3.5),
+(3.6), finite (3.3), its diagonal form, and the `2*Re` form for explicitly
+reflection-stable `Multiset` cutoffs. This upgrades only
+`WeilLiTestFunctions -> FiniteWeilCutoffValues`. Derivative Li to the
+conditionally star-convergent zero sum, selection of cofinal zero cutoffs, and
+the absolutely convergent finite-to-infinite Weil limit remain literature-only
+analytic boundaries. In particular, the norm-square notation does not prove
+the Weil form positive semidefinite.
+
 Suzuki's screw-function program supplies a continuous-function framework for
 studying Weil's distributional quadratic form. Earlier work develops RH
 equivalences and unconditional partial results through the zeta screw function
@@ -144,6 +157,6 @@ upgrade Weil positivity, Li positivity, or RH.
 Real-valuedness of every `classicalLiCoefficient` is now Lean checked from xi
 conjugation symmetry and local principal-log symmetry at `s=1`. `LiPositive`
 is defined on the real sequence but remains unproved. The next formal boundary
-is Lagarias's `G_n` family and equation (3.4), including the zero-sum and
-convergence layer. The broader bottleneck remains a certified, non-circular
+is a multiplicity-aware divisor/cutoff representation for xi zeros, followed
+by separate star-convergence and absolute-convergence limit theorems. The broader bottleneck remains a certified, non-circular
 universal positivity theorem; this sprint claims none.

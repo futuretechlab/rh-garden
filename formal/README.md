@@ -170,7 +170,9 @@ prove any of those propositions.
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
 - Formalize Lagarias's Li test functions and diagonal Weil identity; positivity
-  remains open.
+  remains open. The finite Multiset version is now checked in
+  `RHGarden/WeilFinite.lean`; the star-convergent zero sum and absolutely
+  convergent infinite Weil limit remain separate analytic bridges.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 

@@ -31,7 +31,9 @@ data Representation
   | LogXiMobius
   | LiGeneratingSeries
   | LiSequence
+  | LiZeroSumSequence
   | WeilLiTestFunctions
+  | FiniteWeilCutoffValues
   | WeilQuadraticValues
   | XiTaylorAtOne
   | MobiusFormalSeries
@@ -57,7 +59,9 @@ data SRepresentation (r :: Representation) where
   SLogXiMobius :: SRepresentation 'LogXiMobius
   SLiGeneratingSeries :: SRepresentation 'LiGeneratingSeries
   SLiSequence :: SRepresentation 'LiSequence
+  SLiZeroSumSequence :: SRepresentation 'LiZeroSumSequence
   SWeilLiTestFunctions :: SRepresentation 'WeilLiTestFunctions
+  SFiniteWeilCutoffValues :: SRepresentation 'FiniteWeilCutoffValues
   SWeilQuadraticValues :: SRepresentation 'WeilQuadraticValues
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
   SMobiusFormalSeries :: SRepresentation 'MobiusFormalSeries
@@ -84,7 +88,9 @@ representationValue SXiAfterMobius = XiAfterMobius
 representationValue SLogXiMobius = LogXiMobius
 representationValue SLiGeneratingSeries = LiGeneratingSeries
 representationValue SLiSequence = LiSequence
+representationValue SLiZeroSumSequence = LiZeroSumSequence
 representationValue SWeilLiTestFunctions = WeilLiTestFunctions
+representationValue SFiniteWeilCutoffValues = FiniteWeilCutoffValues
 representationValue SWeilQuadraticValues = WeilQuadraticValues
 representationValue SXiTaylorAtOne = XiTaylorAtOne
 representationValue SMobiusFormalSeries = MobiusFormalSeries
@@ -109,7 +115,9 @@ representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"
 representationLabel LiGeneratingSeries = "Li generating series sum_{n>=1} lambda_n z^(n-1)"
 representationLabel LiSequence = "Li coefficient sequence (lambda_n)_{n>=1}"
+representationLabel LiZeroSumSequence = "conditionally star-convergent Li zero-sum sequence"
 representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
+representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Weil/Li cutoff values"
 representationLabel WeilQuadraticValues = "Weil quadratic-functional values associated to Li coefficients"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"
 representationLabel MobiusFormalSeries = "formal series U=X/(1-X)=X+X^2+..."

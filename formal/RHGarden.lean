@@ -11,3 +11,4 @@ import RHGarden.LiClassical
 import RHGarden.LiCombinatorics
 import RHGarden.LiComposition
 import RHGarden.LiNormalization
+import RHGarden.WeilFinite

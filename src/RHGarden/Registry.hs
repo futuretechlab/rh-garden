@@ -298,23 +298,37 @@ zerosToLi = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The registered edge does not claim that the Li sequence uniquely reconstructs the zero multiset.")
   Nothing
 
-realLiToWeilTests :: RuntimeRepresentationEdge
-realLiToWeilTests = eraseRepresentationEdge $ representationEdge
-  SClassicalLiRealSequence SWeilLiTestFunctions "select Lagarias Li test functions"
+realLiToZeroSum :: RuntimeRepresentationEdge
+realLiToZeroSum = eraseRepresentationEdge $ representationEdge
+  SClassicalLiRealSequence SLiZeroSumSequence "derivative Li equals star-convergent zero-sum Li"
   EquivalentTheorem literatureCertifiedTrust 3 weilRef
-  "For positive classical index k=n+1, select G_k(s)=1-(1-1/s)^k; this identification remains literature-certified."
-  (ReconstructionUpTo "The node records the indexed Li test-function family, not the full Li class of rational functions.")
+  "Identify the derivative-defined coefficient with the conditionally star-convergent zero sum; this analytic bridge is not LeanChecked."
+  (ExactInverse "The literature theorem identifies the indexed values once its convergence convention is formalized.")
   Nothing
 
-weilTestsToValues :: RuntimeRepresentationEdge
-weilTestsToValues = eraseRepresentationEdge $ representationEdge
-  SWeilLiTestFunctions SWeilQuadraticValues "evaluate Weil form on Li tests"
-  EquivalentTheorem literatureCertifiedTrust 3 weilRef
-  "Lagarias (3.4): ||G_k||^2_W=lambda_k+lambda_-k=2 Re(lambda_k); for zeta the Li coefficients are real."
-  (ReconstructionUpTo "Only diagonal values on the registered Li tests are represented; the full sesquilinear form requires (3.3).")
-  (Just (PropertyTransport
-    AllLiCoefficientsNonnegative WeilFormNonnegative
-    "Coefficient nonnegativity corresponds to nonnegativity of these diagonal Weil values after the factor 2; this remains literature-certified."))
+zeroSumToFiniteCutoffs :: RuntimeRepresentationEdge
+zeroSumToFiniteCutoffs = eraseRepresentationEdge $ representationEdge
+  SLiZeroSumSequence SFiniteWeilCutoffValues "choose multiplicity-preserving finite zero cutoffs"
+  InformationLoss literatureCertifiedTrust 2 weilRef
+  "A concrete cofinal family of cutoffs and its relation to star convergence remains to be formalized."
+  (NoReconstruction "One finite cutoff cannot reconstruct a conditional infinite zero sum.")
+  Nothing
+
+weilTestsToFiniteValues :: RuntimeRepresentationEdge
+weilTestsToFiniteValues = eraseRepresentationEdge $ representationEdge
+  SWeilLiTestFunctions SFiniteWeilCutoffValues "finite Lagarias identities"
+  ExactRepresentation leanCheckedTrust 1 liClassicalRef
+  "RHGarden.finiteWeilScalar_liTest proves (3.3) for every valid finite Multiset cutoff; no convergence or positivity is used."
+  (NoReconstruction "The output also depends on the chosen finite zero multiset.")
+  Nothing
+
+finiteCutoffsToWeil :: RuntimeRepresentationEdge
+finiteCutoffsToWeil = eraseRepresentationEdge $ representationEdge
+  SFiniteWeilCutoffValues SWeilQuadraticValues "pass finite cutoffs to the infinite Weil scalar"
+  EquivalentTheorem literatureCertifiedTrust 4 weilRef
+  "Requires absolute convergence of the Weil scalar and limit control; the finite Lean theorem does not prove this step."
+  (ReconstructionUpTo "The infinite value is a controlled limit of a specified cofinal cutoff family.")
+  Nothing
 
 xiToTaylorData :: RuntimeRepresentationEdge
 xiToTaylorData = eraseRepresentationEdge $ representationEdge
@@ -450,7 +464,8 @@ representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
   , xiToZeros, nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
-  , zerosToLi, realLiToWeilTests, weilTestsToValues
+  , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs
+  , weilTestsToFiniteValues, finiteCutoffsToWeil
   , xiToTaylorData, mobiusToFormalSeries, formalTaylorComposition
   , formalMobiusCompositionInput, formalLogDerivative, formalCoefficientExtraction
   , formalToClassicalLi, certifiedXiToGeneratingLog, generatingLogToSequence

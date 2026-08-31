@@ -59,3 +59,44 @@ The next formal boundary is to define this test family and the zero-sum/Weil
 form with its convergence convention, then specialize (3.4). Until then all
 edges through `WeilLiTestFunctions` and `WeilQuadraticValues` remain
 `LiteratureCertified`.
+
+## Lean-checked finite core and remaining limits
+
+`formal/RHGarden/WeilFinite.lean` now checks (3.5), (3.6), and the exact
+finite-Multiset analogue of (3.3). `Multiset` is essential: a cutoff retains
+zero multiplicities. For a reflection-stable valid cutoff it also checks the
+diagonal identity with `2*Re`.
+
+These finite theorems do not identify `finiteLiZeroValue` with the project's
+derivative-defined `classicalLiRealCoefficient`. Two analytic boundaries remain:
+
+1. Lagarias's infinite Li zero sum is conditionally star-convergent. Proving
+   derivative Li equals zero-sum Li requires a precise ordered cutoff family,
+   star-convergence, and the logarithmic-derivative/Hadamard argument.
+2. The Weil scalar product on class `A` is absolutely convergent because both
+   tests have uniform `O(1/|s|)` growth. Passing the finite (3.3) identity to
+   the infinite form requires proving convergence and compatibility of the
+   same cutoff family with that absolutely convergent sum.
+
+Ordinary `tsum` is therefore not used as a common encoding for both limits.
+The notation `||G_n||_W^2` also carries no unconditional positivity claim:
+positive semidefiniteness of the infinite Weil form is RH-level content.
+
+## Pinned mathlib reconnaissance
+
+Pinned mathlib supplies useful local infrastructure:
+
+- `Mathlib.Analysis.Analytic.IsolatedZeros`: formal-series `order`,
+  `HasFPowerSeriesAt.locally_ne_zero`, and analytic isolated-zero principles;
+- `Mathlib.Analysis.Meromorphic.Order`: `meromorphicOrderAt`, analytic order
+  comparison, and order arithmetic;
+- `Mathlib.Analysis.Meromorphic.Divisor`: `MeromorphicOn.divisor` as a
+  `Function.locallyFinsuppWithin`, plus finite support on compact balls/spheres;
+- `Mathlib.NumberTheory.LSeries.ZetaZeros`: `riemannZetaZeros`,
+  `isClosed_riemannZetaZeros`, `isDiscrete_riemannZetaZeros`, compact
+  intersection finiteness, and a cofinite-to-cocompact tendsto theorem.
+
+What is not supplied as a ready-made object is the required multiplicity-aware
+ordered enumeration/cutoff of xi zeros, Lagarias star-summation, or a Hadamard
+product theorem already specialized to xi and its logarithmic derivative.
+The divisor API is the strongest candidate foundation for building those.
