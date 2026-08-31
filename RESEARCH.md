@@ -141,6 +141,21 @@ the absolutely convergent finite-to-infinite Weil limit remain literature-only
 analytic boundaries. In particular, the norm-square notation does not prove
 the Weil form positive semidefinite.
 
+The next representation layer is also Lean checked, without convergence:
+
+```text
+XiFunction -> XiDivisor -> XiRadialZeroCutoff
+XiRadialZeroCutoff -> LiStarPartialSums
+XiRadialZeroCutoff -> FiniteWeilCutoffValues
+```
+
+`xiZeroCutoff T` is the divisor support in `||rho||<=T`, repeated by analytic
+multiplicity. `LiStarConvergesTo` is only a `Tendsto` proposition. The edges
+from partial sums to convergence, from derivative Li to the negative-index star
+limit, and from convergent finite identities to the infinite Weil functional
+remain literature-only. Radial cutoffs are not reflection-stable: only the
+unconditional norm displacement bound by one is checked.
+
 Suzuki's screw-function program supplies a continuous-function framework for
 studying Weil's distributional quadratic form. Earlier work develops RH
 equivalences and unconditional partial results through the zeta screw function
@@ -157,6 +172,7 @@ upgrade Weil positivity, Li positivity, or RH.
 Real-valuedness of every `classicalLiCoefficient` is now Lean checked from xi
 conjugation symmetry and local principal-log symmetry at `s=1`. `LiPositive`
 is defined on the real sequence but remains unproved. The next formal boundary
-is a multiplicity-aware divisor/cutoff representation for xi zeros, followed
-by separate star-convergence and absolute-convergence limit theorems. The broader bottleneck remains a certified, non-circular
+is the star convergence of the divisor-defined radial partial sums, beginning
+with shell zero-counting and the `n=1` cancellation estimate. Separately, the
+infinite Weil form needs absolute-convergence control. The broader bottleneck remains a certified, non-circular
 universal positivity theorem; this sprint claims none.

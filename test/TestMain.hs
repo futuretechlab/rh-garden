@@ -90,6 +90,16 @@ main = do
       Nothing -> False
   check "finite-to-infinite Weil limit remains literature-only" $
     shortestRepresentationRoute KernelMode representationGraph FiniteWeilCutoffValues WeilQuadraticValues == Nothing
+  check "xi divisor to radial star partial sums is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph XiFunction LiStarPartialSums of
+      Just _ -> True
+      Nothing -> False
+  check "radial cutoff feeds finite Weil algebra in kernel mode" $
+    case shortestRepresentationRoute KernelMode representationGraph XiDivisor FiniteWeilCutoffValues of
+      Just _ -> True
+      Nothing -> False
+  check "star convergence remains outside kernel mode" $
+    shortestRepresentationRoute KernelMode representationGraph LiStarPartialSums LiStarConvergence == Nothing
   let evidence = checkLagariasPrefix 100
   check "finite Lagarias result remains Evidence, not Proof" $
     checkedThrough evidence == 100 && not (submissionReady (Nothing :: Maybe (Proof 'RH)))

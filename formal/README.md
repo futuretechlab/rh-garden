@@ -173,6 +173,10 @@ prove any of those propositions.
   remains open. The finite Multiset version is now checked in
   `RHGarden/WeilFinite.lean`; the star-convergent zero sum and absolutely
   convergent infinite Weil limit remain separate analytic bridges.
+- `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
+  analytic multiplicity, compact radial `Multiset` cutoffs, exact cutoff counts,
+  Lagarias radial partial sums, and the open `Tendsto` star-convergence target.
+  Radial cutoffs are not claimed to be Weil-reflection stable.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 

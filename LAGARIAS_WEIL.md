@@ -100,3 +100,40 @@ What is not supplied as a ready-made object is the required multiplicity-aware
 ordered enumeration/cutoff of xi zeros, Lagarias star-summation, or a Hadamard
 product theorem already specialized to xi and its logarithmic derivative.
 The divisor API is the strongest candidate foundation for building those.
+
+## Canonical xi divisor and radial partial sums
+
+`formal/RHGarden/XiZeroCutoff.lean` now uses `MeromorphicOn.divisor` as the
+authoritative multiplicity object. Its support is exactly the xi zero set, and
+its nonnegative integer value is converted to `xiMultiplicity`. Compactness of
+closed balls and local finiteness of divisor support produce a canonical finite
+support set. `xiZeroCutoff T` binds that set to
+`Multiset.replicate (xiMultiplicity rho) rho`; `count_xiZeroCutoff` verifies
+that `rho` occurs exactly with its analytic multiplicity when `||rho|| <= T`.
+
+The definition
+
+```text
+liStarPartial T n = finiteLiZeroValue (xiZeroCutoff T) n
+```
+
+is therefore Lagarias's genuine finite radial expression. Only the proposition
+`LiStarConvergesTo n L := Tendsto (fun T => liStarPartial T n) atTop (nhds L)`
+is introduced. No chosen limit and no convergence theorem are present.
+
+The normalization boundary is recorded faithfully: the derivative coefficient
+at zero-based index `k` first targets the negative star index `-(k+1)` via the
+open proposition `ClassicalLiEqualsNegativeStar`. Positive/negative star-index
+symmetry is a separate open proposition `StarLiSymmetry`.
+
+Radial cutoffs are not asserted reflection-stable. Lean checks only
+
+```text
+abs (||weilReflect rho|| - ||rho||) <= 1.
+```
+
+Thus reflection changes a radius-`T` cutoff only within a bounded-width shell;
+no claim that the shell contribution vanishes is made. Value-level xi symmetry
+is already known, but multiplicity preservation under conjugate reflection was
+not added: the remaining small API bridge is an analytic-order theorem for
+`z ↦ conj (f (conj z))`, or an equivalent Taylor-order conjugation result.

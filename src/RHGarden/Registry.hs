@@ -211,6 +211,12 @@ liClassicalRef = Reference
   , refCitation = "Lean definitions and theorems in formal/RHGarden/LiClassical.lean, LiCombinatorics.lean, LiComposition.lean, and LiNormalization.lean; lake build is authoritative."
   }
 
+xiCutoffRef :: Reference
+xiCutoffRef = Reference
+  { refShort = "RHGarden.XiZeroCutoff"
+  , refCitation = "Lean divisor, multiplicity, radial cutoff, and partial-sum definitions in formal/RHGarden/XiZeroCutoff.lean; lake build is authoritative."
+  }
+
 classicalLiIdentityRef :: Reference
 classicalLiIdentityRef = Reference
   { refShort = "Li 1997 logarithmic-derivative identity"
@@ -266,6 +272,62 @@ xiToZeros = eraseRepresentationEdge $ representationEdge
   InformationLoss literatureCertifiedTrust 2 xiRef
   "Record the nontrivial zeros with multiplicity."
   (ReconstructionUpTo "Hadamard reconstruction needs order, normalization, exponential factors, and analytic hypotheses.")
+  Nothing
+
+xiToDivisor :: RuntimeRepresentationEdge
+xiToDivisor = eraseRepresentationEdge $ representationEdge
+  SXiFunction SXiDivisor "form the entire xi divisor"
+  ExactRepresentation leanCheckedTrust 1 xiCutoffRef
+  "RHGarden.xiDivisor uses MeromorphicOn.divisor; support and values encode zeros with analytic multiplicity."
+  (NoReconstruction "The divisor records zero data, not the normalized entire function.")
+  Nothing
+
+divisorToRadialCutoff :: RuntimeRepresentationEdge
+divisorToRadialCutoff = eraseRepresentationEdge $ representationEdge
+  SXiDivisor SXiRadialZeroCutoff "restrict divisor to |rho|<=T"
+  ExactRepresentation leanCheckedTrust 1 xiCutoffRef
+  "RHGarden.xiZeroCutoff repeats every supported point by xiMultiplicity; count_xiZeroCutoff verifies the exact count."
+  (NoReconstruction "A single bounded cutoff does not reconstruct the global divisor.")
+  Nothing
+
+radialCutoffToStarPartial :: RuntimeRepresentationEdge
+radialCutoffToStarPartial = eraseRepresentationEdge $ representationEdge
+  SXiRadialZeroCutoff SLiStarPartialSums "evaluate finite Li zero sums"
+  ExactRepresentation leanCheckedTrust 1 xiCutoffRef
+  "RHGarden.liStarPartial is finiteLiZeroValue on the genuine multiplicity-aware radial cutoff."
+  (ExactInverse "The indexed partial-sum object retains its cutoff parameter and integer index.")
+  Nothing
+
+radialCutoffToFiniteWeil :: RuntimeRepresentationEdge
+radialCutoffToFiniteWeil = eraseRepresentationEdge $ representationEdge
+  SXiRadialZeroCutoff SFiniteWeilCutoffValues "apply finite Weil-Li algebra to radial cutoffs"
+  ExactRepresentation leanCheckedTrust 1 xiCutoffRef
+  "RHGarden.xiZeroCutoff_valid supplies the pole exclusions required by finiteWeilScalar_liTest."
+  (NoReconstruction "Finite scalar values do not reconstruct the cutoff multiset.")
+  Nothing
+
+starPartialToConvergence :: RuntimeRepresentationEdge
+starPartialToConvergence = eraseRepresentationEdge $ representationEdge
+  SLiStarPartialSums SLiStarConvergence "prove radial star convergence"
+  EquivalentTheorem literatureCertifiedTrust 5 weilRef
+  "LiStarConvergesTo is defined as Tendsto atTop; no convergence theorem is registered."
+  (ExactInverse "A proved convergence proposition identifies the limit of the full partial-sum net.")
+  Nothing
+
+classicalLiToStarConvergence :: RuntimeRepresentationEdge
+classicalLiToStarConvergence = eraseRepresentationEdge $ representationEdge
+  SClassicalLiSequence SLiStarConvergence "derivative Li equals negative-index star limit"
+  EquivalentTheorem literatureCertifiedTrust 5 weilRef
+  "ClassicalLiEqualsNegativeStar records the exact open target with index -(k+1)."
+  (ExactInverse "The target identifies each derivative coefficient with its star limit.")
+  Nothing
+
+starConvergenceToWeil :: RuntimeRepresentationEdge
+starConvergenceToWeil = eraseRepresentationEdge $ representationEdge
+  SLiStarConvergence SWeilQuadraticValues "pass star identities to the infinite Weil functional"
+  EquivalentTheorem literatureCertifiedTrust 5 weilRef
+  "Requires separate conditional Li and absolute Weil convergence control."
+  (NoReconstruction "Convergence values alone do not reconstruct the full Weil form.")
   Nothing
 
 nontrivialZetaZeroToXiZero :: RuntimeRepresentationEdge
@@ -463,7 +525,10 @@ conjecturalPositiveFactorization = eraseRepresentationEdge $ representationEdge
 representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
-  , xiToZeros, nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
+  , xiToZeros, xiToDivisor, divisorToRadialCutoff, radialCutoffToStarPartial
+  , radialCutoffToFiniteWeil, starPartialToConvergence
+  , classicalLiToStarConvergence, starConvergenceToWeil
+  , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs
   , weilTestsToFiniteValues, finiteCutoffsToWeil
   , xiToTaylorData, mobiusToFormalSeries, formalTaylorComposition
