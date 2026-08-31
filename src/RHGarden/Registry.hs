@@ -383,9 +383,9 @@ generatingLogToSequence = eraseRepresentationEdge $ representationEdge
 generatingToNormalizedClassical :: RuntimeRepresentationEdge
 generatingToNormalizedClassical = eraseRepresentationEdge $ representationEdge
   SLiGeneratingSequence SNormalizedClassicalLiSequence "Li generating/original derivative identity"
-  EquivalentTheorem literatureCertifiedTrust 2 classicalLiIdentityRef
-  "The generic finite Mobius coefficient identity is LeanChecked, but the scalar FMS-composition to PowerSeries.subst adapter needed for this sequence equality remains open."
-  (ExactInverse "Once the remaining coefficient adapter is proved, both sequences have the same indexed coefficients.")
+  EquivalentTheorem leanCheckedTrust 2 classicalLiIdentityRef
+  "RHGarden.liGeneratingCoefficient_eq_normalizedClassical proves coefficientwise equality via the specialized Mobius FMS/PowerSeries adapter."
+  (ExactInverse "Both sequences have the same indexed coefficients by a Lean-checked theorem.")
   Nothing
 
 normalizedToClassicalLi :: RuntimeRepresentationEdge

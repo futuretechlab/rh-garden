@@ -62,8 +62,10 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph XiAfterFormalMobius LiGeneratingSequence of
       Just _ -> True
       Nothing -> False
-  check "generating and normalized-original Li definitions remain independent" $
-    shortestRepresentationRoute KernelMode representationGraph LiGeneratingSequence NormalizedClassicalLiSequence == Nothing
+  check "generating and normalized-original Li definitions are LeanChecked equivalent" $
+    case shortestRepresentationRoute KernelMode representationGraph LiGeneratingSequence NormalizedClassicalLiSequence of
+      Just _ -> True
+      Nothing -> False
   check "normalization-by-2 remains a separate literature boundary" $
     shortestRepresentationRoute KernelMode representationGraph NormalizedClassicalLiSequence ClassicalLiSequence == Nothing
   let evidence = checkLagariasPrefix 100

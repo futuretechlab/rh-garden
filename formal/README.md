@@ -119,8 +119,8 @@ certified for `z/(1-z)`. Composing its certificate with
 produces `liXiFPowerSeries`. `certifiedLiXiSeries` is the coefficient adapter
 used by the authoritative formal logarithmic derivative. The older
 `liXiSeries = normalizedXiTaylor.subst liMobiusSeries` remains present as a
-second algebraic encoding; its equality with `certifiedLiXiSeries` is an open
-interoperability lemma and is not labeled `LeanChecked`.
+second algebraic encoding. `liXiSeries_eq_certifiedLiXiSeries` proves its
+equality with `certifiedLiXiSeries` coefficientwise.
 
 `RHGarden/LiClassical.lean` now introduces three independent analytic notions:
 the local logarithm germs, `liGeneratingCoefficient`, and Li's normalized
@@ -139,11 +139,11 @@ and uniqueness identifies the latter with its derivative Taylor FMS.
 
 for every complex `PowerSeries H` with zero constant coefficient. It also
 proves equality of the corresponding generating and original formal
-functionals. The remaining boundary is a specific scalar-coefficient adapter
-between the analytically composed FMS for `liGeneratingLog` and
-`liLocalLogTaylor.subst liMobiusSeries`. Until that adapter is proved,
-`liGeneratingCoefficient = normalizedClassicalLiCoefficient` remains
-`LiteratureCertified`, as does removal of the normalization factor two.
+functionals. `RHGarden/LiComposition.lean` counts compositions by length via
+separator sets, proves the specialized scalar FMS/PowerSeries Mobius adapter,
+and derives `liGeneratingCoefficient_eq_normalizedClassical`. This
+representation edge is now `LeanChecked`; removal of the normalization factor
+two remains `LiteratureCertified`.
 
 `RHGarden/PowerSeriesAPI.lean` records the pinned API. In mathlib v4.33.0,
 composition is `PowerSeries.subst` under `PowerSeries.HasSubst`, not a method
