@@ -31,6 +31,7 @@ data Representation
   | LogXiMobius
   | LiGeneratingSeries
   | LiSequence
+  | WeilLiTestFunctions
   | WeilQuadraticValues
   | XiTaylorAtOne
   | MobiusFormalSeries
@@ -56,6 +57,7 @@ data SRepresentation (r :: Representation) where
   SLogXiMobius :: SRepresentation 'LogXiMobius
   SLiGeneratingSeries :: SRepresentation 'LiGeneratingSeries
   SLiSequence :: SRepresentation 'LiSequence
+  SWeilLiTestFunctions :: SRepresentation 'WeilLiTestFunctions
   SWeilQuadraticValues :: SRepresentation 'WeilQuadraticValues
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
   SMobiusFormalSeries :: SRepresentation 'MobiusFormalSeries
@@ -82,6 +84,7 @@ representationValue SXiAfterMobius = XiAfterMobius
 representationValue SLogXiMobius = LogXiMobius
 representationValue SLiGeneratingSeries = LiGeneratingSeries
 representationValue SLiSequence = LiSequence
+representationValue SWeilLiTestFunctions = WeilLiTestFunctions
 representationValue SWeilQuadraticValues = WeilQuadraticValues
 representationValue SXiTaylorAtOne = XiTaylorAtOne
 representationValue SMobiusFormalSeries = MobiusFormalSeries
@@ -106,6 +109,7 @@ representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"
 representationLabel LiGeneratingSeries = "Li generating series sum_{n>=1} lambda_n z^(n-1)"
 representationLabel LiSequence = "Li coefficient sequence (lambda_n)_{n>=1}"
+representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
 representationLabel WeilQuadraticValues = "Weil quadratic-functional values associated to Li coefficients"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"
 representationLabel MobiusFormalSeries = "formal series U=X/(1-X)=X+X^2+..."

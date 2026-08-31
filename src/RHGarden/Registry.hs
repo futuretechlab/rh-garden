@@ -196,7 +196,7 @@ weilRef :: Reference
 weilRef = Reference
   { refShort = "Lagarias, Li coefficients and Weil functional"
   , refCitation =
-      "J. C. Lagarias, Li coefficients for automorphic L-functions, relating generalized Li coefficients to Weil quadratic-functional values."
+      "J. C. Lagarias, Li coefficients for automorphic L-functions, Ann. Inst. Fourier 57 (2007), Section 3, equations (3.1)--(3.4)."
   }
 
 liFormalRef :: Reference
@@ -298,25 +298,23 @@ zerosToLi = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The registered edge does not claim that the Li sequence uniquely reconstructs the zero multiset.")
   Nothing
 
-liToWeil :: RuntimeRepresentationEdge
-liToWeil = eraseRepresentationEdge $ representationEdge
-  SClassicalLiSequence SWeilQuadraticValues "classical Li/Weil functional correspondence"
+realLiToWeilTests :: RuntimeRepresentationEdge
+realLiToWeilTests = eraseRepresentationEdge $ representationEdge
+  SClassicalLiRealSequence SWeilLiTestFunctions "select Lagarias Li test functions"
   EquivalentTheorem literatureCertifiedTrust 3 weilRef
-  "Associate the specified test functions' Weil quadratic-functional values to generalized Li coefficients."
-  (ReconstructionUpTo "Only the registered family of Weil test-function values is represented.")
+  "For positive classical index k=n+1, select G_k(s)=1-(1-1/s)^k; this identification remains literature-certified."
+  (ReconstructionUpTo "The node records the indexed Li test-function family, not the full Li class of rational functions.")
+  Nothing
+
+weilTestsToValues :: RuntimeRepresentationEdge
+weilTestsToValues = eraseRepresentationEdge $ representationEdge
+  SWeilLiTestFunctions SWeilQuadraticValues "evaluate Weil form on Li tests"
+  EquivalentTheorem literatureCertifiedTrust 3 weilRef
+  "Lagarias (3.4): ||G_k||^2_W=lambda_k+lambda_-k=2 Re(lambda_k); for zeta the Li coefficients are real."
+  (ReconstructionUpTo "Only diagonal values on the registered Li tests are represented; the full sesquilinear form requires (3.3).")
   (Just (PropertyTransport
     AllLiCoefficientsNonnegative WeilFormNonnegative
-    "For the registered Li test-function family, coefficient nonnegativity is transported to nonnegativity of those Weil functional values; no unconditional positive factorization is asserted."))
-
-weilToLi :: RuntimeRepresentationEdge
-weilToLi = eraseRepresentationEdge $ representationEdge
-  SWeilQuadraticValues SClassicalLiSequence "Weil/classical Li functional correspondence"
-  EquivalentTheorem literatureCertifiedTrust 3 weilRef
-  "Recover the classical Li coefficients from the registered Weil test-function values."
-  (ReconstructionUpTo "Only the registered family of Weil test-function values is represented.")
-  (Just (PropertyTransport
-    WeilFormNonnegative AllLiCoefficientsNonnegative
-    "Positivity transport is only for the registered test-function family and remains literature-certified."))
+    "Coefficient nonnegativity corresponds to nonnegativity of these diagonal Weil values after the factor 2; this remains literature-certified."))
 
 xiToTaylorData :: RuntimeRepresentationEdge
 xiToTaylorData = eraseRepresentationEdge $ representationEdge
@@ -414,6 +412,14 @@ classicalToNormalizedLi = eraseRepresentationEdge $ representationEdge
   (ExactInverse "Both independently defined sequences have the same indexed coefficients by a Lean-checked theorem.")
   Nothing
 
+classicalLiToReal :: RuntimeRepresentationEdge
+classicalLiToReal = eraseRepresentationEdge $ representationEdge
+  SClassicalLiSequence SClassicalLiRealSequence "take the proved real classical Li sequence"
+  EquivalentTheorem leanCheckedTrust 1 liClassicalRef
+  "RHGarden.classicalLiCoefficient_eq_real proves coefficientwise equality with the complex embedding of classicalLiRealCoefficient."
+  (ExactInverse "The complex coefficient is exactly the real coefficient embedded into C.")
+  Nothing
+
 negativeToStandardMobiusXi :: RuntimeRepresentationEdge
 negativeToStandardMobiusXi = eraseRepresentationEdge $ representationEdge
   SNegativeMobiusXi SStandardLiMobiusXi "xi symmetry identifies Mobius conventions"
@@ -444,11 +450,12 @@ representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
   , xiToZeros, nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
-  , zerosToLi, liToWeil, weilToLi
+  , zerosToLi, realLiToWeilTests, weilTestsToValues
   , xiToTaylorData, mobiusToFormalSeries, formalTaylorComposition
   , formalMobiusCompositionInput, formalLogDerivative, formalCoefficientExtraction
   , formalToClassicalLi, certifiedXiToGeneratingLog, generatingLogToSequence
   , generatingToNormalizedClassical, normalizedToClassicalLi, classicalToNormalizedLi
+  , classicalLiToReal
   , negativeToStandardMobiusXi, standardToNegativeMobiusXi
   ]
 

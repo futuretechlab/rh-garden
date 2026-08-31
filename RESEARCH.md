@@ -52,13 +52,14 @@ The research map keeps these notions distinct:
 ClassicalLiSequence
 ClassicalLiRealSequence
 LiPositive
+WeilLiTestFunctions
 WeilQuadraticValues
 WeilPositive
 RiemannHypothesis
 ```
 
 `ClassicalLiSequence` and `ClassicalLiRealSequence` are separate representation
-nodes, with no certified edge between them yet. `LiPositive` and
+nodes joined by a `LeanChecked` coefficientwise real-embedding theorem. `LiPositive` and
 `RiemannHypothesis` are criterion propositions. `WeilPositive` is a separate
 property of `WeilQuadraticValues`. Sequence identification, real-valuedness,
 positivity, and RH equivalence therefore cannot be conflated by route search.
@@ -88,14 +89,13 @@ Literature-certified only:
 
 - the zero-sum formula and its analytic summation convention;
 - Li positivity equivalent to RH;
-- classical Li coefficients related to the registered Weil functional values;
+- the real classical Li sequence mapped to Lagarias's registered test functions
+  and Weil functional values (see `LAGARIAS_WEIL.md`);
 - Nyman-Beurling and Lagarias criteria;
 - hypotheses needed for global zero products and reconstruction.
 
 Conjectural or unconstructed:
 
-- real-valuedness inside this Lean development (although classical theory
-  supplies the expected symmetry);
 - a positive Gram or norm-square factorization for all Li coefficients;
 - a self-adjoint Hilbert-Polya operator with exactly the required spectrum;
 - a bridge unifying Li/Weil positivity with Nyman-Beurling geometry.
@@ -105,16 +105,26 @@ Conjectural or unconstructed:
 The next research corridor is deliberately staged:
 
 ```text
-Classical Li coefficients
-  -> Weil quadratic functional
+ClassicalLiRealSequence
+  -> WeilLiTestFunctions
+  -> WeilQuadraticValues
+  -> WeilPositive
+  -> RiemannHypothesis
+```
+
+The later spectral research corridor is:
+
+```text
+Weil quadratic functional
   -> positive-semidefinite representation?
   -> screw function
   -> finite-interval self-adjoint operators
   -> conjectural limiting operator
 ```
 
-Lagarias relates generalized Li coefficients to values of Weil's quadratic
-functional and obtains an RH criterion through positivity of their real parts
+Lagarias defines `G_n(s)=1-(1-1/s)^n` and proves
+`||G_n||_W^2=2 Re(lambda_n)` in equations (3.2)--(3.4); exact hypotheses and
+conventions are recorded in `LAGARIAS_WEIL.md`. He obtains an RH criterion through positivity of their real parts
 ([arXiv:math/0404394](https://arxiv.org/abs/math/0404394)). This is published
 provenance for the Li/Weil correspondence, not a LeanChecked edge.
 
@@ -131,9 +141,9 @@ upgrade Weil positivity, Li positivity, or RH.
 
 ## Next mathematical bottleneck
 
-The next small formal bridge is real-valuedness of every
-`classicalLiCoefficient`, most plausibly from conjugation symmetry of xi or real
-Taylor coefficients at `s = 1`. Only after that bridge should the project define
-Lean positivity on the resulting real sequence. The broader bottleneck remains
-a certified, non-circular universal positivity theorem for the full sequence or
-its corresponding Weil test-function family.
+Real-valuedness of every `classicalLiCoefficient` is now Lean checked from xi
+conjugation symmetry and local principal-log symmetry at `s=1`. `LiPositive`
+is defined on the real sequence but remains unproved. The next formal boundary
+is Lagarias's `G_n` family and equation (3.4), including the zero-sum and
+convergence layer. The broader bottleneck remains a certified, non-circular
+universal positivity theorem; this sprint claims none.

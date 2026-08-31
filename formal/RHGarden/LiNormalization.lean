@@ -1,5 +1,6 @@
 import RHGarden.LiComposition
 import Mathlib.Analysis.Calculus.MeanValue
+import Mathlib.Analysis.Calculus.Deriv.Star
 
 noncomputable section
 
@@ -43,6 +44,43 @@ theorem analyticAt_logNormalizationDifference :
     AnalyticAt ℂ logNormalizationDifference 1 := by
   unfold logNormalizationDifference standardXiLog
   exact analyticAt_log_normalizedXi.sub analyticAt_standardXiLog
+
+theorem eventually_standardXiLog_conj :
+    ∀ᶠ s in nhds (1 : ℂ),
+      standardXiLog (starRingEnd ℂ s) =
+        starRingEnd ℂ (standardXiLog s) := by
+  have hxi : ∀ᶠ s in nhds (1 : ℂ), riemannXi s ∈ Complex.slitPlane :=
+    differentiable_riemannXi.continuous.continuousAt
+      (Complex.isOpen_slitPlane.mem_nhds riemannXi_one_mem_slitPlane)
+  filter_upwards [hxi] with s hs
+  rw [standardXiLog, standardXiLog, riemannXi_conj, Complex.log_conj]
+  exact (Complex.arg_lt_pi_iff.mpr
+    ((Complex.mem_slitPlane_iff.mp hs).elim (fun h ↦ Or.inl h.le) Or.inr)).ne
+
+private theorem iteratedDeriv_conj_conj (f : ℂ → ℂ) (m : ℕ) :
+    iteratedDeriv m (starRingEnd ℂ ∘ f ∘ starRingEnd ℂ) =
+      starRingEnd ℂ ∘ iteratedDeriv m f ∘ starRingEnd ℂ := by
+  induction m with
+  | zero => simp
+  | succ m ih =>
+      rw [show m + 1 = Nat.succ m by omega, iteratedDeriv_succ,
+        iteratedDeriv_succ, ih, deriv_conj_conj]
+
+theorem iteratedDeriv_standardXiLog_conj (m : ℕ) :
+    starRingEnd ℂ (iteratedDeriv m standardXiLog 1) =
+      iteratedDeriv m standardXiLog 1 := by
+  have hreflect :
+      (starRingEnd ℂ ∘ standardXiLog ∘ starRingEnd ℂ) =ᶠ[nhds (1 : ℂ)]
+        standardXiLog := by
+    filter_upwards [eventually_standardXiLog_conj] with s hs
+    simpa [Function.comp_def] using congrArg (starRingEnd ℂ) hs
+  have hderiv := Filter.EventuallyEq.iteratedDeriv_eq m hreflect
+  rw [iteratedDeriv_conj_conj] at hderiv
+  simpa [Function.comp_def] using hderiv
+
+theorem iteratedDeriv_standardXiLog_im_eq_zero (m : ℕ) :
+    (iteratedDeriv m standardXiLog 1).im = 0 :=
+  Complex.conj_eq_iff_im.mp (iteratedDeriv_standardXiLog_conj m)
 
 theorem eventually_deriv_log_normalizedXi_eq_standardXiLog :
     ∀ᶠ s in nhds (1 : ℂ),
@@ -150,5 +188,40 @@ theorem liGeneratingCoefficient_eq_classical (n : ℕ) :
     liGeneratingCoefficient n = classicalLiCoefficient n :=
   (liGeneratingCoefficient_eq_normalizedClassical n).trans
     (normalizedClassicalLiCoefficient_eq_classical n)
+
+theorem classicalLiCoefficient_conj (n : ℕ) :
+    starRingEnd ℂ (classicalLiCoefficient n) = classicalLiCoefficient n := by
+  let f : ℂ → ℂ := fun s ↦ s ^ n * standardXiLog s
+  have hreflect : (starRingEnd ℂ ∘ f ∘ starRingEnd ℂ) =ᶠ[nhds (1 : ℂ)] f := by
+    filter_upwards [eventually_standardXiLog_conj] with s hs
+    simp only [f, Function.comp_apply, map_mul, map_pow, starRingEnd_self_apply]
+    rw [hs]
+    simp
+  have hderiv := Filter.EventuallyEq.iteratedDeriv_eq (n + 1) hreflect
+  rw [iteratedDeriv_conj_conj] at hderiv
+  rw [classicalLiCoefficient]
+  simp only [map_div₀, map_natCast]
+  change starRingEnd ℂ (iteratedDeriv (n + 1) f 1) /
+      (n.factorial : ℂ) = iteratedDeriv (n + 1) f 1 / (n.factorial : ℂ)
+  simpa [Function.comp_def] using congrArg
+    (fun z : ℂ ↦ z / (n.factorial : ℂ)) hderiv
+
+theorem classicalLiCoefficient_im_eq_zero (n : ℕ) :
+    (classicalLiCoefficient n).im = 0 :=
+  Complex.conj_eq_iff_im.mp (classicalLiCoefficient_conj n)
+
+/-- The standard classical Li coefficient as a real number. Index `n`
+corresponds to the conventional coefficient `λ_(n+1)`. -/
+def classicalLiRealCoefficient (n : ℕ) : ℝ := (classicalLiCoefficient n).re
+
+theorem classicalLiCoefficient_eq_real (n : ℕ) :
+    classicalLiCoefficient n = (classicalLiRealCoefficient n : ℂ) := by
+  apply Complex.ext
+  · simp [classicalLiRealCoefficient]
+  · simp [classicalLiCoefficient_im_eq_zero]
+
+/-- The open Li-positivity proposition in zero-based indexing: the term at
+index `n` is the conventional classical coefficient `λ_(n+1)`. -/
+def LiPositive : Prop := ∀ n : ℕ, 0 ≤ classicalLiRealCoefficient n
 
 end RHGarden

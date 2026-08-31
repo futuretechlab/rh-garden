@@ -78,8 +78,12 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence NormalizedClassicalLiSequence of
       Just _ -> True
       Nothing -> False
-  check "real-valued classical Li sequence remains a distinct open representation" $
-    shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence ClassicalLiRealSequence == Nothing
+  check "real-valued classical Li sequence is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence ClassicalLiRealSequence of
+      Just _ -> True
+      Nothing -> False
+  check "Li-to-Weil test-function corridor remains literature-only" $
+    shortestRepresentationRoute KernelMode representationGraph ClassicalLiRealSequence WeilLiTestFunctions == Nothing
   let evidence = checkLagariasPrefix 100
   check "finite Lagarias result remains Evidence, not Proof" $
     checkedThrough evidence == 100 && not (submissionReady (Nothing :: Maybe (Proof 'RH)))

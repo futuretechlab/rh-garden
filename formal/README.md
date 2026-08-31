@@ -150,8 +150,12 @@ the normalized xi-log derivative on a neighborhood, and shows their difference
 is locally constant. The `(n+1)`-st derivative of the resulting term `C*s^n`
 vanishes. Consequently `normalizedClassicalLiCoefficient_eq_classical` and
 `liGeneratingCoefficient_eq_classical` are `LeanChecked`; no global complex-log
-additivity theorem is used. Real-valuedness of this complex-valued definition
-remains a separate open bridge.
+additivity theorem is used. Xi conjugation symmetry and local principal-log
+conjugation at `s=1` show the relevant derivatives are fixed by conjugation.
+Thus `classicalLiCoefficient_im_eq_zero` and
+`classicalLiCoefficient_eq_real` are `LeanChecked`. The zero-based
+`classicalLiRealCoefficient n` corresponds to classical `lambda_(n+1)`;
+`LiPositive` is defined on this sequence but deliberately unproved.
 
 `RHGarden/PowerSeriesAPI.lean` records the pinned API. In mathlib v4.33.0,
 composition is `PowerSeries.subst` under `PowerSeries.HasSubst`, not a method
@@ -165,9 +169,8 @@ prove any of those propositions.
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
-- Prove `classicalLiCoefficient` is real-valued. This is intentionally separate
-  from its now-checked identification with the normalized and generating
-  coefficient sequences.
+- Formalize Lagarias's Li test functions and diagonal Weil identity; positivity
+  remains open.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 
