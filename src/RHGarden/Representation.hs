@@ -24,6 +24,8 @@ import RHGarden.Core (Reference, Trust)
 data Representation
   = XiFunction
   | XiSubquadraticGrowth
+  | ZeroFreeEntireSubquadratic
+  | ExpAffineEntire
   | XiDivisor
   | XiRadialZeroCutoff
   | XiHeightZeroCutoff
@@ -64,6 +66,8 @@ data Representation
 data SRepresentation (r :: Representation) where
   SXiFunction :: SRepresentation 'XiFunction
   SXiSubquadraticGrowth :: SRepresentation 'XiSubquadraticGrowth
+  SZeroFreeEntireSubquadratic :: SRepresentation 'ZeroFreeEntireSubquadratic
+  SExpAffineEntire :: SRepresentation 'ExpAffineEntire
   SXiDivisor :: SRepresentation 'XiDivisor
   SXiRadialZeroCutoff :: SRepresentation 'XiRadialZeroCutoff
   SXiHeightZeroCutoff :: SRepresentation 'XiHeightZeroCutoff
@@ -105,6 +109,8 @@ deriving instance Show (SRepresentation r)
 representationValue :: SRepresentation r -> Representation
 representationValue SXiFunction = XiFunction
 representationValue SXiSubquadraticGrowth = XiSubquadraticGrowth
+representationValue SZeroFreeEntireSubquadratic = ZeroFreeEntireSubquadratic
+representationValue SExpAffineEntire = ExpAffineEntire
 representationValue SXiDivisor = XiDivisor
 representationValue SXiRadialZeroCutoff = XiRadialZeroCutoff
 representationValue SXiHeightZeroCutoff = XiHeightZeroCutoff
@@ -144,6 +150,8 @@ representationValue SStandardLiMobiusXi = StandardLiMobiusXi
 representationLabel :: Representation -> String
 representationLabel XiFunction = "completed xi function xi(s)"
 representationLabel XiSubquadraticGrowth = "proved global subquadratic growth bound for xi"
+representationLabel ZeroFreeEntireSubquadratic = "zero-free entire function with subquadratic growth"
+representationLabel ExpAffineEntire = "exponential of an affine entire function"
 representationLabel XiDivisor = "locally finite xi divisor with analytic multiplicities"
 representationLabel XiRadialZeroCutoff = "radial xi-zero Multiset cutoff |rho|<=T"
 representationLabel XiHeightZeroCutoff = "Lagarias xi-zero Multiset cutoff |Im rho|<=T"

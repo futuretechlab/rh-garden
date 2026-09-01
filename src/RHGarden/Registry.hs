@@ -304,6 +304,17 @@ xiToSubquadraticGrowth = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "A growth bound is a property of xi and does not reconstruct the function.")
   Nothing
 
+subquadraticZeroFreeToExpAffine :: RuntimeRepresentationEdge
+subquadraticZeroFreeToExpAffine = eraseRepresentationEdge $ representationEdge
+  SZeroFreeEntireSubquadratic SExpAffineEntire
+  "integrate H'/H and apply Borel-Caratheodory plus Cauchy's estimate"
+  SufficientReduction leanCheckedTrust 2
+  (Reference "RHGarden.subquadraticZeroFreeEntireIsExpAffine"
+    "Generic Lean theorem in formal/RHGarden/LiExpAffine.lean; lake build is authoritative.")
+  "At exponent 7/4, the Cauchy bound forces the second derivative of the global entire logarithm to vanish."
+  (ExactInverse "The theorem supplies constants A and B with H(z)=exp(A+Bz).")
+  Nothing
+
 divisorToRadialCutoff :: RuntimeRepresentationEdge
 divisorToRadialCutoff = eraseRepresentationEdge $ representationEdge
   SXiDivisor SXiRadialZeroCutoff "restrict divisor to |rho|<=T"
@@ -606,7 +617,8 @@ conjecturalPositiveFactorization = eraseRepresentationEdge $ representationEdge
 representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
-  , xiToZeros, xiToDivisor, xiToSubquadraticGrowth, divisorToRadialCutoff, divisorToHeightCutoff
+  , xiToZeros, xiToDivisor, xiToSubquadraticGrowth, subquadraticZeroFreeToExpAffine
+  , divisorToRadialCutoff, divisorToHeightCutoff
   , divisorToOccurrences, occurrencesToCanonicalProduct, canonicalProductToLogDerivative
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
