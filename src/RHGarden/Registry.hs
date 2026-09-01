@@ -294,6 +294,16 @@ xiToDivisor = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The divisor records zero data, not the normalized entire function.")
   Nothing
 
+xiToSubquadraticGrowth :: RuntimeRepresentationEdge
+xiToSubquadraticGrowth = eraseRepresentationEdge $ representationEdge
+  SXiFunction SXiSubquadraticGrowth "prove coarse global growth below order two"
+  InformationLoss leanCheckedTrust 2
+  (Reference "RHGarden.riemannXi_subquadratic_growth"
+    "Lean theorem in formal/RHGarden/LiHadamardGrowth.lean; lake build is authoritative.")
+  "Euler's integral reduces complex Gamma to real Gamma; a ceiling/factorial bound and xi symmetry yield order at most 3/2."
+  (NoReconstruction "A growth bound is a property of xi and does not reconstruct the function.")
+  Nothing
+
 divisorToRadialCutoff :: RuntimeRepresentationEdge
 divisorToRadialCutoff = eraseRepresentationEdge $ representationEdge
   SXiDivisor SXiRadialZeroCutoff "restrict divisor to |rho|<=T"
@@ -596,7 +606,7 @@ conjecturalPositiveFactorization = eraseRepresentationEdge $ representationEdge
 representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
-  , xiToZeros, xiToDivisor, divisorToRadialCutoff, divisorToHeightCutoff
+  , xiToZeros, xiToDivisor, xiToSubquadraticGrowth, divisorToRadialCutoff, divisorToHeightCutoff
   , divisorToOccurrences, occurrencesToCanonicalProduct, canonicalProductToLogDerivative
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
