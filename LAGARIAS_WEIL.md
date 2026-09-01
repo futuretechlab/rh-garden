@@ -127,6 +127,12 @@ at zero-based index `k` first targets the negative star index `-(k+1)` via the
 open proposition `ClassicalLiEqualsNegativeStar`. Positive/negative star-index
 symmetry is a separate open proposition `StarLiSymmetry`.
 
+This sign has now been re-audited directly against Lagarias's equations
+(1.1)--(1.5): his derivative coefficient `tilde lambda_m` in (1.3) is
+`lambda_{-m}`. For the Riemann zeta specialization the zero symmetries then
+give `lambda_{-m}=lambda_m`; that second equality must not be folded into the
+first identification step.
+
 Weil reflection preserves imaginary part exactly. Lean also checks analytic
 multiplicity preservation under conjugation and under `s -> 1-s`; hence the
 height cutoff is exactly reflection-stable with multiplicity, and the finite
@@ -142,6 +148,30 @@ Thus reflection changes a radius-`T` cutoff only within a bounded-width shell;
 no claim that the shell contribution vanishes is made. The radial object is
 retained because Lagarias uses radial cutoffs in the interpolation section.
 
-Star convergence remains open. Pinned mathlib does not provide the
-Riemann--von Mangoldt asymptotic Lagarias uses to obtain `O(log T)` zeros in a
-unit-height interval, and no replacement estimate is asserted here.
+The earlier stable-mathlib-only state left star convergence open. The pinned
+Zeta23 dependency now supplies the local unit-height zero bound, and RH Garden
+uses it to prove `liStarConvergence` for every integer index.
+
+## Hadamard identification boundary
+
+Star convergence is now supplied unconditionally through the pinned Zeta23
+local zero-count theorem, but convergence does not identify the limit's value.
+Pinned Zeta23 has the exact local completed-zeta identities
+`logDeriv_completedZeta`, `logDeriv_completedZeta_one_sub`, and
+`completedZeta_zeros_strip`. Its theorem
+`zeta_logDeriv_partial_fraction` is instead a finite disk approximation with
+an explicit `O(log (|t|+3))` error. `zero_sum_limit` treats the absolutely
+convergent transformed zero side of the Weil explicit formula. Neither is a
+global Hadamard/logarithmic-derivative identity for xi.
+
+`RHGarden.LiHadamardFinite` records the convergence-free genus-one algebra.
+The remaining analytic input is a xi-specific Hadamard factorization, stated
+there as `XiGenusOneFactorization`: local uniform convergence of the primary
+factor product together with an exponential quotient of degree at most one.
+One must then determine its linear constant (equivalently use the xi
+functional equation), pass logarithmic derivatives locally uniformly near
+`s=1`, and apply the checked finite Li jet identity. Mathlib supplies generic
+locally uniform infinite-product and logarithmic-derivative tools, including
+`logDeriv_tprod_eq_tsum`, but no theorem proving this factorization from
+entire order-one growth. Consequently `ClassicalLiEqualsNegativeStar`
+remains open and no garden trust edge is upgraded by the finite algebra alone.

@@ -217,3 +217,31 @@ This does not prove `XiLocalZeroCountBound`. It also does not identify any star
 limit with `classicalLiCoefficient`; that remains a separate logarithmic-
 derivative/Hadamard analytic boundary. The next isolated implementation gate is
 therefore the upstream-compatible unit-height zero-count theorem.
+
+## Post-integration correction: convergence is discharged
+
+The preceding historical status was superseded by the pinned Zeta23
+integration. Its Apache-2.0 local zeta-zero theorem is checked by the same Lean
+kernel build; `xiLocalZeroCountBound` and `liStarConvergence` are now
+unconditional LeanChecked theorems. Proof authorship remains attributed to
+Anthropic PBC at the exact revision in `ZETA23_COMPATIBILITY.md`.
+
+The remaining boundary is value identification, not convergence. Lagarias's
+convention has been re-audited directly: zero-based derivative index `k`
+first targets star index `-(k+1)`; positive-index equality follows separately
+from zeta symmetry and real-valuedness.
+
+Pinned Zeta23's `zeta_logDeriv_partial_fraction` is a disk-local approximation
+with an error term, not a global xi zero expansion. Its `zero_sum_limit`
+applies to the absolutely convergent Weil explicit-formula test class. Neither
+identifies the star limit with `classicalLiCoefficient`.
+
+`RHGarden.LiHadamardFinite` isolates the finite genus-one algebra: the primary
+factor `Eâ‚(w)=(1-w)exp(w)`, its finite multiplicity-aware product, its exact
+logarithmic derivative, and the finite negative-index Li jet identity. The
+remaining infinite theorem is `XiGenusOneFactorization`, followed by locally
+uniform logarithmic-derivative passage and determination of the linear
+exponential constant from xi symmetry. Mathlib supplies generic locally
+uniform product tools, but neither Mathlib nor Zeta23 supplies Hadamard
+factorization of xi (or a general order-one entire factorization theorem).
+This is the exact next analytic frontier; positivity remains out of scope.
