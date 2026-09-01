@@ -29,6 +29,9 @@ data Representation
   | XiZeros
   | NontrivialZetaZero
   | XiZero
+  | XiZeroOccurrences
+  | XiCanonicalProduct
+  | XiCanonicalProductLogDerivative
   | MobiusVariable
   | XiAfterMobius
   | LogXiMobius
@@ -65,6 +68,9 @@ data SRepresentation (r :: Representation) where
   SXiZeros :: SRepresentation 'XiZeros
   SNontrivialZetaZero :: SRepresentation 'NontrivialZetaZero
   SXiZero :: SRepresentation 'XiZero
+  SXiZeroOccurrences :: SRepresentation 'XiZeroOccurrences
+  SXiCanonicalProduct :: SRepresentation 'XiCanonicalProduct
+  SXiCanonicalProductLogDerivative :: SRepresentation 'XiCanonicalProductLogDerivative
   SMobiusVariable :: SRepresentation 'MobiusVariable
   SXiAfterMobius :: SRepresentation 'XiAfterMobius
   SLogXiMobius :: SRepresentation 'LogXiMobius
@@ -102,6 +108,9 @@ representationValue SXiHeightZeroCutoff = XiHeightZeroCutoff
 representationValue SXiZeros = XiZeros
 representationValue SNontrivialZetaZero = NontrivialZetaZero
 representationValue SXiZero = XiZero
+representationValue SXiZeroOccurrences = XiZeroOccurrences
+representationValue SXiCanonicalProduct = XiCanonicalProduct
+representationValue SXiCanonicalProductLogDerivative = XiCanonicalProductLogDerivative
 representationValue SMobiusVariable = MobiusVariable
 representationValue SXiAfterMobius = XiAfterMobius
 representationValue SLogXiMobius = LogXiMobius
@@ -137,6 +146,9 @@ representationLabel XiHeightZeroCutoff = "Lagarias xi-zero Multiset cutoff |Im r
 representationLabel XiZeros = "multiset of nontrivial xi zeros"
 representationLabel NontrivialZetaZero = "a nontrivial Riemann-zeta zero s"
 representationLabel XiZero = "the corresponding zero xi(s)=0"
+representationLabel XiZeroOccurrences = "xi zeros expanded into analytic-multiplicity occurrences"
+representationLabel XiCanonicalProduct = "locally uniformly convergent intrinsic genus-one xi canonical product"
+representationLabel XiCanonicalProductLogDerivative = "occurrence-indexed logarithmic derivative of the xi canonical product"
 representationLabel MobiusVariable = "Mobius coordinate m(z)=-z/(1-z)"
 representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"

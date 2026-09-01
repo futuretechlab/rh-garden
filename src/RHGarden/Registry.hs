@@ -220,7 +220,13 @@ xiCutoffRef = Reference
 liStarConditionalRef :: Reference
 liStarConditionalRef = Reference
   { refShort = "RHGarden.LiStarConvergence"
-  , refCitation = "Conditional Lean theorems in formal/RHGarden/LiStarConvergence.lean; XiLocalZeroCountBound remains open."
+  , refCitation = "Lean theorems in formal/RHGarden/LiStarConvergence.lean and Zeta23LocalCount.lean; the local count premise is discharged by the pinned Zeta23 theorem."
+  }
+
+xiCanonicalProductRef :: Reference
+xiCanonicalProductRef = Reference
+  { refShort = "RHGarden.LiHadamardInfinite"
+  , refCitation = "Lean occurrence-indexed canonical-product convergence and logarithmic-derivative theorems in formal/RHGarden/LiHadamardInfinite.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference
@@ -302,6 +308,30 @@ divisorToHeightCutoff = eraseRepresentationEdge $ representationEdge
   ExactRepresentation leanCheckedTrust 1 xiCutoffRef
   "RHGarden.xiZeroHeightCutoff is Lagarias's multiplicity-aware height ordering; its support is finite by the unconditional critical-strip bound."
   (NoReconstruction "A single bounded-height cutoff does not reconstruct the global divisor.")
+  Nothing
+
+divisorToOccurrences :: RuntimeRepresentationEdge
+divisorToOccurrences = eraseRepresentationEdge $ representationEdge
+  SXiDivisor SXiZeroOccurrences "expand analytic multiplicities into zero occurrences"
+  ExactRepresentation leanCheckedTrust 1 xiCanonicalProductRef
+  "XiZeroOccurrence is the dependent sum of each supported xi zero with Fin xiMultiplicity."
+  (ExactInverse "Regroup each finite occurrence fiber to recover the divisor multiplicity.")
+  Nothing
+
+occurrencesToCanonicalProduct :: RuntimeRepresentationEdge
+occurrencesToCanonicalProduct = eraseRepresentationEdge $ representationEdge
+  SXiZeroOccurrences SXiCanonicalProduct "form the locally uniform genus-one occurrence product"
+  SufficientReduction leanCheckedTrust 1 xiCanonicalProductRef
+  "xiOccurrencePrimaryFactors_multipliableLocallyUniformly uses reciprocal-square summability and the E1 quadratic estimate."
+  (NoReconstruction "The canonical product alone does not retain a chosen occurrence labeling.")
+  Nothing
+
+canonicalProductToLogDerivative :: RuntimeRepresentationEdge
+canonicalProductToLogDerivative = eraseRepresentationEdge $ representationEdge
+  SXiCanonicalProduct SXiCanonicalProductLogDerivative "take the canonical-product logarithmic derivative"
+  ExactRepresentation leanCheckedTrust 1 xiCanonicalProductRef
+  "logDeriv_xiCanonicalProductOccurrences gives the exact occurrence-indexed partial-fraction tsum away from xi zeros."
+  (ReconstructionUpTo "A logarithmic derivative reconstructs a nonzero entire function up to a multiplicative constant on a connected domain.")
   Nothing
 
 heightCutoffToStarPartial :: RuntimeRepresentationEdge
@@ -567,6 +597,7 @@ representationGraph :: [RuntimeRepresentationEdge]
 representationGraph =
   [ xiMobius, mobiusCoordinate, phiLogDerivative, logToSeries, seriesToSequence
   , xiToZeros, xiToDivisor, divisorToRadialCutoff, divisorToHeightCutoff
+  , divisorToOccurrences, occurrencesToCanonicalProduct, canonicalProductToLogDerivative
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
