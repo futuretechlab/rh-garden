@@ -1,9 +1,11 @@
 # zeta-23-lean compatibility reconnaissance
 
-Status: the small completed-zeta/zeta analytic-order seam has now been adapted
-and checked natively in RH Garden stable Lean. The Riemann--von Mangoldt and
-partial-fraction stacks remain reference-only, and no trust classification is
-upgraded merely from their upstream existence.
+Status: the isolated `integration/zeta23-rc2` experiment establishes that the
+entire RH Garden formal layer compiles unchanged against Zeta23's rc2 Lean and
+Mathlib pins. The exact pinned Zeta23 dependency is accepted by the same Lean
+kernel, and a small adapter proves `RHGarden.xiLocalZeroCountBound` and hence
+unconditional existence of all height-ordered Li star limits. This experiment
+has not been merged into stable `main`.
 
 ## Reference revision and pins
 
@@ -16,8 +18,28 @@ Repository: `https://github.com/anthropics/zeta-23-lean`
 - Mathlib: commit `51e6992efd06126df61a496bebf8f49482a4e129`
   (`v4.33.0-rc2`).
 
-RH Garden uses Lean `v4.33.0` and Mathlib commit
-`db584cd6d46c92f209a44c0f1c829460d327499d` (`v4.33.0`).
+Stable RH Garden `main` uses Lean `v4.33.0` and Mathlib commit
+`db584cd6d46c92f209a44c0f1c829460d327499d` (`v4.33.0`). The isolated
+integration branch instead uses the upstream rc2 pins exactly.
+
+The audited Git URL currently checks out a monorepo root at this commit; its
+Lake package is in `zeta23/`. Accordingly the pinned dependency records
+`subDir = "zeta23"` rather than claiming the dependency source is vendored.
+
+## RC2 integration result
+
+- unchanged RH Garden source build: successful, 3639 jobs;
+- source compatibility adaptations required: zero files, zero lines;
+- imported theorem: `Zeta23.RvM.zeta_local_zero_count`;
+- imported theorem axioms: `propext`, `Classical.choice`, `Quot.sound` only;
+- adapter theorems: `zeta23_zerosIn_eq_rhGarden`,
+  `zeta23_Ncount_eq_rhGarden`, `xiLocalZeroCountBound`;
+- activated result: `liStarConvergence`.
+
+The adapter is externally authored at its analytic input but LeanChecked in
+proof trust: Zeta23 remains a pinned dependency and the theorem is checked by
+the same kernel invocation as RH Garden. Proof provenance and proof trust are
+therefore recorded separately.
 
 ## Zero representation
 
