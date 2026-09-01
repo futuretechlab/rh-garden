@@ -9,7 +9,7 @@ software integration, and resulting work were developed by Future
 Technologies Laboratory LLC with AI-assisted research and software
 development using OpenAI ChatGPT and Codex.
 
-The experimental `integration/zeta23-rc2` branch depends on, but does not
-include, the Apache-2.0 Zeta23 formalization authored by Anthropic PBC:
+RH Garden depends on, but does not vendor, the Apache-2.0 Zeta23
+formalization authored by Anthropic PBC:
 https://github.com/anthropics/zeta-23-lean, pinned at commit
 2bafb8c88f177284a2123b5fefa2ff84e2365eb6.

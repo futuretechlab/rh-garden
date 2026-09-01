@@ -1,11 +1,10 @@
 # zeta-23-lean compatibility reconnaissance
 
-Status: the isolated `integration/zeta23-rc2` experiment establishes that the
-entire RH Garden formal layer compiles unchanged against Zeta23's rc2 Lean and
-Mathlib pins. The exact pinned Zeta23 dependency is accepted by the same Lean
-kernel, and a small adapter proves `RHGarden.xiLocalZeroCountBound` and hence
-unconditional existence of all height-ordered Li star limits. This experiment
-has not been merged into stable `main`.
+Status: the successful `integration/zeta23-rc2` experiment is merged into
+`main`. The RH Garden formal layer uses Zeta23's rc2 Lean and Mathlib pins. The
+exact pinned Zeta23 dependency is accepted by the same Lean kernel, and a small
+adapter proves `RHGarden.xiLocalZeroCountBound` and hence unconditional
+existence of all height-ordered Li star limits.
 
 ## Reference revision and pins
 
@@ -18,9 +17,9 @@ Repository: `https://github.com/anthropics/zeta-23-lean`
 - Mathlib: commit `51e6992efd06126df61a496bebf8f49482a4e129`
   (`v4.33.0-rc2`).
 
-Stable RH Garden `main` uses Lean `v4.33.0` and Mathlib commit
-`db584cd6d46c92f209a44c0f1c829460d327499d` (`v4.33.0`). The isolated
-integration branch instead uses the upstream rc2 pins exactly.
+RH Garden `main` uses Lean `v4.33.0-rc2` and Mathlib commit
+`51e6992efd06126df61a496bebf8f49482a4e129` (`v4.33.0-rc2`), matching the
+upstream Zeta23 pins exactly.
 
 The audited Git URL currently checks out a monorepo root at this commit; its
 Lake package is in `zeta23/`. Accordingly the pinned dependency records
@@ -120,19 +119,16 @@ The central multiplicity adapter is now LeanChecked in
 under the nontrivial-zero/open-strip hypotheses.
 
 The same module defines the half-open window Multiset/count and proves
-`xiHeightWindowMultiplicityCount_eq_zeta`. Consequently
-`XiLocalZeroCountBound` now has exactly the conclusion shape of upstream's
-`zeta_local_zero_count`, but remains unproved in RH Garden.
+`xiHeightWindowMultiplicityCount_eq_zeta`. `RHGarden.Zeta23LocalCount` then
+identifies the upstream and RH Garden counts, proves `xiLocalZeroCountBound`,
+and derives unconditional `liStarConvergence`.
 
 ## Dependency feasibility
 
-A temporary stable-4.33.0 Lake project required both Mathlib `v4.33.0` and the
-local upstream package. Lake resolved the single package named `mathlib` to the
-upstream rc2 commit `51e6992...`, and also selected the upstream rc2-era
-transitive package revisions. It warned that these differ from the stable
-Mathlib dependency graph. Thus a direct dependency cannot preserve RH Garden's
-current stable Mathlib pin; Lake does not install two revisions of one package
-side by side.
+A temporary stable-4.33.0 experiment showed that Lake resolves the single
+package named `mathlib` to Zeta23's rc2 commit. RH Garden therefore adopted the
+matching rc2 Lean and Mathlib pins on `main`; Lake does not install two
+revisions of one package side by side.
 
 The transitive `Zeta23.*` import closure of `Zeta23.RvM.LocalCount` contains 21
 source modules and approximately 7,846 lines. It includes the large
@@ -189,29 +185,30 @@ height-ordered sum of `1/ρ`, or identifies a derivative Li coefficient with a
 star zero sum. In particular, `zero_sum_inv_sq` supplies the higher-power
 majorant but not the conditionally convergent `k = 1` reciprocal-zero term.
 
-## Minimal star-convergence route
+## Integrated star-convergence route
 
 ```text
 RH Garden LeanChecked
   xi divisor, multiplicity, height cutoff, finite G_n algebra
         |
         v
-small adapters
+LeanChecked adapters
   zeta-zero predicate equivalence
   zeta-order = xi-order at nontrivial zeros
   upstream Ncount = RH Garden height-window multiplicity count
         |
         v
-upstream, not yet integrated
+upstream, pinned external dependency
   zeta_local_zero_count
   zero_sum_inv_sq / its underlying unit-window summation
         |
-        +--> small new algebra
+        +--> RH Garden convergence algebra
         |      expand G_n(ρ) as a finite sum of ρ⁻ᵏ
         |      absolute convergence for k ≥ 2
+        |      paired height convergence of Σ 1/ρ
+        |      all integer-indexed Li star limits exist
         |
-        +--> substantial missing analysis
-               paired height convergence of Σ 1/ρ
+        +--> remaining Hadamard/log-derivative boundary
                identify its limit through xi's logarithmic derivative
                derivative-defined Li = negative-index star limit
 ```
@@ -220,15 +217,14 @@ The explicit-formula theorem may eventually offer a second route, but its test
 class does not contain the non-decaying Li test without an approximation and
 limit argument.
 
-## Recommended integration boundary
+## Current analytic boundary
 
-First port or adapt only the zero-representation seam and
-`zeta_local_zero_count` to stable Mathlib, then expose one RH Garden theorem
-whose conclusion is stated directly with `xiMultiplicity` on `(t,t+1]`.
-Only after that theorem builds in RH Garden should the graph edge be upgraded.
-The next implementation after local counting should extract absolute
-convergence for reciprocal powers `k ≥ 2`; the paired `Σ 1/ρ` limit remains a
-separate analytic milestone.
+The zero-representation seam, local count, reciprocal-power convergence, and
+height-star convergence now build together on `main`. The remaining theorem is
+value identification: a xi-specific genus-one Hadamard factorization, locally
+uniform logarithmic-derivative passage near `s = 1`, determination of the
+linear exponential constant from xi symmetry, and identification of the
+classical Li coefficient with the corresponding negative-index star limit.
 
 ## Partial-fraction route comparison
 
