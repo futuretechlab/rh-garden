@@ -38,56 +38,144 @@ theorem xiCanonicalProductOccurrences_eq_zero_iff (s : ℂ) :
     exact xiCanonicalProductOccurrences_ne_zero
   · exact xiCanonicalProductOccurrences_eq_zero_of_riemannXi_eq_zero
 
+/-- An opaque wrapper around the dependent occurrence sigma, used to keep
+infinite-product partition elaboration small in Lean 4.33.0-rc2. -/
+structure XiProductOccurrence where
+  occurrence : XiZeroOccurrence
+
+namespace XiProductOccurrence
+
+def zero (a : XiProductOccurrence) : XiZero := a.occurrence.zero
+
+end XiProductOccurrence
+
+def xiProductOccurrenceEquiv : XiProductOccurrence ≃ XiZeroOccurrence where
+  toFun := XiProductOccurrence.occurrence
+  invFun := XiProductOccurrence.mk
+  left_inv a := by cases a; rfl
+  right_inv _ := rfl
+
+def xiProductOccurrenceFactor (a : XiProductOccurrence) (s : ℂ) : ℂ :=
+  xiOccurrencePrimaryFactor a.occurrence s
+
+/-- The predicate selecting the occurrence fiber belonging to one fixed xi zero. -/
+def xiOccurrencesAtSet (ρ : XiZero) : Set XiProductOccurrence :=
+  {a | a.occurrence.value = (ρ : ℂ)}
+
 /-- The finite occurrence fiber belonging to one fixed xi zero. -/
-abbrev XiOccurrencesAt (ρ : XiZero) :=
-  {a : XiZeroOccurrence // a.zero = ρ}
+abbrev XiOccurrencesAt (ρ : XiZero) := xiOccurrencesAtSet ρ
+
+/-- The complementary occurrence fiber away from one fixed xi zero. -/
+abbrev XiOccurrencesAwayFrom (ρ : XiZero) :=
+  {a : XiProductOccurrence // a ∈ (xiOccurrencesAtSet ρ)ᶜ}
 
 /-- The fixed-zero occurrence fiber is exactly its finite multiplicity index. -/
 def xiOccurrencesAtEquiv (ρ : XiZero) :
     XiOccurrencesAt ρ ≃ Fin (xiMultiplicity (ρ : ℂ)) where
   toFun a := by
-    rcases a with ⟨⟨ρ', j⟩, h⟩
-    change ρ' = ρ at h
+    rcases a with ⟨⟨⟨ρ', j⟩⟩, h⟩
+    have hz : ρ' = ρ := Subtype.ext h
     subst ρ'
     exact j
-  invFun j := ⟨⟨ρ, j⟩, rfl⟩
+  invFun j := ⟨⟨⟨ρ, j⟩⟩, rfl⟩
   left_inv a := by
-    rcases a with ⟨⟨ρ', j⟩, hρ⟩
-    change ρ' = ρ at hρ
+    rcases a with ⟨⟨⟨ρ', j⟩⟩, hρ⟩
+    have hz : ρ' = ρ := Subtype.ext hρ
     subst ρ'
     rfl
   right_inv j := rfl
 
 /-- The canonical product with the occurrence fiber at `ρ` omitted. -/
 noncomputable def xiCanonicalProductAwayFrom (ρ : XiZero) (s : ℂ) : ℂ :=
-  ∏' a : {a : XiZeroOccurrence // a.zero ≠ ρ},
-    xiOccurrencePrimaryFactor a.1 s
+  ∏' a : XiOccurrencesAwayFrom ρ, xiProductOccurrenceFactor a.1 s
+
+private theorem tprod_equiv
+    {ι κ M : Type*} [CommMonoid M] [TopologicalSpace M]
+    (e : ι ≃ κ) (f : κ → M) :
+    (∏' i, f (e i)) = ∏' k, f k :=
+  e.tprod_eq f
+
+private theorem multipliable_equiv
+    {ι κ M : Type*} [CommMonoid M] [TopologicalSpace M]
+    (e : ι ≃ κ) (f : κ → M) (hf : Multipliable f) :
+    Multipliable (fun i => f (e i)) :=
+  e.multipliable_iff.mpr hf
+
+private theorem tprod_partition_of_subproducts
+    {ι M : Type*} [CommMonoid M] [TopologicalSpace M] [T2Space M] [ContinuousMul M]
+    (S : Set ι) (f : ι → M)
+    (hs : Multipliable (fun i : S => f i.1))
+    (hsc : Multipliable (fun i : {j // j ∈ Sᶜ} => f i.1)) :
+    (∏' i : S, f i.1) * (∏' i : {j // j ∈ Sᶜ}, f i.1) = ∏' i, f i :=
+  Multipliable.tprod_mul_tprod_compl hs hsc
+
+private theorem xiProductOccurrence_multipliable (s : ℂ) :
+    Multipliable (fun a : XiProductOccurrence => xiProductOccurrenceFactor a s) :=
+  multipliable_equiv xiProductOccurrenceEquiv
+    (fun a : XiZeroOccurrence => xiOccurrencePrimaryFactor a s)
+    (xiOccurrencePrimaryFactors_multipliableLocallyUniformly.multipliable
+      (Set.mem_univ s))
+
+private theorem xiProductOccurrence_tprod_eq (s : ℂ) :
+    (∏' a : XiProductOccurrence, xiProductOccurrenceFactor a s) =
+      xiCanonicalProductOccurrences s := by
+  calc
+    _ = ∏' a : XiZeroOccurrence, xiOccurrencePrimaryFactor a s :=
+      tprod_equiv xiProductOccurrenceEquiv
+        (fun a : XiZeroOccurrence => xiOccurrencePrimaryFactor a s)
+    _ = xiCanonicalProductOccurrences s := rfl
+
+private theorem xiOccurrencesAt_multipliable (ρ : XiZero) (s : ℂ) :
+    Multipliable (fun a : XiOccurrencesAt ρ => xiProductOccurrenceFactor a.1 s) := by
+  letI : Fintype (XiOccurrencesAt ρ) :=
+    Fintype.ofEquiv (Fin (xiMultiplicity (ρ : ℂ))) (xiOccurrencesAtEquiv ρ).symm
+  exact Multipliable.of_finite
+
+private theorem xiOccurrencesAwayFrom_multipliable (ρ : XiZero) (s : ℂ) :
+    Multipliable (fun a : XiOccurrencesAwayFrom ρ =>
+      xiProductOccurrenceFactor a.1 s) := by
+  have hinc : Function.Injective
+      (fun a : XiOccurrencesAwayFrom ρ => a.1.occurrence) := by
+    intro a b h
+    apply Subtype.ext
+    exact xiProductOccurrenceEquiv.injective h
+  have hsumm : Summable (fun a : XiOccurrencesAwayFrom ρ =>
+      xiOccurrencePrimaryDelta a.1.occurrence s) :=
+    (xiOccurrencePrimaryDelta_summableLocallyUniformly.summable
+      (Set.mem_univ s)).comp_injective hinc
+  simpa [xiProductOccurrenceFactor, xiOccurrencePrimaryDelta, add_comm] using
+    multipliable_one_add_of_summable hsumm.norm
+
+private theorem xiProductOccurrence_partition (ρ : XiZero) (s : ℂ) :
+    (∏' a : {x // x ∈ xiOccurrencesAtSet ρ}, xiProductOccurrenceFactor a.1 s) *
+      (∏' a : {x // x ∈ (xiOccurrencesAtSet ρ)ᶜ},
+        xiProductOccurrenceFactor a.1 s) =
+        ∏' a : XiProductOccurrence, xiProductOccurrenceFactor a s :=
+  tprod_partition_of_subproducts (xiOccurrencesAtSet ρ)
+    (fun a : XiProductOccurrence => xiProductOccurrenceFactor a s)
+    (xiOccurrencesAt_multipliable ρ s) (xiOccurrencesAwayFrom_multipliable ρ s)
 
 theorem xiCanonicalProductOccurrences_split (ρ : XiZero) (s : ℂ) :
-    xiCanonicalProductOccurrences s =
-      (∏' a : XiOccurrencesAt ρ, xiOccurrencePrimaryFactor a.1 s) *
-        xiCanonicalProductAwayFrom ρ s := by
-  have hm : Multipliable (fun a : XiZeroOccurrence => xiOccurrencePrimaryFactor a s) :=
-    xiOccurrencePrimaryFactors_multipliableLocallyUniformly.multipliable (Set.mem_univ s)
-  have hsplit := hm.tprod_subtype_mul_tprod_subtype_compl
-    {a : XiZeroOccurrence | a.zero = ρ}
-  simpa only [xiCanonicalProductOccurrences, xiCanonicalProductAwayFrom,
-    Set.mem_setOf_eq, Set.mem_compl_iff] using hsplit.symm
+    (∏' a : {x // x ∈ xiOccurrencesAtSet ρ}, xiProductOccurrenceFactor a.1 s) *
+      (∏' a : {x // x ∈ (xiOccurrencesAtSet ρ)ᶜ},
+        xiProductOccurrenceFactor a.1 s) =
+        xiCanonicalProductOccurrences s := by
+  exact (xiProductOccurrence_partition ρ s).trans (xiProductOccurrence_tprod_eq s)
 
 theorem xiOccurrencesAt_product (ρ : XiZero) (s : ℂ) :
-    (∏' a : XiOccurrencesAt ρ, xiOccurrencePrimaryFactor a.1 s) =
+    (∏' a : XiOccurrencesAt ρ, xiProductOccurrenceFactor a.1 s) =
       primaryFactorOne (s / (ρ : ℂ)) ^ xiMultiplicity (ρ : ℂ) := by
   letI : Fintype (XiOccurrencesAt ρ) :=
     Fintype.ofEquiv (Fin (xiMultiplicity (ρ : ℂ))) (xiOccurrencesAtEquiv ρ).symm
   rw [tprod_fintype]
   calc
-    (∏ a : XiOccurrencesAt ρ, xiOccurrencePrimaryFactor a.1 s) =
+    (∏ a : XiOccurrencesAt ρ, xiProductOccurrenceFactor a.1 s) =
         ∏ _j : Fin (xiMultiplicity (ρ : ℂ)),
           primaryFactorOne (s / (ρ : ℂ)) := by
       apply Fintype.prod_equiv (xiOccurrencesAtEquiv ρ)
       intro a
-      rcases a with ⟨⟨ρ', j⟩, hρ⟩
-      change ρ' = ρ at hρ
+      rcases a with ⟨⟨⟨ρ', j⟩⟩, hρ⟩
+      have hz : ρ' = ρ := Subtype.ext hρ
       subst ρ'
       rfl
     _ = primaryFactorOne (s / (ρ : ℂ)) ^ xiMultiplicity (ρ : ℂ) :=
@@ -98,36 +186,47 @@ theorem xiCanonicalProductOccurrences_eq_primaryFactor_mul_away
     xiCanonicalProductOccurrences s =
       primaryFactorOne (s / (ρ : ℂ)) ^ xiMultiplicity (ρ : ℂ) *
         xiCanonicalProductAwayFrom ρ s := by
-  rw [xiCanonicalProductOccurrences_split, xiOccurrencesAt_product]
+  rw [← xiCanonicalProductOccurrences_split ρ s, xiOccurrencesAt_product]
+  rfl
 
 private theorem xiAwayPrimaryFactors_multipliableLocallyUniformly (ρ : XiZero) :
     MultipliableLocallyUniformlyOn
-      (fun a : {a : XiZeroOccurrence // a.zero ≠ ρ} =>
-        xiOccurrencePrimaryFactor a.1) Set.univ := by
+      (fun a : XiOccurrencesAwayFrom ρ =>
+        xiProductOccurrenceFactor a.1) Set.univ := by
   apply HasProdLocallyUniformlyOn.multipliableLocallyUniformlyOn
   apply hasProdLocallyUniformlyOn_of_forall_compact isOpen_univ
   intro K _ hK
   obtain ⟨u, hu, hbound⟩ := xiOccurrencePrimaryDelta_compact_majorant K hK
-  let v : {a : XiZeroOccurrence // a.zero ≠ ρ} → ℝ := fun a => u a.1
-  have hv : Summable v := hu.comp_injective Subtype.coe_injective
-  have hbound' : ∀ᶠ a : {a : XiZeroOccurrence // a.zero ≠ ρ} in cofinite,
-      ∀ s ∈ K, ‖xiOccurrencePrimaryDelta a.1 s‖ ≤ v a := by
-    exact Subtype.coe_injective.tendsto_cofinite.eventually hbound
+  let v : XiOccurrencesAwayFrom ρ → ℝ := fun a => u a.1.occurrence
+  have hinc : Function.Injective (fun a : XiOccurrencesAwayFrom ρ => a.1.occurrence) := by
+    intro a b h
+    apply Subtype.ext
+    exact xiProductOccurrenceEquiv.injective h
+  have hv : Summable v := hu.comp_injective hinc
+  have hbound' : ∀ᶠ a : XiOccurrencesAwayFrom ρ in cofinite,
+      ∀ s ∈ K, ‖xiOccurrencePrimaryDelta a.1.occurrence s‖ ≤ v a := by
+    exact hinc.tendsto_cofinite.eventually hbound
   have hprod := Summable.hasProdUniformlyOn_one_add hK hv hbound'
-    (fun a => ((differentiable_xiOccurrencePrimaryFactor a.1).continuous.sub
+    (fun a => ((differentiable_xiOccurrencePrimaryFactor a.1.occurrence).continuous.sub
       continuous_const).continuousOn)
+  change HasProdUniformlyOn
+    (fun a : XiOccurrencesAwayFrom ρ =>
+      xiOccurrencePrimaryFactor a.1.occurrence)
+    (fun s => ∏' a : XiOccurrencesAwayFrom ρ,
+      xiOccurrencePrimaryFactor a.1.occurrence s) K
   simpa [xiOccurrencePrimaryDelta, v] using hprod
 
 theorem differentiable_xiCanonicalProductAwayFrom (ρ : XiZero) :
     Differentiable ℂ (xiCanonicalProductAwayFrom ρ) := by
+  unfold xiCanonicalProductAwayFrom
   change Differentiable ℂ (fun s : ℂ =>
-    ∏' a : {a : XiZeroOccurrence // a.zero ≠ ρ},
-      xiOccurrencePrimaryFactor a.1 s)
+    ∏' a : XiOccurrencesAwayFrom ρ,
+      xiProductOccurrenceFactor a.1 s)
   have hd := (xiAwayPrimaryFactors_multipliableLocallyUniformly ρ)
     |>.hasProdLocallyUniformlyOn.differentiableOn
       (.of_forall <| by
         intro u
-        simp only [xiOccurrencePrimaryFactor, primaryFactorOne]
+        simp only [xiProductOccurrenceFactor, xiOccurrencePrimaryFactor, primaryFactorOne]
         fun_prop)
       isOpen_univ
   exact fun s => (hd s (Set.mem_univ s)).differentiableAt Filter.univ_mem
@@ -136,21 +235,24 @@ theorem xiCanonicalProductAwayFrom_ne_zero (ρ : XiZero) :
     xiCanonicalProductAwayFrom ρ (ρ : ℂ) ≠ 0 := by
   have hsumm := xiOccurrencePrimaryDelta_summableLocallyUniformly.summable
     (x := (ρ : ℂ)) (Set.mem_univ _)
-  have hsumm' : Summable (fun a : {a : XiZeroOccurrence // a.zero ≠ ρ} =>
-      xiOccurrencePrimaryDelta a.1 (ρ : ℂ)) :=
-    hsumm.comp_injective Subtype.coe_injective
+  have hsumm' : Summable (fun a : XiOccurrencesAwayFrom ρ =>
+      xiOccurrencePrimaryDelta a.1.occurrence (ρ : ℂ)) := by
+    apply hsumm.comp_injective
+    intro a b h
+    apply Subtype.ext
+    exact xiProductOccurrenceEquiv.injective h
   have hne := tprod_one_add_ne_zero_of_summable
-    (f := fun a : {a : XiZeroOccurrence // a.zero ≠ ρ} =>
-      xiOccurrencePrimaryDelta a.1 (ρ : ℂ))
+    (f := fun a : XiOccurrencesAwayFrom ρ =>
+      xiOccurrencePrimaryDelta a.1.occurrence (ρ : ℂ))
     (fun a => by
       simpa [xiOccurrencePrimaryDelta] using
-        xiOccurrencePrimaryFactor_ne_zero (by
+        xiOccurrencePrimaryFactor_ne_zero (a := a.1.occurrence) (by
           intro h
           apply a.2
-          apply Subtype.ext
-          simpa [XiZeroOccurrence.zero, XiZeroOccurrence.value] using h.symm))
+          exact h.symm))
     hsumm'.norm
-  simpa [xiCanonicalProductAwayFrom, xiOccurrencePrimaryDelta] using hne
+  simpa [xiCanonicalProductAwayFrom, xiProductOccurrenceFactor,
+    xiOccurrencePrimaryDelta] using hne
 
 theorem analyticOrderAt_primaryFactorOne_div_self (ρ : XiZero) :
     analyticOrderAt (fun s : ℂ => primaryFactorOne (s / (ρ : ℂ))) (ρ : ℂ) = 1 := by
@@ -168,8 +270,8 @@ theorem analyticOrderAt_primaryFactorOne_div_self (ρ : XiZero) :
     field_simp [ρ.ne_zero]
     ring
   have hcenter : analyticOrderAt (fun s : ℂ => s - (ρ : ℂ)) (ρ : ℂ) = 1 := by
-    simpa only [pow_one] using
-      (analyticOrderAt_centeredMonomial (𝕜 := ℂ) (z₀ := (ρ : ℂ)) (n := 1))
+    convert (analyticOrderAt_centeredMonomial
+      (𝕜 := ℂ) (z₀ := (ρ : ℂ)) (n := 1)) using 1 <;> simp
   rw [hfun, analyticOrderAt_mul (by fun_prop) hu, hcenter,
     hu.analyticOrderAt_eq_zero.mpr hu0]
   simp
@@ -187,6 +289,10 @@ theorem analyticOrderNatAt_primaryFactorMultiplicity (ρ : XiZero) :
       simp [analyticOrderNatAt, analyticOrderAt_primaryFactorOne_div_self]]
   simp
 
+theorem analyticAt_primaryFactorOne_div (ρ : XiZero) (s : ℂ) :
+    AnalyticAt ℂ (fun z => primaryFactorOne (z / (ρ : ℂ))) s :=
+  (differentiable_primaryFactorOne_div (ρ : ℂ)).analyticAt s
+
 theorem analyticOrderNatAt_xiCanonicalProductOccurrences_at_zero (ρ : XiZero) :
     analyticOrderNatAt xiCanonicalProductOccurrences (ρ : ℂ) =
       xiMultiplicity (ρ : ℂ) := by
@@ -200,10 +306,10 @@ theorem analyticOrderNatAt_xiCanonicalProductOccurrences_at_zero (ρ : XiZero) :
       ((fun s : ℂ => primaryFactorOne (s / (ρ : ℂ))) ^ xiMultiplicity (ρ : ℂ) *
         xiCanonicalProductAwayFrom ρ) (ρ : ℂ) = _
   rw [analyticOrderNatAt_mul
-    ((differentiable_primaryFactorOne_div (ρ : ℂ)).pow _ |>.analyticAt _)
+    ((analyticAt_primaryFactorOne_div ρ _).pow _)
     ((differentiable_xiCanonicalProductAwayFrom ρ).analyticAt _)
     (by
-      rw [analyticOrderAt_pow]
+      rw [analyticOrderAt_pow (analyticAt_primaryFactorOne_div ρ _)]
       simp [analyticOrderAt_primaryFactorOne_div_self])
     (by
       exact ne_of_eq_of_ne
@@ -239,7 +345,7 @@ theorem analyticOrderAt_xiCanonicalProductOccurrences_ne_top (s : ℂ) :
     analyticOrderAt xiCanonicalProductOccurrences s ≠ ⊤ := by
   intro htop
   have hzero := (AnalyticOnNhd.analyticOrderAt_eq_top_iff_eq_zero s
-    (fun z _ => differentiable_xiCanonicalProductOccurrences.analyticAt z)).mp htop
+    (fun z => differentiable_xiCanonicalProductOccurrences.analyticAt z)).mp htop
   have := congrFun hzero 0
   simpa [xiCanonicalProductOccurrences_zero] using this
 
@@ -263,13 +369,15 @@ theorem meromorphicOn_xiRawQuotient : MeromorphicOn xiRawQuotient Set.univ := by
 
 theorem meromorphicOrderAt_xiRawQuotient (s : ℂ) :
     meromorphicOrderAt xiRawQuotient s = 0 := by
+  unfold xiRawQuotient
+  change meromorphicOrderAt (riemannXi / xiCanonicalProductOccurrences) s = 0
   rw [meromorphicOrderAt_div
     (analyticAt_riemannXi s).meromorphicAt
     (differentiable_xiCanonicalProductOccurrences.analyticAt s).meromorphicAt,
     (analyticAt_riemannXi s).meromorphicOrderAt_eq,
     (differentiable_xiCanonicalProductOccurrences.analyticAt s).meromorphicOrderAt_eq,
     analyticOrderAt_xiCanonicalProduct_eq_riemannXi]
-  simp
+  simp [analyticOrderAt_riemannXi_ne_top s]
 
 /-- The canonical normal-form extension of the xi/canonical-product quotient. -/
 noncomputable def xiZeroFreeQuotient : ℂ → ℂ :=
@@ -278,10 +386,13 @@ noncomputable def xiZeroFreeQuotient : ℂ → ℂ :=
 theorem analyticOnNhd_xiZeroFreeQuotient :
     AnalyticOnNhd ℂ xiZeroFreeQuotient Set.univ := by
   have hnf := meromorphicNFOn_toMeromorphicNFOn xiRawQuotient Set.univ
+  change AnalyticOnNhd ℂ (toMeromorphicNFOn xiRawQuotient Set.univ) Set.univ
   rw [← hnf.divisor_nonneg_iff_analyticOnNhd]
   intro s
-  simp [xiZeroFreeQuotient, meromorphicOn_xiRawQuotient,
-    meromorphicOrderAt_xiRawQuotient]
+  rw [hnf.meromorphicOn.divisor_apply (Set.mem_univ s)]
+  rw [meromorphicOrderAt_toMeromorphicNFOn meromorphicOn_xiRawQuotient
+    (Set.mem_univ s), meromorphicOrderAt_xiRawQuotient]
+  exact le_rfl
 
 theorem differentiable_xiZeroFreeQuotient :
     Differentiable ℂ xiZeroFreeQuotient := fun s =>
@@ -314,10 +425,11 @@ theorem riemannXi_eq_zeroFreeQuotient_mul_canonicalProduct (s : ℂ) :
 
 theorem xiZeroFreeQuotient_divisor_zero :
     MeromorphicOn.divisor xiZeroFreeQuotient Set.univ = 0 := by
+  change MeromorphicOn.divisor (toMeromorphicNFOn xiRawQuotient Set.univ) Set.univ = 0
+  rw [meromorphicOn_xiRawQuotient.divisor_of_toMeromorphicNFOn]
   ext s
-  simp [analyticOnNhd_xiZeroFreeQuotient.meromorphicOn,
-    meromorphicOrderAt_toMeromorphicNFOn, xiZeroFreeQuotient,
-    meromorphicOn_xiRawQuotient, meromorphicOrderAt_xiRawQuotient]
+  rw [meromorphicOn_xiRawQuotient.divisor_apply (Set.mem_univ s)]
+  simp [meromorphicOrderAt_xiRawQuotient]
 
 /-- The sole remaining xi-specific growth gate for the affine factorization. -/
 def XiQuotientSubquadraticGrowth : Prop :=
