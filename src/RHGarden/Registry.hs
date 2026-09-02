@@ -355,6 +355,30 @@ canonicalProductToLogDerivative = eraseRepresentationEdge $ representationEdge
   (ReconstructionUpTo "A logarithmic derivative reconstructs a nonzero entire function up to a multiplicative constant on a connected domain.")
   Nothing
 
+xiAndCanonicalProductToZeroFreeQuotient :: RuntimeRepresentationEdge
+xiAndCanonicalProductToZeroFreeQuotient = eraseRepresentationEdge $ representationEdge
+  SXiCanonicalProduct SXiZeroFreeQuotient "remove the common xi divisor"
+  SufficientReduction leanCheckedTrust 2 xiCanonicalProductRef
+  "RHGarden.xiZeroFreeQuotient is the canonical meromorphic normal-form extension; its order is zero everywhere."
+  (ExactInverse "RHGarden.riemannXi_eq_zeroFreeQuotient_mul_canonicalProduct reconstructs xi globally.")
+  Nothing
+
+zeroFreeQuotientToGrowth :: RuntimeRepresentationEdge
+zeroFreeQuotientToGrowth = eraseRepresentationEdge $ representationEdge
+  SXiZeroFreeQuotient SXiQuotientSubquadraticGrowth "prove quotient subquadratic growth"
+  InformationLoss conjecturalTrust 3 xiCanonicalProductRef
+  "This is the remaining minimum-modulus/Cartan growth seam; xi's upper bound alone does not prove it."
+  (NoReconstruction "A growth bound does not reconstruct the quotient.")
+  Nothing
+
+quotientGrowthToAffineFactorization :: RuntimeRepresentationEdge
+quotientGrowthToAffineFactorization = eraseRepresentationEdge $ representationEdge
+  SXiQuotientSubquadraticGrowth SXiAffineFactorization "apply the generic exp-affine theorem"
+  SufficientReduction leanCheckedTrust 1 xiCanonicalProductRef
+  "RHGarden.riemannXi_eq_exp_affine_mul_canonicalProduct_of_quotient_growth is LeanChecked conditionally on the open growth proposition."
+  (ExactInverse "The conclusion supplies the affine exponential factor multiplying the canonical product.")
+  Nothing
+
 heightCutoffToStarPartial :: RuntimeRepresentationEdge
 heightCutoffToStarPartial = eraseRepresentationEdge $ representationEdge
   SXiHeightZeroCutoff SLiStarPartialSums "evaluate Lagarias height-ordered Li sums"
@@ -620,6 +644,8 @@ representationGraph =
   , xiToZeros, xiToDivisor, xiToSubquadraticGrowth, subquadraticZeroFreeToExpAffine
   , divisorToRadialCutoff, divisorToHeightCutoff
   , divisorToOccurrences, occurrencesToCanonicalProduct, canonicalProductToLogDerivative
+  , xiAndCanonicalProductToZeroFreeQuotient, zeroFreeQuotientToGrowth
+  , quotientGrowthToAffineFactorization
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil

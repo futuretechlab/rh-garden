@@ -93,7 +93,7 @@ theorem norm_primaryFactorOne_sub_one_le {w : ℂ} (hw : ‖w‖ ≤ 1 / 2) :
       simpa only [norm_mul] using mul_le_mul_of_nonneg_left hlin (norm_nonneg w)
     _ ≤ 4 * ‖w‖ ^ 2 := by nlinarith [sq_nonneg ‖w‖]
 
-private theorem xiOccurrencePrimaryDelta_compact_majorant
+theorem xiOccurrencePrimaryDelta_compact_majorant
     (K : Set ℂ) (hK : IsCompact K) :
     ∃ u : XiZeroOccurrence → ℝ, Summable u ∧
       ∀ᶠ a : XiZeroOccurrence in Filter.cofinite,

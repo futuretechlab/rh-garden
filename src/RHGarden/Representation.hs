@@ -35,6 +35,9 @@ data Representation
   | XiZeroOccurrences
   | XiCanonicalProduct
   | XiCanonicalProductLogDerivative
+  | XiZeroFreeQuotient
+  | XiQuotientSubquadraticGrowth
+  | XiAffineFactorization
   | MobiusVariable
   | XiAfterMobius
   | LogXiMobius
@@ -77,6 +80,9 @@ data SRepresentation (r :: Representation) where
   SXiZeroOccurrences :: SRepresentation 'XiZeroOccurrences
   SXiCanonicalProduct :: SRepresentation 'XiCanonicalProduct
   SXiCanonicalProductLogDerivative :: SRepresentation 'XiCanonicalProductLogDerivative
+  SXiZeroFreeQuotient :: SRepresentation 'XiZeroFreeQuotient
+  SXiQuotientSubquadraticGrowth :: SRepresentation 'XiQuotientSubquadraticGrowth
+  SXiAffineFactorization :: SRepresentation 'XiAffineFactorization
   SMobiusVariable :: SRepresentation 'MobiusVariable
   SXiAfterMobius :: SRepresentation 'XiAfterMobius
   SLogXiMobius :: SRepresentation 'LogXiMobius
@@ -120,6 +126,9 @@ representationValue SXiZero = XiZero
 representationValue SXiZeroOccurrences = XiZeroOccurrences
 representationValue SXiCanonicalProduct = XiCanonicalProduct
 representationValue SXiCanonicalProductLogDerivative = XiCanonicalProductLogDerivative
+representationValue SXiZeroFreeQuotient = XiZeroFreeQuotient
+representationValue SXiQuotientSubquadraticGrowth = XiQuotientSubquadraticGrowth
+representationValue SXiAffineFactorization = XiAffineFactorization
 representationValue SMobiusVariable = MobiusVariable
 representationValue SXiAfterMobius = XiAfterMobius
 representationValue SLogXiMobius = LogXiMobius
@@ -161,6 +170,9 @@ representationLabel XiZero = "the corresponding zero xi(s)=0"
 representationLabel XiZeroOccurrences = "xi zeros expanded into analytic-multiplicity occurrences"
 representationLabel XiCanonicalProduct = "locally uniformly convergent intrinsic genus-one xi canonical product"
 representationLabel XiCanonicalProductLogDerivative = "occurrence-indexed logarithmic derivative of the xi canonical product"
+representationLabel XiZeroFreeQuotient = "entire everywhere-nonzero xi/canonical-product quotient"
+representationLabel XiQuotientSubquadraticGrowth = "open subquadratic growth bound for the xi quotient"
+representationLabel XiAffineFactorization = "xi as an affine exponential times its canonical product"
 representationLabel MobiusVariable = "Mobius coordinate m(z)=-z/(1-z)"
 representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"

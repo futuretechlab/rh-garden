@@ -20,3 +20,4 @@ import RHGarden.LiHadamardFinite
 import RHGarden.LiHadamardInfinite
 import RHGarden.LiHadamardGrowth
 import RHGarden.LiExpAffine
+import RHGarden.LiXiQuotient
