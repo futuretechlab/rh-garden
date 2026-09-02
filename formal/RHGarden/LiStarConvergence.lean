@@ -10,6 +10,7 @@ commit 2bafb8c88f177284a2123b5fefa2ff84e2365eb6.
 -/
 
 import RHGarden.ZetaMultiplicity
+import Mathlib.Analysis.SpecialFunctions.Pow.Asymptotics
 
 noncomputable section
 
@@ -87,6 +88,57 @@ private lemma summable_liWeight :
   rw [Real.norm_eq_abs, abs_of_nonneg h0]
   exact liWeight_le n hn
 
+private lemma summable_threeHalvesWindowWeight :
+    Summable (fun n : ℤ ↦
+      Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))) := by
+  have harg : Tendsto (fun n : ℤ ↦ |(n : ℝ)| + 3) cofinite atTop := by
+    have hnorm : Tendsto (fun n : ℤ ↦ ‖(n : ℝ)‖) cofinite atTop :=
+      tendsto_norm_cocompact_atTop.comp Int.tendsto_coe_cofinite
+    simpa only [Real.norm_eq_abs] using
+      tendsto_atTop_add_const_right cofinite 3 hnorm
+  have hlog : ∀ᶠ n : ℤ in cofinite,
+      ‖Real.log (|(n : ℝ)| + 3)‖ ≤ ‖(|(n : ℝ)| + 3) ^ (1 / 4 : ℝ)‖ :=
+    harg.eventually ((isLittleO_log_rpow_atTop
+      (show (0 : ℝ) < 1 / 4 by norm_num)).eventuallyLE)
+  refine Summable.of_norm_bounded_eventually
+    ((Real.summable_abs_int_rpow (show (1 : ℝ) < 5 / 4 by norm_num)).mul_left
+      ((4 : ℝ) ^ (1 / 4 : ℝ))) ?_
+  filter_upwards [hlog, eventually_cofinite_ne 0] with n hnlog hn0
+  have hn1 : (1 : ℝ) ≤ |(n : ℝ)| := by
+    exact_mod_cast Int.one_le_abs hn0
+  have hnpos : (0 : ℝ) < |(n : ℝ)| := lt_of_lt_of_le zero_lt_one hn1
+  have hlog' : Real.log (|(n : ℝ)| + 3) ≤
+      (|(n : ℝ)| + 3) ^ (1 / 4 : ℝ) := by
+    have hlognon : 0 ≤ Real.log (|(n : ℝ)| + 3) :=
+      Real.log_nonneg (by linarith [abs_nonneg (n : ℝ)])
+    have hrpownon : 0 ≤ (|(n : ℝ)| + 3) ^ (1 / 4 : ℝ) :=
+      Real.rpow_nonneg (by linarith [abs_nonneg (n : ℝ)]) _
+    rw [Real.norm_eq_abs, abs_of_nonneg hlognon,
+      Real.norm_eq_abs, abs_of_nonneg hrpownon] at hnlog
+    exact hnlog
+  have hquarter : (|(n : ℝ)| + 3) ^ (1 / 4 : ℝ) ≤
+      (4 * |(n : ℝ)|) ^ (1 / 4 : ℝ) :=
+    Real.rpow_le_rpow (by positivity) (by linarith) (by norm_num)
+  calc
+    ‖Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))‖ =
+        Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ)) := by
+          rw [Real.norm_eq_abs, abs_of_nonneg]
+          exact mul_nonneg (Real.log_nonneg (by linarith [abs_nonneg (n : ℝ)]))
+            (Real.rpow_nonneg (abs_nonneg _) _)
+    _ ≤ (|(n : ℝ)| + 3) ^ (1 / 4 : ℝ) *
+        |(n : ℝ)| ^ (-(3 / 2 : ℝ)) :=
+      mul_le_mul_of_nonneg_right hlog' (Real.rpow_nonneg (abs_nonneg _) _)
+    _ ≤ (4 * |(n : ℝ)|) ^ (1 / 4 : ℝ) *
+        |(n : ℝ)| ^ (-(3 / 2 : ℝ)) :=
+      mul_le_mul_of_nonneg_right hquarter (Real.rpow_nonneg (abs_nonneg _) _)
+    _ = (4 : ℝ) ^ (1 / 4 : ℝ) * |(n : ℝ)| ^ (-(5 / 4 : ℝ)) := by
+      rw [Real.mul_rpow (by norm_num) hnpos.le, mul_assoc,
+        ← Real.rpow_add hnpos]
+      norm_num
+
+private def threeHalvesWindowTotalWeight : ℝ :=
+  ∑' n : ℤ, Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))
+
 private def liTotalWeight : ℝ :=
   ∑' n : ℤ, Real.log (|(n : ℝ)| + 3) / (1 + (n : ℝ) ^ 2)
 
@@ -103,6 +155,55 @@ private lemma le_heightKey_add_one (y : ℝ) : y ≤ (heightKey y : ℝ) + 1 := 
   unfold heightKey
   push_cast
   linarith
+
+private lemma xi_heightKey_fiber_multiplicity_le (s : Finset XiZero) (n : ℤ) :
+    ∑ ρ ∈ s.filter (fun ρ : XiZero ↦ heightKey (ρ : ℂ).im = n),
+        xiMultiplicity (ρ : ℂ) ≤
+      xiHeightWindowMultiplicityCount (n : ℝ) ((n : ℝ) + 1) := by
+  let fiber := s.filter (fun ρ : XiZero ↦ heightKey (ρ : ℂ).im = n)
+  let values : Finset ℂ := fiber.image (fun ρ : XiZero ↦ ρ.1)
+  have hvalues : values ⊆
+      xiZeroHeightWindowSupportFinset (n : ℝ) ((n : ℝ) + 1) := by
+    intro z hz
+    simp only [values] at hz
+    rw [Finset.mem_image] at hz
+    obtain ⟨ρ, hρ, rfl⟩ := hz
+    simp only [fiber, Finset.mem_filter] at hρ
+    rw [mem_xiZeroHeightWindowSupportFinset_iff]
+    refine ⟨ρ.property, ?_, ?_⟩
+    · rw [← hρ.2]
+      exact heightKey_lt _
+    · rw [← hρ.2]
+      exact le_heightKey_add_one _
+  rw [xiHeightWindowMultiplicityCount_eq_sum]
+  rw [show ∑ ρ ∈ s.filter (fun ρ : XiZero ↦ heightKey (ρ : ℂ).im = n),
+      xiMultiplicity ρ.1 =
+      ∑ z ∈ values, xiMultiplicity z by
+    simp only [values, fiber]
+    rw [Finset.sum_image]
+    exact fun _ _ _ _ h ↦ Subtype.val_injective h]
+  exact Finset.sum_le_sum_of_subset_of_nonneg hvalues (fun _ _ _ ↦ Nat.zero_le _)
+
+private lemma half_abs_heightKey_le_norm (ρ : XiZero)
+    (hkey : (2 : ℝ) ≤ |(heightKey (ρ : ℂ).im : ℝ)|) :
+    |(heightKey (ρ : ℂ).im : ℝ)| / 2 ≤ ‖(ρ : ℂ)‖ := by
+  let n := heightKey (ρ : ℂ).im
+  have h1 : (n : ℝ) < (ρ : ℂ).im := heightKey_lt _
+  have h2 : (ρ : ℂ).im ≤ (n : ℝ) + 1 := le_heightKey_add_one _
+  have him : |(n : ℝ)| / 2 ≤ |(ρ : ℂ).im| := by
+    rcases le_or_gt 0 (n : ℝ) with hn | hn
+    · have hy : 0 ≤ (ρ : ℂ).im := by linarith
+      rw [abs_of_nonneg hn, abs_of_nonneg hy]
+      linarith
+    · have hnle : (n : ℝ) ≤ -2 := by
+        have hk := hkey
+        change (2 : ℝ) ≤ |(n : ℝ)| at hk
+        rw [abs_of_neg hn] at hk
+        linarith
+      have hy : (ρ : ℂ).im < 0 := by linarith
+      rw [abs_of_neg hn, abs_of_neg hy]
+      linarith
+  exact him.trans (Complex.abs_im_le_norm (ρ : ℂ))
 
 private lemma one_add_height_sq_ge {y : ℝ} {n : ℤ}
     (h1 : (n : ℝ) < y) (h2 : y ≤ (n : ℝ) + 1) :
@@ -133,30 +234,9 @@ private theorem xi_inv_one_add_normSq_summable
           (xiMultiplicity (ρ : ℂ) : ℝ) / (1 + Complex.normSq (ρ : ℂ)) ≤
         4 * A₀ * (Real.log (|(n : ℝ)| + 3) / (1 + (n : ℝ) ^ 2)) := by
     intro n _
-    let fiber := s.filter (fun ρ ↦ κ ρ = n)
-    let values : Finset ℂ := fiber.image (fun ρ : XiZero ↦ ρ.1)
-    have hvalues : values ⊆
-        xiZeroHeightWindowSupportFinset (n : ℝ) ((n : ℝ) + 1) := by
-      intro z hz
-      simp only [values] at hz
-      rw [Finset.mem_image] at hz
-      obtain ⟨ρ, hρ, rfl⟩ := hz
-      simp only [fiber, Finset.mem_filter] at hρ
-      rw [mem_xiZeroHeightWindowSupportFinset_iff]
-      refine ⟨ρ.property, ?_, ?_⟩
-      · rw [← hρ.2]
-        exact heightKey_lt _
-      · rw [← hρ.2]
-        exact le_heightKey_add_one _
     have hwinNat : ∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n), xiMultiplicity (ρ : ℂ) ≤
         xiHeightWindowMultiplicityCount (n : ℝ) ((n : ℝ) + 1) := by
-      rw [xiHeightWindowMultiplicityCount_eq_sum]
-      rw [show ∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n), xiMultiplicity ρ.1 =
-          ∑ z ∈ values, xiMultiplicity z by
-        simp only [values, fiber]
-        rw [Finset.sum_image]
-        exact fun _ _ _ _ h ↦ Subtype.val_injective h]
-      exact Finset.sum_le_sum_of_subset_of_nonneg hvalues (fun _ _ _ ↦ Nat.zero_le _)
+      simpa only [hκ] using xi_heightKey_fiber_multiplicity_le s n
     have hwin : ∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n),
           (xiMultiplicity (ρ : ℂ) : ℝ) ≤
         A₀ * Real.log (|(n : ℝ)| + 3) := by
@@ -222,6 +302,119 @@ private theorem xi_inv_one_add_normSq_summable
       refine mul_le_mul_of_nonneg_left ?_ (by linarith)
       exact summable_liWeight.sum_le_tsum _ fun n _ ↦
         div_nonneg (Real.log_nonneg (by linarith [abs_nonneg (n : ℝ)])) (by positivity)
+
+private theorem xi_heightKey_reciprocal_three_halves_summable
+    (hCount : XiLocalZeroCountBound) :
+    Summable (fun ρ : XiZero ↦
+      (xiMultiplicity (ρ : ℂ) : ℝ) *
+        |(heightKey (ρ : ℂ).im : ℝ)| ^ (-(3 / 2 : ℝ))) := by
+  classical
+  let κ : XiZero → ℤ := fun ρ ↦ heightKey (ρ : ℂ).im
+  change Summable (fun ρ : XiZero ↦
+    (xiMultiplicity (ρ : ℂ) : ℝ) * |(κ ρ : ℝ)| ^ (-(3 / 2 : ℝ)))
+  obtain ⟨A₀, hA₀, hloc⟩ := hCount
+  refine summable_of_sum_le (c := A₀ * threeHalvesWindowTotalWeight)
+    (fun ρ ↦ mul_nonneg (Nat.cast_nonneg _)
+      (Real.rpow_nonneg (abs_nonneg _) _)) fun s ↦ ?_
+  rw [← Finset.sum_fiberwise_of_maps_to (g := κ) (t := s.image κ)
+    (fun ρ hρ ↦ Finset.mem_image_of_mem κ hρ)]
+  have hfiber : ∀ n ∈ s.image κ,
+      ∑ ρ ∈ s with κ ρ = n,
+          (xiMultiplicity (ρ : ℂ) : ℝ) * |(κ ρ : ℝ)| ^ (-(3 / 2 : ℝ)) ≤
+        A₀ * (Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))) := by
+    intro n _
+    have hwinNat : ∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n), xiMultiplicity (ρ : ℂ) ≤
+        xiHeightWindowMultiplicityCount (n : ℝ) ((n : ℝ) + 1) := by
+      simpa only [κ] using xi_heightKey_fiber_multiplicity_le s n
+    have hwin : ∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n),
+          (xiMultiplicity (ρ : ℂ) : ℝ) ≤
+        A₀ * Real.log (|(n : ℝ)| + 3) := by
+      have hc : ((∑ ρ ∈ s.filter (fun ρ ↦ κ ρ = n),
+          xiMultiplicity ρ.1 : ℕ) : ℝ) ≤
+          (xiHeightWindowMultiplicityCount (n : ℝ) ((n : ℝ) + 1) : ℝ) := by
+        exact_mod_cast hwinNat
+      simpa only [Nat.cast_sum] using hc.trans (hloc (n : ℝ))
+    calc
+      ∑ ρ ∈ s with κ ρ = n,
+          (xiMultiplicity (ρ : ℂ) : ℝ) * |(κ ρ : ℝ)| ^ (-(3 / 2 : ℝ)) =
+          (∑ ρ ∈ s with κ ρ = n, (xiMultiplicity (ρ : ℂ) : ℝ)) *
+            |(n : ℝ)| ^ (-(3 / 2 : ℝ)) := by
+        rw [Finset.sum_mul]
+        apply Finset.sum_congr rfl
+        intro ρ hρ
+        rw [(Finset.mem_filter.mp hρ).2]
+      _ ≤ (A₀ * Real.log (|(n : ℝ)| + 3)) *
+          |(n : ℝ)| ^ (-(3 / 2 : ℝ)) :=
+        mul_le_mul_of_nonneg_right hwin (Real.rpow_nonneg (abs_nonneg _) _)
+      _ = A₀ *
+          (Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))) := by ring
+  calc
+    ∑ n ∈ s.image κ, ∑ ρ ∈ s with κ ρ = n,
+        (xiMultiplicity (ρ : ℂ) : ℝ) * |(κ ρ : ℝ)| ^ (-(3 / 2 : ℝ)) ≤
+        ∑ n ∈ s.image κ,
+          A₀ * (Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ))) :=
+      Finset.sum_le_sum hfiber
+    _ = A₀ * ∑ n ∈ s.image κ,
+        Real.log (|(n : ℝ)| + 3) * |(n : ℝ)| ^ (-(3 / 2 : ℝ)) := by
+      rw [Finset.mul_sum]
+    _ ≤ A₀ * threeHalvesWindowTotalWeight := by
+      refine mul_le_mul_of_nonneg_left ?_ (by linarith)
+      exact summable_threeHalvesWindowWeight.sum_le_tsum _ fun n _ ↦
+        mul_nonneg (Real.log_nonneg (by linarith [abs_nonneg (n : ℝ)]))
+          (Real.rpow_nonneg (abs_nonneg _) _)
+
+/-- The local unit-height count implies reciprocal three-halves summability,
+with analytic multiplicity. -/
+theorem xi_reciprocal_three_halves_summable (hCount : XiLocalZeroCountBound) :
+    Summable (fun ρ : XiZero ↦
+      (xiMultiplicity (ρ : ℂ) : ℝ) / ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ)) := by
+  classical
+  have hg := (xi_heightKey_reciprocal_three_halves_summable hCount).mul_left
+    ((1 / 2 : ℝ) ^ (-(3 / 2 : ℝ)))
+  refine Summable.of_norm_bounded_eventually hg ?_
+  have hcentral : {ρ : XiZero |
+      |(heightKey (ρ : ℂ).im : ℝ)| < 2}.Finite := by
+    have hstrip : {ρ : XiZero | (ρ : ℂ) ∈ xiZeroSupportInHeightStrip 3}.Finite := by
+      exact (xiZeroSupportInHeightStrip_finite 3).preimage
+        (f := fun ρ : XiZero ↦ (ρ : ℂ)) Subtype.val_injective.injOn
+    apply hstrip.subset
+    intro ρ hρ
+    simp only [Set.mem_ofPred_eq] at hρ
+    change (ρ : ℂ) ∈ xiZeroSupportInHeightStrip 3
+    refine ⟨ρ.property, abs_le.mpr ⟨?_, ?_⟩⟩
+    · linarith [heightKey_lt (ρ : ℂ).im, (abs_lt.mp hρ).1]
+    · linarith [le_heightKey_add_one (ρ : ℂ).im, (abs_lt.mp hρ).2]
+  filter_upwards [hcentral.compl_mem_cofinite] with ρ hρ
+  simp only [Set.mem_compl_iff, Set.mem_ofPred_eq, not_lt] at hρ
+  have hkeypos : 0 < |(heightKey (ρ : ℂ).im : ℝ)| := lt_of_lt_of_le (by norm_num) hρ
+  have hhalfpos : 0 < |(heightKey (ρ : ℂ).im : ℝ)| / 2 := by positivity
+  have hpows : (|(heightKey (ρ : ℂ).im : ℝ)| / 2) ^ (3 / 2 : ℝ) ≤
+      ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ) :=
+    Real.rpow_le_rpow hhalfpos.le (half_abs_heightKey_le_norm ρ hρ) (by norm_num)
+  have hinv : 1 / ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ) ≤
+      1 / (|(heightKey (ρ : ℂ).im : ℝ)| / 2) ^ (3 / 2 : ℝ) :=
+    one_div_le_one_div_of_le (Real.rpow_pos_of_pos hhalfpos _) hpows
+  have hscale : 1 / (|(heightKey (ρ : ℂ).im : ℝ)| / 2) ^ (3 / 2 : ℝ) =
+      (1 / 2 : ℝ) ^ (-(3 / 2 : ℝ)) *
+        |(heightKey (ρ : ℂ).im : ℝ)| ^ (-(3 / 2 : ℝ)) := by
+    rw [one_div, ← Real.rpow_neg hhalfpos.le]
+    rw [show |(heightKey (ρ : ℂ).im : ℝ)| / 2 =
+        (1 / 2 : ℝ) * |(heightKey (ρ : ℂ).im : ℝ)| by ring,
+      Real.mul_rpow (by norm_num) hkeypos.le]
+  have hm : (0 : ℝ) ≤ xiMultiplicity (ρ : ℂ) := Nat.cast_nonneg _
+  rw [Real.norm_eq_abs, abs_of_nonneg (div_nonneg hm (Real.rpow_nonneg (norm_nonneg _) _))]
+  calc
+    (xiMultiplicity (ρ : ℂ) : ℝ) / ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ) =
+        (xiMultiplicity (ρ : ℂ) : ℝ) *
+          (1 / ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ)) := by ring
+    _ ≤ (xiMultiplicity (ρ : ℂ) : ℝ) *
+          (1 / (|(heightKey (ρ : ℂ).im : ℝ)| / 2) ^ (3 / 2 : ℝ)) :=
+      mul_le_mul_of_nonneg_left hinv hm
+    _ = (1 / 2 : ℝ) ^ (-(3 / 2 : ℝ)) *
+          ((xiMultiplicity (ρ : ℂ) : ℝ) *
+            |(heightKey (ρ : ℂ).im : ℝ)| ^ (-(3 / 2 : ℝ))) := by
+      rw [hscale]
+      ring
 
 /-- The local unit-height count implies absolute reciprocal-square summability,
 with analytic multiplicity. -/

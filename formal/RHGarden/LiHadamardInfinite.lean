@@ -69,6 +69,20 @@ theorem xiOccurrence_reciprocal_sq_summable :
   · simpa [XiZeroOccurrence.value, Finset.sum_const, nsmul_eq_mul, Nat.cast_mul,
       div_eq_mul_inv, mul_comm] using xi_reciprocal_sq_summable_unconditional
 
+/-- Expanding every zero into its finitely many multiplicity occurrences preserves
+reciprocal three-halves summability. -/
+theorem xiOccurrence_reciprocal_three_halves_summable :
+    Summable (fun a : XiZeroOccurrence ↦
+      1 / ‖a.value‖ ^ (3 / 2 : ℝ)) := by
+  rw [summable_sigma_of_nonneg (fun _ ↦ by positivity)]
+  constructor
+  · intro ρ
+    exact (hasSum_fintype fun _ : Fin (xiMultiplicity (ρ : ℂ)) ↦
+      1 / ‖(ρ : ℂ)‖ ^ (3 / 2 : ℝ)).summable
+  · simpa [XiZeroOccurrence.value, Finset.sum_const, nsmul_eq_mul, Nat.cast_mul,
+      div_eq_mul_inv, mul_comm] using
+        xi_reciprocal_three_halves_summable xiLocalZeroCountBound
+
 /-- Quadratic small-argument estimate for the genus-one factor.
 
 The proof is native to RH Garden. Its decomposition follows the elementary-factor estimate in
