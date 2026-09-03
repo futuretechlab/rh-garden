@@ -235,6 +235,12 @@ xiQuotientGrowthRef = Reference
   , refCitation = "Lean primary-factor, Nevanlinna-characteristic, Poisson, quotient-growth, normalized affine-factorization, and exact xi partial-fraction theorems in formal/RHGarden/LiQuotientGrowth.lean; lake build is authoritative."
   }
 
+liStarIdentificationRef :: Reference
+liStarIdentificationRef = Reference
+  { refShort = "RHGarden.LiStarIdentification"
+  , refCitation = "Lean reciprocal-star limit, locally uniform xi partial-fraction convergence, finite Li-jet transport, and classicalLiEqualsNegativeStar in formal/RHGarden/LiStarIdentification.lean; lake build is authoritative."
+  }
+
 classicalLiIdentityRef :: Reference
 classicalLiIdentityRef = Reference
   { refShort = "Li 1997 logarithmic-derivative identity"
@@ -448,8 +454,8 @@ localCountToLiStar = eraseRepresentationEdge $ representationEdge
 classicalLiToStarConvergence :: RuntimeRepresentationEdge
 classicalLiToStarConvergence = eraseRepresentationEdge $ representationEdge
   SClassicalLiSequence SLiStarConvergence "derivative Li equals negative-index star limit"
-  EquivalentTheorem literatureCertifiedTrust 5 weilRef
-  "ClassicalLiEqualsNegativeStar records the exact open target with index -(k+1)."
+  EquivalentTheorem leanCheckedTrust 1 liStarIdentificationRef
+  "RHGarden.classicalLiEqualsNegativeStar identifies each zero-based classical coefficient with the exact height-ordered star limit at index -(k+1)."
   (ExactInverse "The target identifies each derivative coefficient with its star limit.")
   Nothing
 

@@ -22,3 +22,4 @@ import RHGarden.LiHadamardGrowth
 import RHGarden.LiExpAffine
 import RHGarden.LiXiQuotient
 import RHGarden.LiQuotientGrowth
+import RHGarden.LiStarIdentification

@@ -524,7 +524,8 @@ theorem xi_reciprocal_re_summable (hCount : XiLocalZeroCountBound) :
   exact mul_le_mul_of_nonneg_left (by simpa [one_div] using abs_reciprocal_re_le_sq ρ)
     (Nat.cast_nonneg _)
 
-private def xiHeightZeroEmbedding (T : ℝ) :
+/-- Embed the finite support of a height cutoff into the subtype of xi zeros. -/
+def xiHeightZeroEmbedding (T : ℝ) :
     {z // z ∈ xiZeroHeightSupportFinset T} ↪ XiZero where
   toFun z := ⟨z.1, (mem_xiZeroHeightSupportFinset_iff T z.1).mp z.2 |>.1⟩
   inj' := fun _ _ h ↦ Subtype.ext (congrArg (fun w : XiZero ↦ w.1) h)
@@ -532,6 +533,19 @@ private def xiHeightZeroEmbedding (T : ℝ) :
 /-- Distinct xi zeros in the height cutoff; multiplicity remains a weight. -/
 noncomputable def xiZeroHeightFinset (T : ℝ) : Finset XiZero :=
   (xiZeroHeightSupportFinset T).attach.map (xiHeightZeroEmbedding T)
+
+/-- Rewrite a multiplicity-expanded height-cutoff multiset sum as a weighted
+sum over the corresponding finite set of distinct xi zeros. -/
+theorem xiZeroHeightCutoff_map_sum_eq_sum (T : ℝ) (f : ℂ → ℂ) :
+    ((xiZeroHeightCutoff T).map f).sum =
+      ∑ ρ ∈ xiZeroHeightFinset T,
+        (xiMultiplicity (ρ : ℂ) : ℂ) * f ρ := by
+  classical
+  simp [xiZeroHeightCutoff, xiZeroHeightFinset, xiHeightZeroEmbedding,
+    Multiset.map_bind, Multiset.sum_bind, Multiset.sum_replicate,
+    nsmul_eq_mul]
+  rw [← Finset.sum_attach]
+  rfl
 
 theorem mem_xiZeroHeightFinset_iff (T : ℝ) (ρ : XiZero) :
     ρ ∈ xiZeroHeightFinset T ↔ |ρ.1.im| ≤ T := by

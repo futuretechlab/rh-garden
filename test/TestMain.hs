@@ -108,6 +108,10 @@ main = do
       Nothing -> False
   check "star convergence remains outside kernel mode" $
     shortestRepresentationRoute KernelMode representationGraph LiStarPartialSums LiStarConvergence == Nothing
+  check "classical Li coefficients equal negative-index star limits in kernel mode" $
+    case shortestRepresentationRoute KernelMode representationGraph ClassicalLiSequence LiStarConvergence of
+      Just _ -> True
+      Nothing -> False
   check "local count conditionally reduces to star convergence in kernel mode" $
     case shortestRepresentationRoute KernelMode representationGraph XiLocalZeroCountBound LiStarConvergence of
       Just _ -> True
