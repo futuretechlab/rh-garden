@@ -229,6 +229,12 @@ xiCanonicalProductRef = Reference
   , refCitation = "Lean occurrence-indexed canonical-product convergence and logarithmic-derivative theorems in formal/RHGarden/LiHadamardInfinite.lean; lake build is authoritative."
   }
 
+xiQuotientGrowthRef :: Reference
+xiQuotientGrowthRef = Reference
+  { refShort = "RHGarden.LiQuotientGrowth"
+  , refCitation = "Lean primary-factor, Nevanlinna-characteristic, Poisson, quotient-growth, and unconditional affine-factorization theorems in formal/RHGarden/LiQuotientGrowth.lean; lake build is authoritative."
+  }
+
 classicalLiIdentityRef :: Reference
 classicalLiIdentityRef = Reference
   { refShort = "Li 1997 logarithmic-derivative identity"
@@ -366,16 +372,16 @@ xiAndCanonicalProductToZeroFreeQuotient = eraseRepresentationEdge $ representati
 zeroFreeQuotientToGrowth :: RuntimeRepresentationEdge
 zeroFreeQuotientToGrowth = eraseRepresentationEdge $ representationEdge
   SXiZeroFreeQuotient SXiQuotientSubquadraticGrowth "prove quotient subquadratic growth"
-  InformationLoss conjecturalTrust 3 xiCanonicalProductRef
-  "This is the remaining minimum-modulus/Cartan growth seam; xi's upper bound alone does not prove it."
+  InformationLoss leanCheckedTrust 3 xiQuotientGrowthRef
+  "RHGarden.xiQuotient_subquadratic_growth uses Nevanlinna characteristic bounds and Poisson's formula to prove the pointwise bound."
   (NoReconstruction "A growth bound does not reconstruct the quotient.")
   Nothing
 
 quotientGrowthToAffineFactorization :: RuntimeRepresentationEdge
 quotientGrowthToAffineFactorization = eraseRepresentationEdge $ representationEdge
   SXiQuotientSubquadraticGrowth SXiAffineFactorization "apply the generic exp-affine theorem"
-  SufficientReduction leanCheckedTrust 1 xiCanonicalProductRef
-  "RHGarden.riemannXi_eq_exp_affine_mul_canonicalProduct_of_quotient_growth is LeanChecked conditionally on the open growth proposition."
+  SufficientReduction leanCheckedTrust 1 xiQuotientGrowthRef
+  "RHGarden.riemannXi_eq_exp_affine_mul_canonicalProduct is the unconditional LeanChecked genus-one Hadamard representation."
   (ExactInverse "The conclusion supplies the affine exponential factor multiplying the canonical product.")
   Nothing
 

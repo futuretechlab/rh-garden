@@ -98,6 +98,10 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph XiDivisor FiniteWeilCutoffValues of
       Just _ -> True
       Nothing -> False
+  check "xi affine canonical-product factorization is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph XiFunction XiAffineFactorization of
+      Just _ -> True
+      Nothing -> False
   check "star convergence remains outside kernel mode" $
     shortestRepresentationRoute KernelMode representationGraph LiStarPartialSums LiStarConvergence == Nothing
   check "local count conditionally reduces to star convergence in kernel mode" $
