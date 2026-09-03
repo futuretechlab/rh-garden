@@ -53,6 +53,10 @@ data Representation
   | WeilLiTestFunctions
   | FiniteWeilCutoffValues
   | WeilLiQuadraticValues
+  | XiSpectralParameters
+  | SuzukiPsiZeroSide
+  | RiemannScrewKernel
+  | SuzukiGramKernel
   | XiTaylorAtOne
   | MobiusFormalSeries
   | XiAfterFormalMobius
@@ -99,6 +103,10 @@ data SRepresentation (r :: Representation) where
   SWeilLiTestFunctions :: SRepresentation 'WeilLiTestFunctions
   SFiniteWeilCutoffValues :: SRepresentation 'FiniteWeilCutoffValues
   SWeilLiQuadraticValues :: SRepresentation 'WeilLiQuadraticValues
+  SXiSpectralParameters :: SRepresentation 'XiSpectralParameters
+  SSuzukiPsiZeroSide :: SRepresentation 'SuzukiPsiZeroSide
+  SRiemannScrewKernel :: SRepresentation 'RiemannScrewKernel
+  SSuzukiGramKernel :: SRepresentation 'SuzukiGramKernel
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
   SMobiusFormalSeries :: SRepresentation 'MobiusFormalSeries
   SXiAfterFormalMobius :: SRepresentation 'XiAfterFormalMobius
@@ -146,6 +154,10 @@ representationValue SLiZeroSumSequence = LiZeroSumSequence
 representationValue SWeilLiTestFunctions = WeilLiTestFunctions
 representationValue SFiniteWeilCutoffValues = FiniteWeilCutoffValues
 representationValue SWeilLiQuadraticValues = WeilLiQuadraticValues
+representationValue SXiSpectralParameters = XiSpectralParameters
+representationValue SSuzukiPsiZeroSide = SuzukiPsiZeroSide
+representationValue SRiemannScrewKernel = RiemannScrewKernel
+representationValue SSuzukiGramKernel = SuzukiGramKernel
 representationValue SXiTaylorAtOne = XiTaylorAtOne
 representationValue SMobiusFormalSeries = MobiusFormalSeries
 representationValue SXiAfterFormalMobius = XiAfterFormalMobius
@@ -191,6 +203,10 @@ representationLabel LiZeroSumSequence = "conditionally star-convergent Li zero-s
 representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
 representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Weil/Li cutoff values"
 representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil values on the Li test family"
+representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral coordinates gamma=i(rho-1/2)"
+representationLabel SuzukiPsiZeroSide = "absolutely convergent totalized zero-side Suzuki Psi series"
+representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
+representationLabel SuzukiGramKernel = "critical-line spectral Gram expansion of the Riemann screw kernel"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"
 representationLabel MobiusFormalSeries = "formal series U=X/(1-X)=X+X^2+..."
 representationLabel XiAfterFormalMobius = "certified coefficient series of 2*xi(1/(1-z))"

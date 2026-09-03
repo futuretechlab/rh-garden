@@ -17,7 +17,8 @@ The program keeps four domains separate:
    construct an operator.
 2. `RHGarden.Representation` models data/description forms independently:
    `XiFunction`, `XiZeros`, `MobiusVariable`, `XiAfterMobius`, `LogXiMobius`,
-   `LiGeneratingSeries`, `LiSequence`, and `WeilLiQuadraticValues`.
+   `LiGeneratingSeries`, `LiSequence`, `WeilLiQuadraticValues`, and the
+   zero-side Suzuki screw-function representations.
 3. `RHGarden.Algebra` and `RHGarden.Mobius` implement a small exact algebra
    checker over `Rational`. It does not evaluate xi or zeta.
 4. `RHGarden.Evidence` contains finite floating-point experiments. It exports
@@ -106,6 +107,13 @@ The known RH equivalences (Xi real zeros, Li positivity, Nyman–Beurling, and
 Lagarias) are `LiteratureCertified`, not kernel checked. The Hilbert–Pólya
 realization is an unfulfilled stronger obligation. A candidate positive
 Gram/norm-square factorization of Li/Weil values is explicitly `Conjectural`.
+
+The Suzuki district now kernel-checks the occurrence-indexed zero-side series,
+the screw-kernel identity, the critical-line Gram factorization, and the
+implication from real Xi spectral parameters to kernel PSD. The converse is
+not checked. The literal nonzero-denominator interpretation also awaits the
+local classical fact `riemannXi (1/2) != 0`, which is not in the pinned
+Mathlib/Zeta23 API; see `SUZUKI_SCREW.md`.
 
 The non-negotiable invariant is that a numerical pattern, citation, symbolic
 experiment, or conjectural reduction never becomes proof merely because it

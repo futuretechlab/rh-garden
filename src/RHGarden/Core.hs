@@ -19,6 +19,7 @@ module RHGarden.Core
   , Reference(..)
   , Reduction
   , leanEquiv
+  , leanSufficient
   , literatureEquiv
   , literatureSufficient
   , conjecturalReduction
@@ -42,6 +43,7 @@ data Criterion
   | LiPositive
   | WeilLiPositive
   | WeilFormPSD
+  | ScrewKernelPSD
   | NymanBeurlingDense
   | LagariasInequality
   | SelfAdjointXiRealization
@@ -55,6 +57,7 @@ data SCriterion (c :: Criterion) where
   SLiPositive             :: SCriterion 'LiPositive
   SWeilLiPositive         :: SCriterion 'WeilLiPositive
   SWeilFormPSD            :: SCriterion 'WeilFormPSD
+  SScrewKernelPSD          :: SCriterion 'ScrewKernelPSD
   SNymanBeurlingDense     :: SCriterion 'NymanBeurlingDense
   SLagariasInequality     :: SCriterion 'LagariasInequality
   SSelfAdjointXiRealization :: SCriterion 'SelfAdjointXiRealization
@@ -68,6 +71,7 @@ criterionValue SXiZerosReal              = XiZerosReal
 criterionValue SLiPositive               = LiPositive
 criterionValue SWeilLiPositive           = WeilLiPositive
 criterionValue SWeilFormPSD              = WeilFormPSD
+criterionValue SScrewKernelPSD            = ScrewKernelPSD
 criterionValue SNymanBeurlingDense       = NymanBeurlingDense
 criterionValue SLagariasInequality       = LagariasInequality
 criterionValue SSelfAdjointXiRealization = SelfAdjointXiRealization
@@ -79,6 +83,7 @@ criterionLabel XiZerosReal = "All zeros of Xi(t)=xi(1/2+it) are real"
 criterionLabel LiPositive = "Li coefficients lambda_n are nonnegative for every n>=1"
 criterionLabel WeilLiPositive = "Diagonal Weil values are nonnegative on every Li test G_n"
 criterionLabel WeilFormPSD = "Full Weil form is positive semidefinite on its complete test-function space"
+criterionLabel ScrewKernelPSD = "Suzuki's zero-side Riemann screw kernel is positive semidefinite"
 criterionLabel NymanBeurlingDense = "Nyman-Beurling closure/density criterion"
 criterionLabel LagariasInequality = "Lagarias divisor-sum inequality for every n>=1"
 criterionLabel SelfAdjointXiRealization =
@@ -149,6 +154,17 @@ leanEquiv
   -> Reduction a b
 leanEquiv a b name cost ref note =
   Reduction a b name Equivalent LeanChecked cost ref note
+
+leanSufficient
+  :: SCriterion a
+  -> SCriterion b
+  -> String
+  -> Int
+  -> Reference
+  -> String
+  -> Reduction a b
+leanSufficient a b name cost ref note =
+  Reduction a b name SufficientCondition LeanChecked cost ref note
 
 literatureEquiv
   :: SCriterion a

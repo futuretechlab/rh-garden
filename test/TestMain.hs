@@ -44,6 +44,12 @@ main = do
       Nothing -> False
   check "full Weil-form PSD remains a distinct open criterion" $
     shortestRoute KernelMode certifiedGraph WeilFormPSD LiPositive == Nothing
+  check "critical-line reality LeanChecks screw-kernel PSD" $
+    case shortestRoute KernelMode certifiedGraph ScrewKernelPSD XiZerosReal of
+      Just _ -> True
+      Nothing -> False
+  check "Suzuki PSD converse remains outside kernel mode" $
+    shortestRoute KernelMode certifiedGraph XiZerosReal ScrewKernelPSD == Nothing
   check "LiteratureMode rejects Conjectural edges" $
     shortestRepresentationRoute LiteratureMode representationExplorationGraph WeilLiQuadraticValues LiSequence == Nothing
   check "ExplorationMode accepts Conjectural edges" $
@@ -97,6 +103,14 @@ main = do
   check "finite-to-infinite Weil limit is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph FiniteWeilCutoffValues WeilLiQuadraticValues of
       Just route -> routeEndsAt route WeilLiQuadraticValues
+      Nothing -> False
+  check "xi divisor reaches the zero-side screw kernel in kernel mode" $
+    case shortestRepresentationRoute KernelMode representationGraph XiDivisor RiemannScrewKernel of
+      Just _ -> True
+      Nothing -> False
+  check "a supplied Suzuki Gram representation evaluates to the screw kernel" $
+    case shortestRepresentationRoute KernelMode representationGraph SuzukiGramKernel RiemannScrewKernel of
+      Just _ -> True
       Nothing -> False
   check "xi divisor to height-ordered star partial sums is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph XiFunction LiStarPartialSums of

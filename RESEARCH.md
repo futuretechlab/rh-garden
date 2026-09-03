@@ -111,6 +111,55 @@ Li's `LiPositive <-> RiemannHypothesis` criterion remains registered as
 literature-certified rather than kernel-checked. Thus neither Li positivity,
 Weil-Li positivity, full Weil positivity, nor RH has been discharged.
 
+## Suzuki zero-side screw kernel
+
+`RHGarden.SuzukiScrew` starts the Suzuki district from the xi divisor. For an
+analytic-multiplicity occurrence `a`, Lean defines
+
+```text
+gamma_a = i * (rho_a - 1/2)
+```
+
+and checks the inverse coordinate, the real and imaginary coordinates, and
+the equivalence between real spectral parameters and `XiTZerosReal`. A
+cofinite comparison with occurrence reciprocal-square summability proves
+summability of `1/|gamma_a|^2`; it does not repeat zero counting.
+
+The totalized zero-side series, real screw function, and kernel are
+
+```text
+Psi(t) = sum_a (1-exp(i*gamma_a*t))/gamma_a^2
+g(t) = -Psi(t)
+GKernel(t,u) = g(t-u)-g(t)-g(-u)+g(0).
+```
+
+Lean proves unconditional conjugation and evenness of `Psi`, absolute
+summability at fixed real arguments, and the exact `tsum` algebra
+
+```text
+Kernel(t,u) = sum_a
+  (exp(i*gamma_a*t)-1)*(exp(-i*gamma_a*u)-1)/gamma_a^2.
+```
+
+Here division is Lean's totalized field division. To identify this literally
+with Suzuki's published formula one must additionally know every `gamma_a` is
+nonzero. The file isolates this as `XiMidpointNonzero`, proves that it implies
+`xiSpectralParameter a != 0`, and records the exact equivalence with
+`rho_a != 1/2`. The pinned Mathlib/Zeta23 API does not presently prove the
+classical input `riemannXi (1/2) != 0`; no axiom is introduced to hide it.
+
+Assuming the existing open proposition `XiTZerosReal`, Lean rewrites every
+totalized kernel term as
+
+```text
+suzukiFeature a t * conjugate (suzukiFeature a u)
+```
+
+and proves both finite-height Gram positivity and positive semidefiniteness of
+the limiting kernel. This implication proves neither RH nor the converse
+Suzuki criterion. Recovery of critical-line reality from screw-kernel PSD
+remains literature-certified.
+
 ## Garden trust state
 
 The following representation edges are LeanChecked:
@@ -121,6 +170,10 @@ XiHeightZeroCutoff -> FiniteWeilCutoffValues
 LiStarConvergence -> WeilLiQuadraticValues
 FiniteWeilCutoffValues -> WeilLiQuadraticValues
 ClassicalLiRealSequence <-> WeilLiQuadraticValues.
+XiDivisor -> XiSpectralParameters
+XiSpectralParameters -> SuzukiPsiZeroSide
+SuzukiPsiZeroSide -> RiemannScrewKernel
+SuzukiGramKernel -> RiemannScrewKernel
 ```
 
 The criterion reductions
@@ -134,14 +187,13 @@ edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
 ## Exact next frontier
 
-The representation and convergence questions for the Li test family are now
-closed. The next mathematical frontier is a certified, non-circular proof of
-nonnegativity of the equivalent sequences—either `LiPositive` or
-`WeilLiPositive`—or a genuinely stronger construction proving the full Weil
-form positive semidefinite. A positive Gram/norm-square factorization, a full
-Weil test-space development, or an independently certified operator-theoretic
-argument would be new mathematics; none is claimed here.
+The immediate formalization blocker in the Suzuki district is the elementary
+but absent midpoint theorem `riemannXi (1/2) != 0`. A sound route is to
+formalize the Dirichlet-eta representation at `s=1/2` (including its analytic
+continuation identity with zeta) and prove its alternating sum is positive.
+After that local input, the literal nonzero-denominator zero-side formula is
+fully available. The larger Suzuki converse
+`KernelPSD riemannScrewKernel -> XiTZerosReal` then requires the separate
+Krein--Langer/Nevanlinna machinery described in the literature.
 
-The later Suzuki screw-function and Hilbert--Polya operator programs remain
-research directions only. They must not be registered as proofs without a
-finite, auditable kernel term and all required analytic identifications.
+No positivity theorem for the Li sequence or full Weil form is claimed.

@@ -166,13 +166,25 @@ The global pointwise correspondence
 RH/`XiT` formulation are checked equivalences of open propositions. They do not
 prove any of those propositions.
 
+`RHGarden/SuzukiScrew.lean` defines the occurrence-indexed spectral coordinate
+`gamma=i*(rho-1/2)`, proves reciprocal-square summability in that coordinate,
+and constructs the absolutely convergent zero-side Suzuki function and screw
+kernel. The zero-side kernel identity, its critical-line Gram form, finite
+height convergence, finite-height PSD, and limiting PSD under `XiTZerosReal`
+are LeanChecked. The classical local fact `riemannXi (1/2) ≠ 0`, needed to know
+that Suzuki's denominators are literally nonzero rather than totalized, is not
+available in the pinned dependencies. It is exposed as `XiMidpointNonzero`;
+no axiom is added.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
-- Formalize Lagarias's Li test functions and diagonal Weil identity; positivity
-  remains open. The finite Multiset version is now checked in
-  `RHGarden/WeilFinite.lean`; the star-convergent zero sum and absolutely
-  convergent infinite Weil limit remain separate analytic bridges.
+- Li-test Weil positivity and full Weil-form PSD remain open. The finite and
+  infinite Weil-Li identities are checked, including absolute convergence of
+  the infinite scalar and its equality to twice the classical Li coefficient.
+- Prove `XiMidpointNonzero`, preferably through a formal Dirichlet-eta identity
+  at `s=1/2`, then formalize Suzuki's converse from global screw-kernel PSD to
+  real spectral parameters.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

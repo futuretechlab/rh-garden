@@ -64,6 +64,7 @@ routes mode graph = do
       , LiPositive
       , WeilLiPositive
       , WeilFormPSD
+      , ScrewKernelPSD
       , NymanBeurlingDense
       , LagariasInequality
       , SelfAdjointXiRealization
@@ -95,9 +96,10 @@ submissionStatus = do
   putStrLn "  1. LiPositive: prove lambda_n >= 0 for every n >= 1."
   putStrLn "  2. WeilLiPositive: equivalently prove nonnegativity on every Li-test diagonal."
   putStrLn "  3. WeilFormPSD: prove positive semidefiniteness on the full Weil test space."
-  putStrLn "  4. NymanBeurlingDense: prove the required L2 closure/density statement."
-  putStrLn "  5. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
-  putStrLn "  6. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
+  putStrLn "  4. ScrewKernelPSD converse: formalize Suzuki's recovery of critical-line reality."
+  putStrLn "  5. NymanBeurlingDense: prove the required L2 closure/density statement."
+  putStrLn "  6. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
+  putStrLn "  7. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
   putStrLn ""
   putStrLn "A publishable proof requires at least one frontier to be discharged by a finite, auditable proof term."
 
@@ -362,6 +364,24 @@ formalStatus = do
     , "weilLiScalar_self_nat"
     , "weilLiQuadraticValue_eq_two_li"
     , "liPositive_iff_weilLiPositive"
+    , "xiZero_eq_half_sub_I_mul_spectral"
+    , "riemannXi_half_sub_I_mul_spectral_eq_zero"
+    , "xiSpectralParameter_ne_zero_iff_value_ne_half"
+    , "xiSpectralParameter_ne_zero_of_midpoint"
+    , "xiTZerosReal_iff_spectralParameters_real"
+    , "half_norm_value_le_norm_xiSpectralParameter"
+    , "xiSpectral_reciprocal_sq_summable"
+    , "summable_suzukiPsiZero_term"
+    , "suzukiPsiZero_zero"
+    , "suzukiPsiZero_conj"
+    , "suzukiPsiZero_neg"
+    , "riemannScrewKernel_hermitian"
+    , "summable_suzukiKernelTerm"
+    , "riemannScrewKernel_eq_zero_sum"
+    , "riemannScrewKernel_eq_gram_of_XiTZerosReal"
+    , "riemannScrewKernelHeight_tendsto"
+    , "riemannScrewKernelHeight_psd_of_XiTZerosReal"
+    , "riemannScrewKernel_psd_of_XiTZerosReal"
     , "liXiSeries_constantCoeff"
     , "liXiSeries_isUnit"
     , "liXiSeries_mul_inv"

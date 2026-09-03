@@ -63,6 +63,22 @@ formalXiTRef = Reference
   , refCitation = "Lean theorem in formal/RHGarden/CriticalLine.lean; lake build is authoritative."
   }
 
+suzukiScrewRef :: Reference
+suzukiScrewRef = Reference
+  { refShort = "RHGarden.riemannScrewKernel_psd_of_XiTZerosReal"
+  , refCitation =
+      "Lean theorem in formal/RHGarden/SuzukiScrew.lean; the zero-side kernel identity, " ++
+      "critical-line Gram expansion, and finite-matrix PSD proof are kernel checked."
+  }
+
+suzukiConverseRef :: Reference
+suzukiConverseRef = Reference
+  { refShort = "Suzuki screw-function criterion"
+  , refCitation =
+      "M. Suzuki, screw-function formulations of the Riemann hypothesis; the converse " ++
+      "from global kernel positivity to critical-line reality is not formalized here."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -90,6 +106,20 @@ xiTToXiHypothesis = eraseReduction $ leanEquiv
   "undo the XiT critical-line coordinate"
   1 formalXiTRef
   "Reverse use of the LeanChecked coordinate equivalence; no proposition is discharged."
+
+screwPSDFromXiT :: RuntimeReduction
+screwPSDFromXiT = eraseReduction $ leanSufficient
+  SScrewKernelPSD SXiZerosReal
+  "critical-line spectral parameters give a positive screw kernel"
+  1 suzukiScrewRef
+  "RHGarden.riemannScrewKernel_psd_of_XiTZerosReal rewrites the zero-side kernel as an occurrence-indexed Gram sum and passes finite-cutoff positivity to the limit."
+
+xiTFromScrewPSD :: RuntimeReduction
+xiTFromScrewPSD = eraseReduction $ literatureSufficient
+  SXiZerosReal SScrewKernelPSD
+  "Suzuki screw-kernel converse"
+  5 suzukiConverseRef
+  "The Krein-Langer/Nevanlinna converse is literature-certified only; no Lean theorem currently recovers critical-line reality from kernel PSD."
 
 rhToLi :: RuntimeReduction
 rhToLi = eraseReduction $ literatureEquiv
@@ -175,6 +205,7 @@ certifiedGraph :: [RuntimeReduction]
 certifiedGraph =
   [ rhToXiHypothesis, xiHypothesisToRh
   , xiHypothesisToXiT, xiTToXiHypothesis
+  , screwPSDFromXiT, xiTFromScrewPSD
   , rhToLi, liToRh, liToWeilLiPositive, weilLiPositiveToLi
   , rhToNyman, nymanToRh
   , rhToLagarias, lagariasToRh
@@ -487,6 +518,38 @@ starConvergenceToWeil = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "Convergence values alone do not reconstruct the full Weil form.")
   Nothing
 
+divisorToXiSpectral :: RuntimeRepresentationEdge
+divisorToXiSpectral = eraseRepresentationEdge $ representationEdge
+  SXiDivisor SXiSpectralParameters "rotate xi zeros to Suzuki spectral coordinates"
+  ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
+  "RHGarden.xiZero_eq_half_sub_I_mul_spectral and the coordinate formulas identify gamma=i(rho-1/2), preserving analytic multiplicity occurrences."
+  (ExactInverse "Recover rho as 1/2-I*gamma occurrence by occurrence.")
+  Nothing
+
+xiSpectralToSuzukiPsi :: RuntimeRepresentationEdge
+xiSpectralToSuzukiPsi = eraseRepresentationEdge $ representationEdge
+  SXiSpectralParameters SSuzukiPsiZeroSide "sum the reciprocal-square Suzuki zero expansion"
+  ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
+  "RHGarden.xiSpectral_reciprocal_sq_summable and summable_suzukiPsiZero_term prove the occurrence-indexed series converges absolutely for each real t. The representation is totalized at gamma=0 until XiMidpointNonzero is discharged."
+  (NoReconstruction "The summed function does not by itself reconstruct the labelled spectral divisor.")
+  Nothing
+
+suzukiPsiToScrewKernel :: RuntimeRepresentationEdge
+suzukiPsiToScrewKernel = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiZeroSide SRiemannScrewKernel "take Suzuki's translation-difference screw kernel"
+  ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
+  "RHGarden.riemannScrewKernel_eq_zero_sum proves Suzuki equation (1.9) by absolutely convergent tsum algebra."
+  (NoReconstruction "A translation-difference kernel loses affine additions to the screw function.")
+  Nothing
+
+suzukiGramToScrewKernel :: RuntimeRepresentationEdge
+suzukiGramToScrewKernel = eraseRepresentationEdge $ representationEdge
+  SSuzukiGramKernel SRiemannScrewKernel "evaluate the critical-line Suzuki Gram expansion"
+  ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
+  "RHGarden.riemannScrewKernel_eq_gram_of_XiTZerosReal identifies the supplied critical-line Gram expansion with the zero-side screw kernel. The XiTZerosReal witness belongs to the source representation and is not inferred from the kernel."
+  (NoReconstruction "The kernel alone does not recover a real-spectral Gram witness; Suzuki's converse remains literature-certified.")
+  Nothing
+
 nontrivialZetaZeroToXiZero :: RuntimeRepresentationEdge
 nontrivialZetaZeroToXiZero = eraseRepresentationEdge $ representationEdge
   SNontrivialZetaZero SXiZero "nontrivial zeta zero gives xi zero"
@@ -708,6 +771,8 @@ representationGraph =
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
+  , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToScrewKernel
+  , suzukiGramToScrewKernel
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs
   , weilTestsToFiniteValues, finiteCutoffsToWeil
