@@ -24,9 +24,9 @@ theorem riemannXi_half_sub_I_mul_spectral_eq_zero
   rw [← xiZero_eq_half_sub_I_mul_spectral a]
   exact a.1.xi_eq_zero
 
-/-- The one additional classical nonvanishing input needed to interpret every
-Suzuki denominator literally, rather than through Lean's totalized division.
-The pinned zeta library does not currently expose this fact. -/
+/-- The local nonvanishing statement needed to interpret every Suzuki
+denominator literally. It is discharged unconditionally in
+`RHGarden.XiMidpoint`. -/
 def XiMidpointNonzero : Prop :=
   riemannXi (1 / 2 : ℂ) ≠ 0
 
@@ -405,9 +405,8 @@ theorem summable_suzukiKernelTerm (t u : ℝ) :
   exact h.congr fun a => (suzukiKernelTerm_eq_psi_combination t u a).symm
 
 /-- Suzuki's zero-side algebra (equation (1.9)), indexed by analytic
-occurrences of xi zeros. It is unconditional for the totalized Lean terms;
-`XiMidpointNonzero` is the separately exposed input that makes every published
-spectral denominator literally nonzero. -/
+occurrences of xi zeros. `RHGarden.XiMidpoint` proves unconditionally that all
+the spectral denominators occurring here are nonzero. -/
 theorem riemannScrewKernel_eq_zero_sum (t u : ℝ) :
     riemannScrewKernel t u =
       ∑' a : XiZeroOccurrence, suzukiKernelTerm t u a := by

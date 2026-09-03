@@ -68,7 +68,8 @@ suzukiScrewRef = Reference
   { refShort = "RHGarden.riemannScrewKernel_psd_of_XiTZerosReal"
   , refCitation =
       "Lean theorem in formal/RHGarden/SuzukiScrew.lean; the zero-side kernel identity, " ++
-      "critical-line Gram expansion, and finite-matrix PSD proof are kernel checked."
+      "critical-line Gram expansion, finite-matrix PSD proof, and spectral-denominator " ++
+      "nonvanishing are kernel checked."
   }
 
 suzukiConverseRef :: Reference
@@ -530,7 +531,7 @@ xiSpectralToSuzukiPsi :: RuntimeRepresentationEdge
 xiSpectralToSuzukiPsi = eraseRepresentationEdge $ representationEdge
   SXiSpectralParameters SSuzukiPsiZeroSide "sum the reciprocal-square Suzuki zero expansion"
   ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
-  "RHGarden.xiSpectral_reciprocal_sq_summable and summable_suzukiPsiZero_term prove the occurrence-indexed series converges absolutely for each real t. The representation is totalized at gamma=0 until XiMidpointNonzero is discharged."
+  "RHGarden.xiSpectral_reciprocal_sq_summable and summable_suzukiPsiZero_term prove the occurrence-indexed series converges absolutely for each real t; RHGarden.xiSpectralParameter_ne_zero proves every displayed denominator is nonzero."
   (NoReconstruction "The summed function does not by itself reconstruct the labelled spectral divisor.")
   Nothing
 

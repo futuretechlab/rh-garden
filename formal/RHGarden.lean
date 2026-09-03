@@ -25,3 +25,4 @@ import RHGarden.LiQuotientGrowth
 import RHGarden.LiStarIdentification
 import RHGarden.LiWeilInfinite
 import RHGarden.SuzukiScrew
+import RHGarden.XiMidpoint

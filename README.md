@@ -111,9 +111,9 @@ Gram/norm-square factorization of Li/Weil values is explicitly `Conjectural`.
 The Suzuki district now kernel-checks the occurrence-indexed zero-side series,
 the screw-kernel identity, the critical-line Gram factorization, and the
 implication from real Xi spectral parameters to kernel PSD. The converse is
-not checked. The literal nonzero-denominator interpretation also awaits the
-local classical fact `riemannXi (1/2) != 0`, which is not in the pinned
-Mathlib/Zeta23 API; see `SUZUKI_SCREW.md`.
+not checked. An Euler--Maclaurin remainder estimate now proves
+`riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula
+is unconditionally nonzero; see `SUZUKI_SCREW.md`.
 
 The non-negotiable invariant is that a numerical pattern, citation, symbolic
 experiment, or conjectural reduction never becomes proof merely because it

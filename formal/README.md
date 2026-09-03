@@ -171,10 +171,10 @@ prove any of those propositions.
 and constructs the absolutely convergent zero-side Suzuki function and screw
 kernel. The zero-side kernel identity, its critical-line Gram form, finite
 height convergence, finite-height PSD, and limiting PSD under `XiTZerosReal`
-are LeanChecked. The classical local fact `riemannXi (1/2) ≠ 0`, needed to know
-that Suzuki's denominators are literally nonzero rather than totalized, is not
-available in the pinned dependencies. It is exposed as `XiMidpointNonzero`;
-no axiom is added.
+are LeanChecked. `RHGarden/XiMidpoint.lean` uses the pinned Euler--Maclaurin
+formula and remainder bound to prove `Re (riemannZeta (1/2)) < 0`, hence
+`riemannXi (1/2) ≠ 0` and unconditional nonvanishing of every Suzuki spectral
+denominator.
 
 ## Open targets
 
@@ -182,9 +182,9 @@ no axiom is added.
 - Li-test Weil positivity and full Weil-form PSD remain open. The finite and
   infinite Weil-Li identities are checked, including absolute convergence of
   the infinite scalar and its equality to twice the classical Li coefficient.
-- Prove `XiMidpointNonzero`, preferably through a formal Dirichlet-eta identity
-  at `s=1/2`, then formalize Suzuki's converse from global screw-kernel PSD to
-  real spectral parameters.
+- Formalize Suzuki's converse from global screw-kernel PSD to real spectral
+  parameters. The forward critical-line Gram/PSD implication and midpoint
+  denominator nonvanishing are already checked.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

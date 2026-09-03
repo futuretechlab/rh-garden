@@ -204,7 +204,7 @@ representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(
 representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Weil/Li cutoff values"
 representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil values on the Li test family"
 representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral coordinates gamma=i(rho-1/2)"
-representationLabel SuzukiPsiZeroSide = "absolutely convergent totalized zero-side Suzuki Psi series"
+representationLabel SuzukiPsiZeroSide = "absolutely convergent zero-side Suzuki Psi series with nonzero spectral denominators"
 representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
 representationLabel SuzukiGramKernel = "critical-line spectral Gram expansion of the Riemann screw kernel"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"

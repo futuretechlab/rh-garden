@@ -69,28 +69,30 @@ points and coefficients.
 The converse implication is not formalized. It needs the global analytic
 machinery in Suzuki's criterion and is kept literature-certified.
 
-## Explicit midpoint nonvanishing boundary
+## Midpoint and literal denominators
 
-Lean's division is totalized, so the algebraic series above is still a Lean
-term if a spectral parameter is zero. Suzuki's literal denominator requires
-the classical fact
+`RHGarden.XiMidpoint` proves the classical fact
 
 ```text
 XiMidpointNonzero := riemannXi (1/2) != 0.
 ```
 
-The file proves
+The proof uses the pinned `N=1` Euler--Maclaurin representation
 
 ```text
-gamma_a != 0 <-> rho_a != 1/2
-XiMidpointNonzero -> gamma_a != 0.
+zeta(1/2) = -3/2 + J/2,    |J| <= 2.
 ```
 
-The pinned Mathlib/Zeta23 environment has no theorem establishing
-`riemannXi (1/2) != 0`; in particular, zero counting starts too high to supply
-that local fact. RH Garden therefore records the input explicitly rather than
-introducing an axiom or silently treating totalized division as a
-nonvanishing proof.
+It follows that `Re zeta(1/2) < 0`; therefore zeta and xi do not vanish at the
+midpoint. Together with the coordinate algebra, Lean proves
 
-The exact next local task is a kernel-checked Dirichlet-eta argument at
-`s=1/2`. After that, the next large frontier is Suzuki's PSD converse.
+```text
+gamma_a != 0 <-> rho_a != 1/2,
+gamma_a != 0.
+```
+
+Thus every spectral denominator in the displayed Suzuki formulas is
+unconditionally and literally nonzero. No RH or zero-counting hypothesis is
+used.
+
+The next large frontier is Suzuki's PSD converse.
