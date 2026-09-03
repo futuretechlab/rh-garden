@@ -40,6 +40,8 @@ data Criterion
   | XiRiemannHypothesis
   | XiZerosReal
   | LiPositive
+  | WeilLiPositive
+  | WeilFormPSD
   | NymanBeurlingDense
   | LagariasInequality
   | SelfAdjointXiRealization
@@ -51,6 +53,8 @@ data SCriterion (c :: Criterion) where
   SXiRiemannHypothesis    :: SCriterion 'XiRiemannHypothesis
   SXiZerosReal            :: SCriterion 'XiZerosReal
   SLiPositive             :: SCriterion 'LiPositive
+  SWeilLiPositive         :: SCriterion 'WeilLiPositive
+  SWeilFormPSD            :: SCriterion 'WeilFormPSD
   SNymanBeurlingDense     :: SCriterion 'NymanBeurlingDense
   SLagariasInequality     :: SCriterion 'LagariasInequality
   SSelfAdjointXiRealization :: SCriterion 'SelfAdjointXiRealization
@@ -62,6 +66,8 @@ criterionValue SRH                       = RH
 criterionValue SXiRiemannHypothesis      = XiRiemannHypothesis
 criterionValue SXiZerosReal              = XiZerosReal
 criterionValue SLiPositive               = LiPositive
+criterionValue SWeilLiPositive           = WeilLiPositive
+criterionValue SWeilFormPSD              = WeilFormPSD
 criterionValue SNymanBeurlingDense       = NymanBeurlingDense
 criterionValue SLagariasInequality       = LagariasInequality
 criterionValue SSelfAdjointXiRealization = SelfAdjointXiRealization
@@ -71,6 +77,8 @@ criterionLabel RH = "Riemann Hypothesis"
 criterionLabel XiRiemannHypothesis = "Every zero s of the entire xi function has re(s)=1/2"
 criterionLabel XiZerosReal = "All zeros of Xi(t)=xi(1/2+it) are real"
 criterionLabel LiPositive = "Li coefficients lambda_n are nonnegative for every n>=1"
+criterionLabel WeilLiPositive = "Diagonal Weil values are nonnegative on every Li test G_n"
+criterionLabel WeilFormPSD = "Full Weil form is positive semidefinite on its complete test-function space"
 criterionLabel NymanBeurlingDense = "Nyman-Beurling closure/density criterion"
 criterionLabel LagariasInequality = "Lagarias divisor-sum inequality for every n>=1"
 criterionLabel SelfAdjointXiRealization =
@@ -98,6 +106,7 @@ data ObligationProperty
   = NontrivialZerosOnCriticalLine
   | XiZerosHaveRealOrdinates
   | EveryLiCoefficientNonnegative
+  | WeilLiDiagonalNonnegative
   deriving (Eq, Ord, Show)
 
 data Preservation = Preservation
@@ -215,6 +224,12 @@ criterionPreservation RH LiPositive = Just (Preservation
 criterionPreservation LiPositive RH = Just (Preservation
   EveryLiCoefficientNonnegative NontrivialZerosOnCriticalLine
   "Reverse direction of Li's criterion; literature-certified, not kernel checked.")
+criterionPreservation LiPositive WeilLiPositive = Just (Preservation
+  EveryLiCoefficientNonnegative WeilLiDiagonalNonnegative
+  "The LeanChecked identity W(G_n,G_n)=2*lambda_n transports nonnegativity coefficientwise.")
+criterionPreservation WeilLiPositive LiPositive = Just (Preservation
+  WeilLiDiagonalNonnegative EveryLiCoefficientNonnegative
+  "Divide the LeanChecked diagonal identity by the positive scalar 2.")
 criterionPreservation _ _ = Nothing
 
 admissibleInKernelMode :: RuntimeReduction -> Bool

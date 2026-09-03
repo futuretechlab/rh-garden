@@ -38,10 +38,16 @@ main = do
     case shortestRoute KernelMode certifiedGraph RH XiRiemannHypothesis of
       Just _ -> not (submissionReady (Nothing :: Maybe (Proof 'RH)))
       Nothing -> False
+  check "Li and Li-test Weil positivity are LeanChecked equivalent" $
+    case shortestRoute KernelMode certifiedGraph LiPositive WeilLiPositive of
+      Just _ -> True
+      Nothing -> False
+  check "full Weil-form PSD remains a distinct open criterion" $
+    shortestRoute KernelMode certifiedGraph WeilFormPSD LiPositive == Nothing
   check "LiteratureMode rejects Conjectural edges" $
-    shortestRepresentationRoute LiteratureMode representationExplorationGraph WeilQuadraticValues LiSequence == Nothing
+    shortestRepresentationRoute LiteratureMode representationExplorationGraph WeilLiQuadraticValues LiSequence == Nothing
   check "ExplorationMode accepts Conjectural edges" $
-    case shortestRepresentationRoute ExplorationMode representationExplorationGraph WeilQuadraticValues LiSequence of
+    case shortestRepresentationRoute ExplorationMode representationExplorationGraph WeilLiQuadraticValues LiSequence of
       Just _ -> True
       Nothing -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
@@ -88,8 +94,10 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph WeilLiTestFunctions FiniteWeilCutoffValues of
       Just _ -> True
       Nothing -> False
-  check "finite-to-infinite Weil limit remains literature-only" $
-    shortestRepresentationRoute KernelMode representationGraph FiniteWeilCutoffValues WeilQuadraticValues == Nothing
+  check "finite-to-infinite Weil limit is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph FiniteWeilCutoffValues WeilLiQuadraticValues of
+      Just route -> routeEndsAt route WeilLiQuadraticValues
+      Nothing -> False
   check "xi divisor to height-ordered star partial sums is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph XiFunction LiStarPartialSums of
       Just _ -> True

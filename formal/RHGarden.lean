@@ -23,3 +23,4 @@ import RHGarden.LiExpAffine
 import RHGarden.LiXiQuotient
 import RHGarden.LiQuotientGrowth
 import RHGarden.LiStarIdentification
+import RHGarden.LiWeilInfinite

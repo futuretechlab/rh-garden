@@ -17,7 +17,7 @@ The program keeps four domains separate:
    construct an operator.
 2. `RHGarden.Representation` models data/description forms independently:
    `XiFunction`, `XiZeros`, `MobiusVariable`, `XiAfterMobius`, `LogXiMobius`,
-   `LiGeneratingSeries`, `LiSequence`, and `WeilQuadraticValues`.
+   `LiGeneratingSeries`, `LiSequence`, and `WeilLiQuadraticValues`.
 3. `RHGarden.Algebra` and `RHGarden.Mobius` implement a small exact algebra
    checker over `Rational`. It does not evaluate xi or zeta.
 4. `RHGarden.Evidence` contains finite floating-point experiments. It exports

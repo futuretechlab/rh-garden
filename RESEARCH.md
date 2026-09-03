@@ -1,247 +1,147 @@
-# Research corridor: xi to the Li sequence
+# RH Garden research status
 
-**Status: this project does not currently prove the Riemann Hypothesis.** The
-implemented corridor organizes known identities and exposes missing proof
-obligations. The local route from the normalized xi generating germ to the
-independently defined standard classical Li coefficients is now kernel checked;
-the positivity and RH-criterion bridges remain literature metadata.
+**This project does not prove the Riemann Hypothesis.** It now certifies a
+large representation loop for Riemann xi and the Li test family, but the
+universal positivity proposition remains open.
 
-## Common source and target
+## LeanChecked representation loop
 
-The source is Riemann's completed function
+The first analytic loop is closed in Lean:
 
 ```text
-xi(s) = 1/2 s(s-1) pi^(-s/2) Gamma(s/2) zeta(s).
+Xi
+  -> Taylor and generating representations
+  -> classical Li coefficients
+  -> signed Lagarias height-star zero sums
+  -> occurrence-indexed genus-one canonical product
+  -> exact xi logarithmic derivative
+  -> Xi.
 ```
 
-The zero/Hadamard route and the Mobius/logarithmic-derivative route both reach
-Li coefficients with index convention `n >= 1`. Taking a zero multiset is
-information loss: reconstruction requires normalization, growth, exponential
-factors, and analytic hypotheses that are not silently assumed. The registered
-zero formula
+The checked ingredients include the multiplicity-aware xi divisor, genuine
+height cutoffs, exact conjugation and Weil-reflection symmetries, the pinned
+Zeta23 local zero-count estimate, reciprocal-square and reciprocal-three-halves
+summability, canonical-product local uniform convergence, the zero-free
+quotient growth theorem, normalized affine factorization, and passage of
+finite Li jets through locally uniform logarithmic-derivative limits.
+
+In the project's zero-based convention,
+`classicalLiRealCoefficient k` is the conventional coefficient
+`lambda_(k+1)`. Lean proves that the complex coefficient is real and that both
+signed star limits have this value:
 
 ```text
-lambda_n = sum_rho [1 - (1 - 1/rho)^n]
+LiStarConvergesTo ( k+1) (classicalLiCoefficient k)
+LiStarConvergesTo (-(k+1)) (classicalLiCoefficient k).
 ```
 
-retains its standard limiting interpretation and remains
-`LiteratureCertified`.
+Individual Li zero sums retain Lagarias's conditional height-star convention;
+they are not silently represented by an unordered `tsum`.
 
-The formal analytic route now continues through fully checked local steps:
+## Infinite Weil-Li representation
+
+For the integer-indexed Li tests
 
 ```text
-XiFunction
-  -> XiTaylorAtOne
-  -> XiAfterFormalMobius
-  -> LiGeneratingLog
-  -> LiGeneratingSequence
-  -> NormalizedClassicalLiSequence
-  -> ClassicalLiSequence
+G_n(s) = 1 - (1 - 1/s)^n,
 ```
 
-The last edge is branch-conscious. Lean compares logarithmic derivatives near
-`s = 1`, proves the two logarithms differ locally by a constant, and observes
-that the `(n+1)`-st derivative of `C*s^n` vanishes. It does not assume a global
-complex-log addition law.
-
-## Distinct sequence and proposition layers
-
-The research map keeps these notions distinct:
+`RHGarden.LiWeilInfinite` defines the occurrence-indexed Weil summand and the
+ordinary infinite scalar
 
 ```text
-ClassicalLiSequence
-ClassicalLiRealSequence
-LiPositive
-WeilLiTestFunctions
-WeilQuadraticValues
-WeilPositive
-RiemannHypothesis
+weilLiScalar n m =
+  sum_rho G_n(rho) * conjugate(G_m(1-conjugate(rho))).
 ```
 
-`ClassicalLiSequence` and `ClassicalLiRealSequence` are separate representation
-nodes joined by a `LeanChecked` coefficientwise real-embedding theorem. `LiPositive` and
-`RiemannHypothesis` are criterion propositions. `WeilPositive` is a separate
-property of `WeilQuadraticValues`. Sequence identification, real-valuedness,
-positivity, and RH equivalence therefore cannot be conflated by route search.
+This sum is absolutely convergent. Lean proves each test is
+`O(1/|rho|)` on xi zeros, bounds a paired summand by a constant times
+`1/|rho|^2`, applies occurrence-indexed reciprocal-square summability, and
+shows the genuine height cutoffs exhaust the resulting `tsum`.
 
-Li's `LiPositive <-> RiemannHypothesis` criterion remains literature-certified.
-Finite positivity computations cannot satisfy its universal quantifier. The
-representation graph records both directions of the literature relationship
-between the standard classical Li sequence and the specified Weil
-quadratic-functional values. It does **not** assume Weil positivity.
-
-## Status ledger
-
-Implemented and kernel checked:
-
-- the xi/nontrivial-zeta-zero correspondence and RH/xi critical-line
-  reformulations (equivalences of open propositions, not proofs of them);
-- analytic xi Taylor and local logarithm germs;
-- the finite FMS/PowerSeries Mobius coefficient adapter;
-- generating coefficients equal normalized classical Li coefficients;
-- the standard local xi logarithm at `s = 1`;
-- local equality of normalized and standard logarithmic derivatives;
-- local constancy of their difference and annihilation of `C*s^n`;
-- generating coefficients equal independently defined standard classical Li
-  coefficients.
-
-Literature-certified only:
-
-- the zero-sum formula and its analytic summation convention;
-- Li positivity equivalent to RH;
-- the real classical Li sequence mapped to Lagarias's registered test functions
-  and Weil functional values (see `LAGARIAS_WEIL.md`);
-- Nyman-Beurling and Lagarias criteria;
-- hypotheses needed for global zero products and reconstruction.
-
-Conjectural or unconstructed:
-
-- a positive Gram or norm-square factorization for all Li coefficients;
-- a self-adjoint Hilbert-Polya operator with exactly the required spectrum;
-- a bridge unifying Li/Weil positivity with Nyman-Beurling geometry.
-
-## Prospective Li-Weil-spectral corridor
-
-The next research corridor is deliberately staged:
+Passing the finite identity through this ordinary limit on the left and three
+star limits on the right proves Lagarias equation (3.3) for Riemann xi:
 
 ```text
-ClassicalLiRealSequence
-  -> LiZeroSumSequence
-  -> FiniteWeilCutoffValues
-  -> WeilQuadraticValues
-  -> WeilPositive
-  -> RiemannHypothesis
-
-WeilLiTestFunctions
-  -> FiniteWeilCutoffValues
+weilLiScalar n m
+  = classicalLiSigned n
+  + classicalLiSigned (-m)
+  - classicalLiSigned (n-m).
 ```
 
-The later spectral research corridor is:
+Hermitian symmetry is also LeanChecked. On the diagonal, equation (3.4)
+becomes
 
 ```text
-Weil quadratic functional
-  -> positive-semidefinite representation?
-  -> screw function
-  -> finite-interval self-adjoint operators
-  -> conjectural limiting operator
+weilLiScalar n n = 2 * classicalLiSigned n
+weilLiQuadraticValue k = 2 * classicalLiRealCoefficient k.
 ```
 
-Lagarias defines `G_n(s)=1-(1-1/s)^n` and proves
-`||G_n||_W^2=2 Re(lambda_n)` in equations (3.2)--(3.4); exact hypotheses and
-conventions are recorded in `LAGARIAS_WEIL.md`. He obtains an RH criterion through positivity of their real parts
-([arXiv:math/0404394](https://arxiv.org/abs/math/0404394)). This is published
-provenance for the Li/Weil correspondence, not a LeanChecked edge.
-
-The finite algebraic core is now Lean checked in `RHGarden.WeilFinite`: (3.5),
-(3.6), finite (3.3), its diagonal form, and the `2*Re` form for explicitly
-reflection-stable `Multiset` cutoffs. This upgrades only
-`WeilLiTestFunctions -> FiniteWeilCutoffValues`. Derivative Li to the
-conditionally star-convergent zero sum, selection of cofinal zero cutoffs, and
-the absolutely convergent finite-to-infinite Weil limit remain literature-only
-analytic boundaries. In particular, the norm-square notation does not prove
-the Weil form positive semidefinite.
-
-The next representation layer is also Lean checked, without convergence:
+The second formula is the certified bridge
 
 ```text
-XiFunction -> XiDivisor -> XiRadialZeroCutoff
-XiDivisor -> XiHeightZeroCutoff
+ClassicalLiRealSequence <-> WeilLiQuadraticValues.
+```
+
+The representation name deliberately says `WeilLi`: only Lagarias's Li test
+family has been formalized at the infinite level.
+
+## Distinct positivity propositions
+
+The garden keeps three claims separate:
+
+```text
+LiPositive       := every classical Li coefficient is nonnegative
+WeilLiPositive   := every diagonal Weil value on G_n is nonnegative
+WeilFormPSD      := the full Weil form is positive semidefinite on its test space
+```
+
+Lean proves
+
+```text
+LiPositive <-> WeilLiPositive
+```
+
+coefficientwise from `weilLiQuadraticValue k = 2*lambda_(k+1)`. This is an
+equivalence of two open propositions and proves neither endpoint. The full
+`WeilFormPSD` statement is stronger and remains a separate future
+formalization; it must not be inferred from the Li-test diagonal identity.
+
+Li's `LiPositive <-> RiemannHypothesis` criterion remains registered as
+literature-certified rather than kernel-checked. Thus neither Li positivity,
+Weil-Li positivity, full Weil positivity, nor RH has been discharged.
+
+## Garden trust state
+
+The following representation edges are LeanChecked:
+
+```text
 XiHeightZeroCutoff -> LiStarPartialSums
 XiHeightZeroCutoff -> FiniteWeilCutoffValues
+LiStarConvergence -> WeilLiQuadraticValues
+FiniteWeilCutoffValues -> WeilLiQuadraticValues
+ClassicalLiRealSequence <-> WeilLiQuadraticValues.
 ```
 
-`xiZeroHeightCutoff T` is the divisor support in `|Im rho|<=T`, repeated by
-analytic multiplicity, matching Lagarias equation (6.106). Weil reflection
-preserves height and analytic multiplicity exactly, so this cutoff is
-reflection-stable. `xiZeroRadialCutoff` remains a separate auxiliary object for
-the radial cuts used in Lagarias's interpolation section. `LiStarConvergesTo`
-is only a `Tendsto` proposition. The edges
-from partial sums to convergence, from derivative Li to the negative-index star
-limit, and from convergent finite identities to the infinite Weil functional
-remain literature-only. Radial cutoffs are not claimed reflection-stable: only
-their unconditional norm displacement bound by one is checked.
-
-Suzuki's screw-function program supplies a continuous-function framework for
-studying Weil's distributional quadratic form. Earlier work develops RH
-equivalences and unconditional partial results through the zeta screw function
-([arXiv:2206.03682](https://arxiv.org/abs/2206.03682)). The 2026 work organizes
-Weil's quadratic form through that framework and studies finite-interval
-self-adjoint operators without assuming RH
-([arXiv:2606.09096](https://arxiv.org/abs/2606.09096)). Its limiting
-self-adjoint realization with spectrum equal to the zero ordinates is explicitly
-a conjecture. The project must not register that limit as proved or use it to
-upgrade Weil positivity, Li positivity, or RH.
-
-## Next mathematical bottleneck
-
-Real-valuedness of every `classicalLiCoefficient` is now Lean checked from xi
-conjugation symmetry and local principal-log symmetry at `s=1`. `LiPositive`
-is defined on the real sequence but remains unproved. The zeta/xi multiplicity
-seam and the exact half-open height-window count representation are now also
-Lean checked in `RHGarden.ZetaMultiplicity`. The proposition
-`XiLocalZeroCountBound` is deliberately unproved; the equivalent zeta theorem
-is externally formalized by Anthropic's Apache-2.0 `zeta-23-lean` artifact at
-the revision recorded in `ZETA23_COMPATIBILITY.md`.
-
-The next formal boundary is integrating or selectively adapting that local
-height-count theorem. Reconnaissance found that upstream's local
-logarithmic-derivative partial fraction has a slightly smaller raw dependency
-closure but supplies only a finite disk-local approximation, not the paired
-height limit needed for `Σ 1/ρ`; it is therefore not presently a cheaper
-star-convergence route. Once the local count is available, the generic
-reciprocal-square summability argument is small enough to adapt independently.
-The remaining special step is the `n=1` paired cancellation argument. Separately, the
-infinite Weil form needs absolute-convergence control. The broader bottleneck remains a certified, non-circular
-universal positivity theorem; this sprint claims none.
-
-## Conditional Li star convergence layer
-
-The local-count consequence layer is now Lean checked as an implication:
+The criterion reductions
 
 ```text
-[OPEN] XiLocalZeroCountBound
-  -> ReciprocalSquareSummability
-  -> ReciprocalStarConvergence
-  -> positive-index G_n star convergence
-  -> negative-index convergence by exact height-cutoff reflection
+LiPositive <-> WeilLiPositive
 ```
 
-`RHGarden.liStarConvergence_of_localZeroCount` proves that the single explicit
-premise implies existence of every integer-indexed Lagarias height star limit.
-The proof groups multiplicities into integer-height windows, treats the bounded
-region separately, uses conjugation to turn the first reciprocal moment into a
-real absolutely dominated sum, and uses a finite binomial expansion for each
-`G_n`. The Apache-2.0 provenance header records the adapted generic argument.
+are also LeanChecked. No edge promotes either proposition to a proof, and no
+edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
-This does not prove `XiLocalZeroCountBound`. It also does not identify any star
-limit with `classicalLiCoefficient`; that remains a separate logarithmic-
-derivative/Hadamard analytic boundary. The next isolated implementation gate is
-therefore the upstream-compatible unit-height zero-count theorem.
+## Exact next frontier
 
-## Post-integration correction: convergence is discharged
+The representation and convergence questions for the Li test family are now
+closed. The next mathematical frontier is a certified, non-circular proof of
+nonnegativity of the equivalent sequences—either `LiPositive` or
+`WeilLiPositive`—or a genuinely stronger construction proving the full Weil
+form positive semidefinite. A positive Gram/norm-square factorization, a full
+Weil test-space development, or an independently certified operator-theoretic
+argument would be new mathematics; none is claimed here.
 
-The preceding historical status was superseded by the pinned Zeta23
-integration. Its Apache-2.0 local zeta-zero theorem is checked by the same Lean
-kernel build; `xiLocalZeroCountBound` and `liStarConvergence` are now
-unconditional LeanChecked theorems. Proof authorship remains attributed to
-Anthropic PBC at the exact revision in `ZETA23_COMPATIBILITY.md`.
-
-The remaining boundary is value identification, not convergence. Lagarias's
-convention has been re-audited directly: zero-based derivative index `k`
-first targets star index `-(k+1)`; positive-index equality follows separately
-from zeta symmetry and real-valuedness.
-
-Pinned Zeta23's `zeta_logDeriv_partial_fraction` is a disk-local approximation
-with an error term, not a global xi zero expansion. Its `zero_sum_limit`
-applies to the absolutely convergent Weil explicit-formula test class. Neither
-identifies the star limit with `classicalLiCoefficient`.
-
-`RHGarden.LiHadamardFinite` isolates the finite genus-one algebra: the primary
-factor `Eâ‚(w)=(1-w)exp(w)`, its finite multiplicity-aware product, its exact
-logarithmic derivative, and the finite negative-index Li jet identity. The
-remaining infinite theorem is `XiGenusOneFactorization`, followed by locally
-uniform logarithmic-derivative passage and determination of the linear
-exponential constant from xi symmetry. Mathlib supplies generic locally
-uniform product tools, but neither Mathlib nor Zeta23 supplies Hadamard
-factorization of xi (or a general order-one entire factorization theorem).
-This is the exact next analytic frontier; positivity remains out of scope.
+The later Suzuki screw-function and Hilbert--Polya operator programs remain
+research directions only. They must not be registered as proofs without a
+finite, auditable kernel term and all required analytic identifications.

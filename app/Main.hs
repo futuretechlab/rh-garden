@@ -62,6 +62,8 @@ routes mode graph = do
       [ XiZerosReal
       , XiRiemannHypothesis
       , LiPositive
+      , WeilLiPositive
+      , WeilFormPSD
       , NymanBeurlingDense
       , LagariasInequality
       , SelfAdjointXiRealization
@@ -91,9 +93,11 @@ submissionStatus = do
   putStrLn ""
   putStrLn "Open proof frontiers already represented in the graph:"
   putStrLn "  1. LiPositive: prove lambda_n >= 0 for every n >= 1."
-  putStrLn "  2. NymanBeurlingDense: prove the required L2 closure/density statement."
-  putStrLn "  3. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
-  putStrLn "  4. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
+  putStrLn "  2. WeilLiPositive: equivalently prove nonnegativity on every Li-test diagonal."
+  putStrLn "  3. WeilFormPSD: prove positive semidefiniteness on the full Weil test space."
+  putStrLn "  4. NymanBeurlingDense: prove the required L2 closure/density statement."
+  putStrLn "  5. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
+  putStrLn "  6. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
   putStrLn ""
   putStrLn "A publishable proof requires at least one frontier to be discharged by a finite, auditable proof term."
 
@@ -346,6 +350,18 @@ formalStatus = do
     , "finiteLogDerivLiJet_tendsto_classicalLiCoefficient"
     , "classicalLiEqualsNegativeStar"
     , "classicalLiEqualsPositiveStar"
+    , "classicalLiSigned_neg"
+    , "liStarConvergesTo_classicalLiSigned"
+    , "norm_weilLiTest_le_inv_norm"
+    , "summable_weilLiScalarTerm"
+    , "tendsto_heightCutoff_sum_of_summable"
+    , "finiteWeilScalar_heightCutoff_tendsto"
+    , "weilLiScalar_eq_classicalLiSigned"
+    , "weilLiScalar_conj_symm"
+    , "weilLiScalar_self"
+    , "weilLiScalar_self_nat"
+    , "weilLiQuadraticValue_eq_two_li"
+    , "liPositive_iff_weilLiPositive"
     , "liXiSeries_constantCoeff"
     , "liXiSeries_isUnit"
     , "liXiSeries_mul_inv"

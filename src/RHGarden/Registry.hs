@@ -105,6 +105,20 @@ liToRh = eraseReduction $ literatureEquiv
   2 liRef
   "Nonnegativity of all Li coefficients is necessary and sufficient for RH."
 
+liToWeilLiPositive :: RuntimeReduction
+liToWeilLiPositive = eraseReduction $ leanEquiv
+  SLiPositive SWeilLiPositive
+  "Li positivity iff positivity of the Li-test Weil diagonal"
+  1 liWeilInfiniteRef
+  "RHGarden.liPositive_iff_weilLiPositive uses W(G_n,G_n)=2*lambda_n; it proves an equivalence of open propositions only."
+
+weilLiPositiveToLi :: RuntimeReduction
+weilLiPositiveToLi = eraseReduction $ leanEquiv
+  SWeilLiPositive SLiPositive
+  "positivity of the Li-test Weil diagonal iff Li positivity"
+  1 liWeilInfiniteRef
+  "Reverse direction of the same LeanChecked coefficientwise identity; full Weil-form PSD is a distinct, stronger future criterion."
+
 rhToNyman :: RuntimeReduction
 rhToNyman = eraseReduction $ literatureEquiv
   SRH SNymanBeurlingDense
@@ -161,7 +175,7 @@ certifiedGraph :: [RuntimeReduction]
 certifiedGraph =
   [ rhToXiHypothesis, xiHypothesisToRh
   , xiHypothesisToXiT, xiTToXiHypothesis
-  , rhToLi, liToRh
+  , rhToLi, liToRh, liToWeilLiPositive, weilLiPositiveToLi
   , rhToNyman, nymanToRh
   , rhToLagarias, lagariasToRh
   , xiToSelfAdjoint
@@ -239,6 +253,12 @@ liStarIdentificationRef :: Reference
 liStarIdentificationRef = Reference
   { refShort = "RHGarden.LiStarIdentification"
   , refCitation = "Lean reciprocal-star limit, locally uniform xi partial-fraction convergence, finite Li-jet transport, and classicalLiEqualsNegativeStar in formal/RHGarden/LiStarIdentification.lean; lake build is authoritative."
+  }
+
+liWeilInfiniteRef :: Reference
+liWeilInfiniteRef = Reference
+  { refShort = "RHGarden.LiWeilInfinite"
+  , refCitation = "Lean absolute Weil-summability, height-cutoff exhaustion, infinite Lagarias (3.3), diagonal (3.4), and Li/Weil-Li positivity-equivalence theorems in formal/RHGarden/LiWeilInfinite.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference
@@ -461,9 +481,9 @@ classicalLiToStarConvergence = eraseRepresentationEdge $ representationEdge
 
 starConvergenceToWeil :: RuntimeRepresentationEdge
 starConvergenceToWeil = eraseRepresentationEdge $ representationEdge
-  SLiStarConvergence SWeilQuadraticValues "pass star identities to the infinite Weil functional"
-  EquivalentTheorem literatureCertifiedTrust 5 weilRef
-  "Requires separate conditional Li and absolute Weil convergence control."
+  SLiStarConvergence SWeilLiQuadraticValues "pass star identities to the infinite Weil-Li scalar"
+  EquivalentTheorem leanCheckedTrust 1 liWeilInfiniteRef
+  "RHGarden.weilLiScalar_eq_classicalLiSigned combines ordinary absolute convergence on the Weil side with the three signed Li star limits."
   (NoReconstruction "Convergence values alone do not reconstruct the full Weil form.")
   Nothing
 
@@ -523,10 +543,28 @@ weilTestsToFiniteValues = eraseRepresentationEdge $ representationEdge
 
 finiteCutoffsToWeil :: RuntimeRepresentationEdge
 finiteCutoffsToWeil = eraseRepresentationEdge $ representationEdge
-  SFiniteWeilCutoffValues SWeilQuadraticValues "pass finite cutoffs to the infinite Weil scalar"
-  EquivalentTheorem literatureCertifiedTrust 4 weilRef
-  "Requires absolute convergence of the Weil scalar and limit control; the finite Lean theorem does not prove this step."
+  SFiniteWeilCutoffValues SWeilLiQuadraticValues "pass finite cutoffs to the infinite Weil-Li scalar"
+  EquivalentTheorem leanCheckedTrust 1 liWeilInfiniteRef
+  "RHGarden.finiteWeilScalar_heightCutoff_tendsto proves exhaustion of the ordinary absolutely convergent occurrence-indexed tsum."
   (ReconstructionUpTo "The infinite value is a controlled limit of a specified cofinal cutoff family.")
+  Nothing
+
+realLiToWeilLiQuadratic :: RuntimeRepresentationEdge
+realLiToWeilLiQuadratic = eraseRepresentationEdge $ representationEdge
+  SClassicalLiRealSequence SWeilLiQuadraticValues
+  "identify each Li-test Weil diagonal value as twice the classical Li coefficient"
+  EquivalentTheorem leanCheckedTrust 1 liWeilInfiniteRef
+  "RHGarden.weilLiQuadraticValue_eq_two_li proves W(G_(k+1),G_(k+1))=2*lambda_(k+1)."
+  (ExactInverse "Recover each real Li coefficient by division by 2.")
+  Nothing
+
+weilLiQuadraticToRealLi :: RuntimeRepresentationEdge
+weilLiQuadraticToRealLi = eraseRepresentationEdge $ representationEdge
+  SWeilLiQuadraticValues SClassicalLiRealSequence
+  "recover classical Li coefficients from the Li-test Weil diagonal"
+  EquivalentTheorem leanCheckedTrust 1 liWeilInfiniteRef
+  "Reverse use of RHGarden.weilLiQuadraticValue_eq_two_li."
+  (ExactInverse "Multiply each real Li coefficient by 2 to recover the Weil diagonal value.")
   Nothing
 
 xiToTaylorData :: RuntimeRepresentationEdge
@@ -651,12 +689,12 @@ standardToNegativeMobiusXi = eraseRepresentationEdge $ representationEdge
 
 conjecturalPositiveFactorization :: RuntimeRepresentationEdge
 conjecturalPositiveFactorization = eraseRepresentationEdge $ representationEdge
-  SWeilQuadraticValues SLiSequence "candidate positive Gram factorization"
+  SWeilLiQuadraticValues SLiSequence "candidate positive Gram factorization"
   ConjecturalBridge conjecturalTrust 8
   (Reference "UNPROVED RESEARCH EDGE" "No positive operator or norm-square factorization is currently proved.")
   "Seek lambda_n=||T v_n||^2 without assuming RH."
   (NoReconstruction "No transform exists until the conjectural factorization is constructed and proved.")
-  (Just (PropertyTransport WeilFormNonnegative AllLiCoefficientsNonnegative
+  (Just (PropertyTransport WeilLiValuesNonnegative AllLiCoefficientsNonnegative
     "A proved norm-square identity would transport positivity, but this statement is currently conjectural."))
 
 representationGraph :: [RuntimeRepresentationEdge]
@@ -673,6 +711,7 @@ representationGraph =
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs
   , weilTestsToFiniteValues, finiteCutoffsToWeil
+  , realLiToWeilLiQuadratic, weilLiQuadraticToRealLi
   , xiToTaylorData, mobiusToFormalSeries, formalTaylorComposition
   , formalMobiusCompositionInput, formalLogDerivative, formalCoefficientExtraction
   , formalToClassicalLi, certifiedXiToGeneratingLog, generatingLogToSequence

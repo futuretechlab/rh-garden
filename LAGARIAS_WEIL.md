@@ -1,8 +1,9 @@
 # Lagarias Li/Weil normalization map
 
-This note records the next formalization target from Jeffrey C. Lagarias,
+This note records the RH Garden specialization of Jeffrey C. Lagarias,
 *Li coefficients for automorphic L-functions*, Ann. Inst. Fourier 57 (2007),
-1689--1740, Section 3, DOI 10.5802/aif.2311. Nothing here is currently a Lean theorem.
+1689--1740, Section 3, DOI 10.5802/aif.2311. The finite and infinite
+Li-test identities described below are now LeanChecked for Riemann xi.
 
 ## Hypotheses and ambient test space
 
@@ -55,32 +56,42 @@ general. For Riemann zeta the coefficients are real, so it is `2*lambda_n`.
 RHGarden is zero-based: `classicalLiRealCoefficient k` represents
 `lambda_(k+1)`, corresponding to `G_(k+1)`.
 
-The next formal boundary is to define this test family and the zero-sum/Weil
-form with its convergence convention, then specialize (3.4). Until then all
-edges through `WeilLiTestFunctions` and `WeilQuadraticValues` remain
-`LiteratureCertified`.
+`RHGarden.LiWeilInfinite` defines the occurrence-indexed scalar as an ordinary
+`tsum`, proves its absolute convergence, and specializes both (3.3) and (3.4).
+The garden node is named `WeilLiQuadraticValues` to distinguish this Li-test
+diagonal from the future full Weil form.
 
-## Lean-checked finite core and remaining limits
+## Lean-checked finite and infinite layers
 
 `formal/RHGarden/WeilFinite.lean` now checks (3.5), (3.6), and the exact
 finite-Multiset analogue of (3.3). `Multiset` is essential: a cutoff retains
 zero multiplicities. For a reflection-stable valid cutoff it also checks the
 diagonal identity with `2*Re`.
 
-These finite theorems do not identify `finiteLiZeroValue` with the project's
-derivative-defined `classicalLiRealCoefficient`. Two analytic boundaries remain:
+`formal/RHGarden/LiStarIdentification.lean` identifies both signed height-star
+limits with the derivative-defined classical Li coefficient. Then
+`formal/RHGarden/LiWeilInfinite.lean` proves `G_n(rho)=O(1/|rho|)`, absolute
+summability of each product pair, exhaustion of the ordinary `tsum` by the
+same height cutoffs, and the infinite identity
 
-1. Lagarias's infinite Li zero sum is conditionally star-convergent. Proving
-   derivative Li equals zero-sum Li requires a precise ordered cutoff family,
-   star-convergence, and the logarithmic-derivative/Hadamard argument.
-2. The Weil scalar product on class `A` is absolutely convergent because both
-   tests have uniform `O(1/|s|)` growth. Passing the finite (3.3) identity to
-   the infinite form requires proving convergence and compatibility of the
-   same cutoff family with that absolutely convergent sum.
+```text
+weilLiScalar n m
+  = classicalLiSigned n
+  + classicalLiSigned (-m)
+  - classicalLiSigned (n-m).
+```
+
+Its diagonal consequence is LeanChecked:
+
+```text
+weilLiQuadraticValue k = 2 * classicalLiRealCoefficient k.
+```
 
 Ordinary `tsum` is therefore not used as a common encoding for both limits.
 The notation `||G_n||_W^2` also carries no unconditional positivity claim:
-positive semidefiniteness of the infinite Weil form is RH-level content.
+`WeilLiPositive` remains open, although Lean checks its equivalence with
+`LiPositive`. Positive semidefiniteness of the full Weil form on all of `A` is
+the separate future criterion `WeilFormPSD`.
 
 ## Pinned mathlib reconnaissance
 
@@ -120,12 +131,13 @@ liStarPartial T n = finiteLiZeroValue (xiZeroHeightCutoff T) n
 is Lagarias's genuine incomplete Li coefficient ordering. Equation (6.106)
 uses `|Im rho|<=T`, not a radial norm bound. Only the proposition
 `LiStarConvergesTo n L := Tendsto (fun T => liStarPartial T n) atTop (nhds L)`
-is introduced. No chosen limit and no convergence theorem are present.
+is introduced. The pinned local zero-count theorem and subsequent Hadamard
+identification now prove its limit for every integer index.
 
 The normalization boundary is recorded faithfully: the derivative coefficient
-at zero-based index `k` first targets the negative star index `-(k+1)` via the
-open proposition `ClassicalLiEqualsNegativeStar`. Positive/negative star-index
-symmetry is a separate open proposition `StarLiSymmetry`.
+at zero-based index `k` first targets the negative star index `-(k+1)` through
+the LeanChecked theorem `classicalLiEqualsNegativeStar`; the positive-index
+version is `classicalLiEqualsPositiveStar`.
 
 This sign has now been re-audited directly against Lagarias's equations
 (1.1)--(1.5): his derivative coefficient `tilde lambda_m` in (1.3) is
@@ -152,26 +164,15 @@ The earlier stable-mathlib-only state left star convergence open. The pinned
 Zeta23 dependency now supplies the local unit-height zero bound, and RH Garden
 uses it to prove `liStarConvergence` for every integer index.
 
-## Hadamard identification boundary
+## Current frontier
 
-Star convergence is now supplied unconditionally through the pinned Zeta23
-local zero-count theorem, but convergence does not identify the limit's value.
-Pinned Zeta23 has the exact local completed-zeta identities
-`logDeriv_completedZeta`, `logDeriv_completedZeta_one_sub`, and
-`completedZeta_zeros_strip`. Its theorem
-`zeta_logDeriv_partial_fraction` is instead a finite disk approximation with
-an explicit `O(log (|t|+3))` error. `zero_sum_limit` treats the absolutely
-convergent transformed zero side of the Weil explicit formula. Neither is a
-global Hadamard/logarithmic-derivative identity for xi.
+The full occurrence-indexed genus-one product, normalized affine factor,
+exact logarithmic derivative, classical/star identification, and infinite
+Li-test Weil identities are all LeanChecked. The remaining problem is no
+longer representation or convergence: it is to prove nonnegativity.
 
-`RHGarden.LiHadamardFinite` records the convergence-free genus-one algebra.
-The remaining analytic input is a xi-specific Hadamard factorization, stated
-there as `XiGenusOneFactorization`: local uniform convergence of the primary
-factor product together with an exponential quotient of degree at most one.
-One must then determine its linear constant (equivalently use the xi
-functional equation), pass logarithmic derivatives locally uniformly near
-`s=1`, and apply the checked finite Li jet identity. Mathlib supplies generic
-locally uniform infinite-product and logarithmic-derivative tools, including
-`logDeriv_tprod_eq_tsum`, but no theorem proving this factorization from
-entire order-one growth. Consequently `ClassicalLiEqualsNegativeStar`
-remains open and no garden trust edge is upgraded by the finite algebra alone.
+The immediate open proposition may be stated either as `LiPositive` or as
+`WeilLiPositive`; `RHGarden.liPositive_iff_weilLiPositive` proves these are
+equivalent. This does not prove either one. Extending the construction from
+the Li test family to Lagarias's whole space `A` and proving `WeilFormPSD`
+remains a larger, distinct formalization frontier.

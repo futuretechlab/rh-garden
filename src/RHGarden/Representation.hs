@@ -52,7 +52,7 @@ data Representation
   | LiZeroSumSequence
   | WeilLiTestFunctions
   | FiniteWeilCutoffValues
-  | WeilQuadraticValues
+  | WeilLiQuadraticValues
   | XiTaylorAtOne
   | MobiusFormalSeries
   | XiAfterFormalMobius
@@ -98,7 +98,7 @@ data SRepresentation (r :: Representation) where
   SLiZeroSumSequence :: SRepresentation 'LiZeroSumSequence
   SWeilLiTestFunctions :: SRepresentation 'WeilLiTestFunctions
   SFiniteWeilCutoffValues :: SRepresentation 'FiniteWeilCutoffValues
-  SWeilQuadraticValues :: SRepresentation 'WeilQuadraticValues
+  SWeilLiQuadraticValues :: SRepresentation 'WeilLiQuadraticValues
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
   SMobiusFormalSeries :: SRepresentation 'MobiusFormalSeries
   SXiAfterFormalMobius :: SRepresentation 'XiAfterFormalMobius
@@ -145,7 +145,7 @@ representationValue SLiStarConvergence = LiStarConvergence
 representationValue SLiZeroSumSequence = LiZeroSumSequence
 representationValue SWeilLiTestFunctions = WeilLiTestFunctions
 representationValue SFiniteWeilCutoffValues = FiniteWeilCutoffValues
-representationValue SWeilQuadraticValues = WeilQuadraticValues
+representationValue SWeilLiQuadraticValues = WeilLiQuadraticValues
 representationValue SXiTaylorAtOne = XiTaylorAtOne
 representationValue SMobiusFormalSeries = MobiusFormalSeries
 representationValue SXiAfterFormalMobius = XiAfterFormalMobius
@@ -190,7 +190,7 @@ representationLabel LiStarConvergence = "Lagarias height-ordered star-convergenc
 representationLabel LiZeroSumSequence = "conditionally star-convergent Li zero-sum sequence"
 representationLabel WeilLiTestFunctions = "Lagarias Li test functions G_n(s)=1-(1-1/s)^n"
 representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Weil/Li cutoff values"
-representationLabel WeilQuadraticValues = "Weil quadratic-functional values associated to Li coefficients"
+representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil values on the Li test family"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"
 representationLabel MobiusFormalSeries = "formal series U=X/(1-X)=X+X^2+..."
 representationLabel XiAfterFormalMobius = "certified coefficient series of 2*xi(1/(1-z))"
@@ -215,7 +215,7 @@ data RepresentationKind
 data Property
   = CriticalLineZeros
   | AllLiCoefficientsNonnegative
-  | WeilFormNonnegative
+  | WeilLiValuesNonnegative
   deriving (Eq, Ord, Show)
 
 data PropertyTransport = PropertyTransport
