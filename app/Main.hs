@@ -65,6 +65,8 @@ routes mode graph = do
       , WeilLiPositive
       , WeilFormPSD
       , ScrewKernelPSD
+      , ScrewFunction
+      , XiNevanlinnaFunction
       , NymanBeurlingDense
       , LagariasInequality
       , SelfAdjointXiRealization
@@ -96,7 +98,7 @@ submissionStatus = do
   putStrLn "  1. LiPositive: prove lambda_n >= 0 for every n >= 1."
   putStrLn "  2. WeilLiPositive: equivalently prove nonnegativity on every Li-test diagonal."
   putStrLn "  3. WeilFormPSD: prove positive semidefiniteness on the full Weil test space."
-  putStrLn "  4. ScrewKernelPSD converse: formalize Suzuki's recovery of critical-line reality."
+  putStrLn "  4. ScrewToNevanlinnaBridge: formalize the specialized Krein-Langer implication."
   putStrLn "  5. NymanBeurlingDense: prove the required L2 closure/density statement."
   putStrLn "  6. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
   putStrLn "  7. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
@@ -387,6 +389,20 @@ formalStatus = do
     , "riemannXi_half_ne_zero"
     , "xiMidpointNonzero"
     , "xiSpectralParameter_ne_zero"
+    , "logDeriv_riemannXi_half_eq_zero"
+    , "xiNevanlinnaQ_conj"
+    , "summable_xiSpectralCorrectedTerm"
+    , "xiNevanlinnaQ_eq_spectral_sum"
+    , "xiNevanlinna_of_XiTZerosReal"
+    , "XiTZerosReal_of_xiNevanlinna"
+    , "xiTZerosReal_iff_xiNevanlinna"
+    , "suzukiPsiZero_summableLocallyUniformly"
+    , "continuous_suzukiPsiZero"
+    , "continuous_riemannScrew"
+    , "riemannScrew_isScrew_iff_kernelPSD"
+    , "integrableOn_riemannScrew_exp"
+    , "integral_riemannScrew_exp_eq_xiNevanlinnaQ_neg"
+    , "riemannScrew_nonpos_of_kernelPSD"
     , "liXiSeries_constantCoeff"
     , "liXiSeries_isUnit"
     , "liXiSeries_mul_inv"

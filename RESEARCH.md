@@ -156,8 +156,31 @@ suzukiFeature a t * conjugate (suzukiFeature a u)
 
 and proves both finite-height Gram positivity and positive semidefiniteness of
 the limiting kernel. This implication proves neither RH nor the converse
-Suzuki criterion. Recovery of critical-line reality from screw-kernel PSD
-remains literature-certified.
+Suzuki criterion.
+
+`RHGarden.XiNevanlinna` now defines
+`Q_xi(z)=i*logDeriv xi(1/2-i*z)` and proves the centered, absolutely convergent
+spectral partial fraction. It LeanChecks
+
+```text
+XiTZerosReal <-> XiNevanlinna
+```
+
+without assuming simple zeros: the reverse direction uses analytic order to
+show that a logarithmic derivative cannot be analytic at any xi zero. Compact
+local normal convergence proves screw continuity, and the remaining screw
+axiom is exactly `KernelPSD riemannScrewKernel`.
+
+For `Im z>1/2`, Lean also proves absolute integrability and the convention-
+correct Fourier--Laplace identity
+
+```text
+integral_0^infinity g(t)e^(izt) dt = (i/z^2) Q_xi(-z).
+```
+
+Only `ScrewToNevanlinnaBridge` remains literature-certified. The pinned
+library contains no Krein--Langer or equivalent positive-kernel theorem from
+which that implication can be instantiated.
 
 ## Garden trust state
 
@@ -171,7 +194,9 @@ FiniteWeilCutoffValues -> WeilLiQuadraticValues
 ClassicalLiRealSequence <-> WeilLiQuadraticValues.
 XiDivisor -> XiSpectralParameters
 XiSpectralParameters -> SuzukiPsiZeroSide
-SuzukiPsiZeroSide -> RiemannScrewKernel
+SuzukiPsiZeroSide -> RiemannScrew
+RiemannScrew -> RiemannScrewKernel
+RiemannScrew -> XiNevanlinnaTransformHighStrip
 SuzukiGramKernel -> RiemannScrewKernel
 ```
 
@@ -186,9 +211,9 @@ edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
 ## Exact next frontier
 
-The next Suzuki frontier is the converse
-`KernelPSD riemannScrewKernel -> XiTZerosReal`. It requires the separate
-Krein--Langer/Nevanlinna machinery described in the literature; midpoint
-nonvanishing and the literal zero-side spectral denominators are now closed.
+The next Suzuki frontier is the single isolated proposition
+`ScrewToNevanlinnaBridge`, from kernel PSD to `XiNevanlinna`. The downstream
+implication `XiNevanlinna -> XiTZerosReal` is now LeanChecked, as are midpoint
+nonvanishing, literal denominators, continuity, and the high-strip transform.
 
 No positivity theorem for the Li sequence or full Weil form is claimed.

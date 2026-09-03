@@ -66,8 +66,75 @@ Gram identity, every finite-height Gram matrix is positive semidefinite, and
 the limiting kernel is positive semidefinite for every finite set of sample
 points and coefficients.
 
-The converse implication is not formalized. It needs the global analytic
-machinery in Suzuki's criterion and is kept literature-certified.
+## The xi Nevanlinna function
+
+`RHGarden.XiNevanlinna` defines
+
+```text
+Q_xi(z) = i * logDeriv xi (1/2-i*z)
+```
+
+and the project predicate `XiNevanlinna`: `Q_xi` is analytic on the upper
+half-plane and has nonnegative imaginary part there.  Centering the exact
+genus-one partial fraction at `1/2` gives the absolutely convergent identity
+
+```text
+Q_xi(z) = sum_a (1/(gamma_a-z) - 1/gamma_a).
+```
+
+Lean proves both directions
+
+```text
+XiTZerosReal <-> XiNevanlinna.
+```
+
+The forward direction takes imaginary parts of the corrected spectral sum.
+For the reverse direction, upper-half-plane analyticity is incompatible with
+the logarithmic-derivative pole at a spectral zero.  The proof uses Mathlib's
+analytic-order factorization and therefore handles arbitrary multiplicity;
+reflection `gamma -> -gamma` then excludes the lower half-plane.
+
+## Continuity, screw axioms, and the transform
+
+The zero series is normally summable on compact real intervals.  Consequently
+`Psi_0`, `Psi`, and `riemannScrew` are continuous.  With `IsScrewFunction`
+defined by continuity, normalization, Hermitian symmetry, and finite-matrix
+kernel PSD, Lean proves
+
+```text
+IsScrewFunction riemannScrew <-> KernelPSD riemannScrewKernel.
+```
+
+For `Im z > 1/2`, absolute domination permits termwise integration and Lean
+checks
+
+```text
+integral_0^infinity g(t) * exp(i*z*t) dt
+  = (i/z^2) * Q_xi(-z).
+```
+
+The argument `-z` is forced by the conventions used here:
+`gamma=i*(rho-1/2)`, `rho=1/2-i*gamma`, and the transform kernel is
+`exp(+i*z*t)`, so its exponent combines as `gamma+z`.  A formula using
+`Q_xi(z)` instead requires reversing either the spectral coordinate or the
+Fourier sign.
+
+Suzuki's 2023 Theorem 1.2 and equations (1.2), (1.6), (1.7), and (1.8) provide
+the literature context.  The final historical implication from the screw
+property to the Nevanlinna property uses Krein--Langer theory.
+
+The pinned Mathlib revision has upper-half-plane types, complex Poisson
+formulas, matrix positivity, and Riesz--Markov infrastructure, but no
+Krein--Langer theorem, Bochner representation for this increment kernel, or
+specialized screw-to-Nevanlinna bridge.  RH Garden therefore isolates exactly
+
+```text
+ScrewToNevanlinnaBridge :=
+  KernelPSD riemannScrewKernel -> XiNevanlinna
+```
+
+as literature-certified/open formalization.  It is not an axiom and is not
+used to produce a Lean theorem.
 
 ## Midpoint and literal denominators
 
@@ -95,4 +162,6 @@ Thus every spectral denominator in the displayed Suzuki formulas is
 unconditionally and literally nonzero. No RH or zero-counting hypothesis is
 used.
 
-The next large frontier is Suzuki's PSD converse.
+The next frontier is a proof of `ScrewToNevanlinnaBridge`, beginning with the
+extension of finite sampled kernel positivity to the integral test functions
+used in the Krein--Langer argument.  No positivity statement or RH is proved.

@@ -231,7 +231,7 @@ private noncomputable def xiZeroConjEquiv : XiZero ≃ XiZero where
   left_inv ρ := by ext; simp
   right_inv ρ := by ext; simp
 
-private noncomputable def xiZeroOneSubEquiv : XiZero ≃ XiZero where
+noncomputable def xiZeroOneSubEquiv : XiZero ≃ XiZero where
   toFun ρ := ⟨1 - (ρ : ℂ), by
     rw [mem_xiDivisor_support_iff, riemannXi_one_sub, ρ.xi_eq_zero]⟩
   invFun ρ := ⟨1 - (ρ : ℂ), by
@@ -244,7 +244,7 @@ private noncomputable def xiOccurrenceConjEquiv :
   xiZeroConjEquiv.sigmaCongr fun ρ =>
     Equiv.cast (congrArg Fin (xiMultiplicity_conj (ρ : ℂ)).symm)
 
-private noncomputable def xiOccurrenceOneSubEquiv :
+noncomputable def xiOccurrenceOneSubEquiv :
     XiZeroOccurrence ≃ XiZeroOccurrence :=
   xiZeroOneSubEquiv.sigmaCongr fun ρ =>
     Equiv.cast (congrArg Fin (xiMultiplicity_one_sub (ρ : ℂ)).symm)
@@ -252,7 +252,7 @@ private noncomputable def xiOccurrenceOneSubEquiv :
 @[simp] private theorem xiOccurrenceConjEquiv_value (a : XiZeroOccurrence) :
     (xiOccurrenceConjEquiv a).value = starRingEnd ℂ a.value := rfl
 
-@[simp] private theorem xiOccurrenceOneSubEquiv_value (a : XiZeroOccurrence) :
+@[simp] theorem xiOccurrenceOneSubEquiv_value (a : XiZeroOccurrence) :
     (xiOccurrenceOneSubEquiv a).value = 1 - a.value := rfl
 
 @[simp] theorem xiSpectralParameter_conjOccurrence (a : XiZeroOccurrence) :

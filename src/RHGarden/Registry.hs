@@ -80,6 +80,15 @@ suzukiConverseRef = Reference
       "from global kernel positivity to critical-line reality is not formalized here."
   }
 
+xiNevanlinnaRef :: Reference
+xiNevanlinnaRef = Reference
+  { refShort = "RHGarden.xiTZerosReal_iff_xiNevanlinna"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/XiNevanlinna.lean: the corrected centered " ++
+      "spectral partial fraction, both directions of the xi Nevanlinna criterion, " ++
+      "screw continuity, and the high-strip Fourier-Laplace transform are kernel checked."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -115,12 +124,40 @@ screwPSDFromXiT = eraseReduction $ leanSufficient
   1 suzukiScrewRef
   "RHGarden.riemannScrewKernel_psd_of_XiTZerosReal rewrites the zero-side kernel as an occurrence-indexed Gram sum and passes finite-cutoff positivity to the limit."
 
-xiTFromScrewPSD :: RuntimeReduction
-xiTFromScrewPSD = eraseReduction $ literatureSufficient
-  SXiZerosReal SScrewKernelPSD
-  "Suzuki screw-kernel converse"
+xiNevanlinnaFromXiT :: RuntimeReduction
+xiNevanlinnaFromXiT = eraseReduction $ leanEquiv
+  SXiNevanlinnaFunction SXiZerosReal
+  "critical-line spectral sum makes Q_xi Nevanlinna"
+  1 xiNevanlinnaRef
+  "RHGarden.xiNevanlinna_of_XiTZerosReal is LeanChecked; it does not prove either open endpoint."
+
+xiTFromXiNevanlinna :: RuntimeReduction
+xiTFromXiNevanlinna = eraseReduction $ leanEquiv
+  SXiZerosReal SXiNevanlinnaFunction
+  "upper-half-plane analyticity excludes nonreal xi spectral zeros"
+  1 xiNevanlinnaRef
+  "RHGarden.XiTZerosReal_of_xiNevanlinna uses analytic order at arbitrary-multiplicity zeros."
+
+screwFunctionFromKernelPSD :: RuntimeReduction
+screwFunctionFromKernelPSD = eraseReduction $ leanEquiv
+  SScrewFunction SScrewKernelPSD
+  "continuous normalized Riemann screw function reduces to kernel PSD"
+  1 xiNevanlinnaRef
+  "RHGarden.riemannScrew_isScrew_iff_kernelPSD discharges continuity, normalization, and Hermitian symmetry."
+
+kernelPSDFromScrewFunction :: RuntimeReduction
+kernelPSDFromScrewFunction = eraseReduction $ leanEquiv
+  SScrewKernelPSD SScrewFunction
+  "Suzuki screw-function axioms include kernel PSD"
+  1 xiNevanlinnaRef
+  "Reverse direction of the same LeanChecked equivalence of open propositions."
+
+xiNevanlinnaFromScrewFunction :: RuntimeReduction
+xiNevanlinnaFromScrewFunction = eraseReduction $ literatureSufficient
+  SXiNevanlinnaFunction SScrewFunction
+  "Krein-Langer screw-to-Nevanlinna bridge"
   5 suzukiConverseRef
-  "The Krein-Langer/Nevanlinna converse is literature-certified only; no Lean theorem currently recovers critical-line reality from kernel PSD."
+  "Exactly RHGarden.ScrewToNevanlinnaBridge. Pinned Mathlib has no theorem implementing this positive-kernel representation step."
 
 rhToLi :: RuntimeReduction
 rhToLi = eraseReduction $ literatureEquiv
@@ -206,7 +243,10 @@ certifiedGraph :: [RuntimeReduction]
 certifiedGraph =
   [ rhToXiHypothesis, xiHypothesisToRh
   , xiHypothesisToXiT, xiTToXiHypothesis
-  , screwPSDFromXiT, xiTFromScrewPSD
+  , screwPSDFromXiT
+  , xiNevanlinnaFromXiT, xiTFromXiNevanlinna
+  , screwFunctionFromKernelPSD, kernelPSDFromScrewFunction
+  , xiNevanlinnaFromScrewFunction
   , rhToLi, liToRh, liToWeilLiPositive, weilLiPositiveToLi
   , rhToNyman, nymanToRh
   , rhToLagarias, lagariasToRh
@@ -535,6 +575,31 @@ xiSpectralToSuzukiPsi = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The summed function does not by itself reconstruct the labelled spectral divisor.")
   Nothing
 
+suzukiPsiToRiemannScrew :: RuntimeRepresentationEdge
+suzukiPsiToRiemannScrew = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiZeroSide SRiemannScrew "take g=-Psi and prove compact-local normal convergence"
+  ExactRepresentation leanCheckedTrust 1 xiNevanlinnaRef
+  "RHGarden.continuous_suzukiPsiZero and continuous_riemannScrew prove the zero-side sum is a continuous real-even screw candidate."
+  (ExactInverse "Psi is the negative of the normalized Riemann screw function.")
+  Nothing
+
+riemannScrewToKernel :: RuntimeRepresentationEdge
+riemannScrewToKernel = eraseRepresentationEdge $ representationEdge
+  SRiemannScrew SRiemannScrewKernel "take the translation-difference kernel"
+  ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
+  "The kernel is defined by g(t-u)-g(t)-g(-u)+g(0), and RHGarden.riemannScrewKernel_eq_zero_sum identifies its zero expansion."
+  (NoReconstruction "A translation-difference kernel loses affine additions to a general screw function.")
+  Nothing
+
+riemannScrewToNevanlinnaTransform :: RuntimeRepresentationEdge
+riemannScrewToNevanlinnaTransform = eraseRepresentationEdge $ representationEdge
+  SRiemannScrew SXiNevanlinnaTransformHighStrip
+  "take the absolutely convergent Fourier-Laplace transform on Im z>1/2"
+  ExactRepresentation leanCheckedTrust 1 xiNevanlinnaRef
+  "RHGarden.integral_riemannScrew_exp_eq_xiNevanlinnaQ_neg proves integral_0^infinity g(t)e^(izt)dt=(i/z^2)Q_xi(-z) with the project's spectral-coordinate convention."
+  (NoReconstruction "The checked theorem records the high-strip transform identity; no inverse-transform theorem is asserted.")
+  Nothing
+
 suzukiPsiToScrewKernel :: RuntimeRepresentationEdge
 suzukiPsiToScrewKernel = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SRiemannScrewKernel "take Suzuki's translation-difference screw kernel"
@@ -772,7 +837,9 @@ representationGraph =
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
-  , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToScrewKernel
+  , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToRiemannScrew
+  , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
+  , suzukiPsiToScrewKernel
   , suzukiGramToScrewKernel
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero
   , zerosToLi, realLiToZeroSum, zeroSumToFiniteCutoffs

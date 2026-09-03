@@ -50,6 +50,12 @@ main = do
       Nothing -> False
   check "Suzuki PSD converse remains outside kernel mode" $
     shortestRoute KernelMode certifiedGraph XiZerosReal ScrewKernelPSD == Nothing
+  check "Xi critical-line reality and the Nevanlinna criterion are LeanChecked equivalent" $
+    case shortestRoute KernelMode certifiedGraph XiZerosReal XiNevanlinnaFunction of
+      Just _ -> True
+      Nothing -> False
+  check "the isolated screw-to-Nevanlinna bridge remains outside kernel mode" $
+    shortestRoute KernelMode certifiedGraph XiNevanlinnaFunction ScrewFunction == Nothing
   check "LiteratureMode rejects Conjectural edges" $
     shortestRepresentationRoute LiteratureMode representationExplorationGraph WeilLiQuadraticValues LiSequence == Nothing
   check "ExplorationMode accepts Conjectural edges" $
@@ -106,6 +112,10 @@ main = do
       Nothing -> False
   check "xi divisor reaches the zero-side screw kernel in kernel mode" $
     case shortestRepresentationRoute KernelMode representationGraph XiDivisor RiemannScrewKernel of
+      Just _ -> True
+      Nothing -> False
+  check "the Riemann screw has a LeanChecked high-strip Nevanlinna transform" $
+    case shortestRepresentationRoute KernelMode representationGraph RiemannScrew XiNevanlinnaTransformHighStrip of
       Just _ -> True
       Nothing -> False
   check "a supplied Suzuki Gram representation evaluates to the screw kernel" $

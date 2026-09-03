@@ -55,8 +55,10 @@ data Representation
   | WeilLiQuadraticValues
   | XiSpectralParameters
   | SuzukiPsiZeroSide
+  | RiemannScrew
   | RiemannScrewKernel
   | SuzukiGramKernel
+  | XiNevanlinnaTransformHighStrip
   | XiTaylorAtOne
   | MobiusFormalSeries
   | XiAfterFormalMobius
@@ -105,8 +107,10 @@ data SRepresentation (r :: Representation) where
   SWeilLiQuadraticValues :: SRepresentation 'WeilLiQuadraticValues
   SXiSpectralParameters :: SRepresentation 'XiSpectralParameters
   SSuzukiPsiZeroSide :: SRepresentation 'SuzukiPsiZeroSide
+  SRiemannScrew :: SRepresentation 'RiemannScrew
   SRiemannScrewKernel :: SRepresentation 'RiemannScrewKernel
   SSuzukiGramKernel :: SRepresentation 'SuzukiGramKernel
+  SXiNevanlinnaTransformHighStrip :: SRepresentation 'XiNevanlinnaTransformHighStrip
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
   SMobiusFormalSeries :: SRepresentation 'MobiusFormalSeries
   SXiAfterFormalMobius :: SRepresentation 'XiAfterFormalMobius
@@ -156,8 +160,10 @@ representationValue SFiniteWeilCutoffValues = FiniteWeilCutoffValues
 representationValue SWeilLiQuadraticValues = WeilLiQuadraticValues
 representationValue SXiSpectralParameters = XiSpectralParameters
 representationValue SSuzukiPsiZeroSide = SuzukiPsiZeroSide
+representationValue SRiemannScrew = RiemannScrew
 representationValue SRiemannScrewKernel = RiemannScrewKernel
 representationValue SSuzukiGramKernel = SuzukiGramKernel
+representationValue SXiNevanlinnaTransformHighStrip = XiNevanlinnaTransformHighStrip
 representationValue SXiTaylorAtOne = XiTaylorAtOne
 representationValue SMobiusFormalSeries = MobiusFormalSeries
 representationValue SXiAfterFormalMobius = XiAfterFormalMobius
@@ -205,8 +211,10 @@ representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Wei
 representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil values on the Li test family"
 representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral coordinates gamma=i(rho-1/2)"
 representationLabel SuzukiPsiZeroSide = "absolutely convergent zero-side Suzuki Psi series with nonzero spectral denominators"
+representationLabel RiemannScrew = "continuous real-even zero-side Riemann screw function g=-Psi"
 representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
 representationLabel SuzukiGramKernel = "critical-line spectral Gram expansion of the Riemann screw kernel"
+representationLabel XiNevanlinnaTransformHighStrip = "Fourier-Laplace transform (i/z^2) Q_xi(-z) on Im z>1/2"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"
 representationLabel MobiusFormalSeries = "formal series U=X/(1-X)=X+X^2+..."
 representationLabel XiAfterFormalMobius = "certified coefficient series of 2*xi(1/(1-z))"

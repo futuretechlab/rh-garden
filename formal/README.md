@@ -176,15 +176,23 @@ formula and remainder bound to prove `Re (riemannZeta (1/2)) < 0`, hence
 `riemannXi (1/2) ≠ 0` and unconditional nonvanishing of every Suzuki spectral
 denominator.
 
+`RHGarden/XiNevanlinna.lean` defines Suzuki's centered function
+`Q_xi(z)=i*logDeriv xi(1/2-i*z)`, proves its corrected occurrence partial
+fraction, and LeanChecks `XiTZerosReal ↔ XiNevanlinna`. It also proves compact-
+local normal convergence and continuity of the screw function, reduces the
+screw axioms exactly to kernel PSD, and establishes the absolutely convergent
+high-strip transform `(i/z^2) Q_xi(-z)` for the repository's Fourier and
+spectral sign conventions.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
 - Li-test Weil positivity and full Weil-form PSD remain open. The finite and
   infinite Weil-Li identities are checked, including absolute convergence of
   the infinite scalar and its equality to twice the classical Li coefficient.
-- Formalize Suzuki's converse from global screw-kernel PSD to real spectral
-  parameters. The forward critical-line Gram/PSD implication and midpoint
-  denominator nonvanishing are already checked.
+- Formalize the isolated `ScrewToNevanlinnaBridge`. The Nevanlinna-to-real-
+  spectrum implication, forward critical-line Gram/PSD implication, transform,
+  continuity, and midpoint denominator nonvanishing are already checked.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`
