@@ -102,6 +102,10 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph XiFunction XiAffineFactorization of
       Just _ -> True
       Nothing -> False
+  check "xi occurrence partial-fraction formula is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph XiCanonicalProduct XiLogDerivPartialFraction of
+      Just _ -> True
+      Nothing -> False
   check "star convergence remains outside kernel mode" $
     shortestRepresentationRoute KernelMode representationGraph LiStarPartialSums LiStarConvergence == Nothing
   check "local count conditionally reduces to star convergence in kernel mode" $

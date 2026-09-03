@@ -528,4 +528,115 @@ theorem riemannXi_eq_exp_affine_mul_canonicalProduct :
   riemannXi_eq_exp_affine_mul_canonicalProduct_of_quotient_growth
     xiQuotient_subquadratic_growth
 
+/-- The genus-one occurrence product has vanishing logarithmic derivative at
+the origin.  Every corrected reciprocal summand vanishes there termwise. -/
+theorem logDeriv_xiCanonicalProductOccurrences_zero :
+    logDeriv xiCanonicalProductOccurrences 0 = 0 := by
+  rw [logDeriv_xiCanonicalProductOccurrences (by simp)]
+  simp
+
+/-- The logarithmic derivative of an exponential affine function is its
+linear coefficient. -/
+theorem logDeriv_exp_affine (A B s : ℂ) :
+    logDeriv (fun z : ℂ ↦ Complex.exp (A + B * z)) s = B := by
+  change logDeriv (Complex.exp ∘ fun z : ℂ ↦ A + B * z) s = B
+  rw [logDeriv_comp (by fun_prop) (by fun_prop), Complex.logDeriv_exp]
+  simp
+
+/-- The occurrence-indexed genus-one factorization normalized at the origin.
+The constant exponential is fixed by `riemannXi 0 = 1 / 2`; its linear
+coefficient is the logarithmic derivative of xi at zero. -/
+theorem riemannXi_eq_half_mul_exp_logDeriv_zero_mul_canonicalProduct :
+    ∀ s : ℂ,
+      riemannXi s =
+        (1 / 2 : ℂ) *
+          Complex.exp (logDeriv riemannXi 0 * s) *
+            xiCanonicalProductOccurrences s := by
+  obtain ⟨A, B, hfactor⟩ :=
+    riemannXi_eq_exp_affine_mul_canonicalProduct
+  have hA : Complex.exp A = (1 / 2 : ℂ) := by
+    have hzero := hfactor 0
+    simpa using hzero.symm
+  have hB : B = logDeriv riemannXi 0 := by
+    have hexp_ne : Complex.exp (A + B * (0 : ℂ)) ≠ 0 :=
+      Complex.exp_ne_zero _
+    have hproduct_ne : xiCanonicalProductOccurrences 0 ≠ 0 := by simp
+    have hlog :
+        logDeriv riemannXi 0 =
+          logDeriv (fun z : ℂ ↦ Complex.exp (A + B * z)) 0 +
+            logDeriv xiCanonicalProductOccurrences 0 := by
+      rw [show riemannXi = fun z : ℂ ↦
+          Complex.exp (A + B * z) * xiCanonicalProductOccurrences z from
+        funext hfactor]
+      exact logDeriv_mul 0 hexp_ne hproduct_ne
+        (by fun_prop)
+        differentiable_xiCanonicalProductOccurrences.differentiableAt
+    simpa [logDeriv_exp_affine,
+      logDeriv_xiCanonicalProductOccurrences_zero] using hlog.symm
+  intro s
+  calc
+    riemannXi s = Complex.exp (A + B * s) *
+        xiCanonicalProductOccurrences s := hfactor s
+    _ = Complex.exp A * Complex.exp (B * s) *
+        xiCanonicalProductOccurrences s := by rw [Complex.exp_add]
+    _ = (1 / 2 : ℂ) *
+          Complex.exp (logDeriv riemannXi 0 * s) *
+            xiCanonicalProductOccurrences s := by rw [hA, hB]
+
+/-- Exact global occurrence-indexed partial-fraction expansion of the
+logarithmic derivative of Riemann xi away from its zeros. -/
+theorem logDeriv_riemannXi_eq_zero_value_add_zero_sum
+    {s : ℂ}
+    (hs : riemannXi s ≠ 0) :
+    logDeriv riemannXi s =
+      logDeriv riemannXi 0 +
+        ∑' a : XiZeroOccurrence,
+          (1 / (s - a.value) + 1 / a.value) := by
+  obtain ⟨A, B, hfactor⟩ :=
+    riemannXi_eq_exp_affine_mul_canonicalProduct
+  have hB : B = logDeriv riemannXi 0 := by
+    have hexp_ne : Complex.exp (A + B * (0 : ℂ)) ≠ 0 :=
+      Complex.exp_ne_zero _
+    have hproduct_ne : xiCanonicalProductOccurrences 0 ≠ 0 := by simp
+    have hlog :
+        logDeriv riemannXi 0 =
+          logDeriv (fun z : ℂ ↦ Complex.exp (A + B * z)) 0 +
+            logDeriv xiCanonicalProductOccurrences 0 := by
+      rw [show riemannXi = fun z : ℂ ↦
+          Complex.exp (A + B * z) * xiCanonicalProductOccurrences z from
+        funext hfactor]
+      exact logDeriv_mul 0 hexp_ne hproduct_ne
+        (by fun_prop)
+        differentiable_xiCanonicalProductOccurrences.differentiableAt
+    simpa [logDeriv_exp_affine,
+      logDeriv_xiCanonicalProductOccurrences_zero] using hlog.symm
+  have hexp_ne : Complex.exp (A + B * s) ≠ 0 := Complex.exp_ne_zero _
+  have hproduct_ne : xiCanonicalProductOccurrences s ≠ 0 :=
+    xiCanonicalProductOccurrences_ne_zero hs
+  calc
+    logDeriv riemannXi s =
+        logDeriv (fun z : ℂ ↦
+          Complex.exp (A + B * z) * xiCanonicalProductOccurrences z) s := by
+      rw [show riemannXi = fun z : ℂ ↦
+          Complex.exp (A + B * z) * xiCanonicalProductOccurrences z from
+        funext hfactor]
+    _ = logDeriv (fun z : ℂ ↦ Complex.exp (A + B * z)) s +
+        logDeriv xiCanonicalProductOccurrences s :=
+      logDeriv_mul s hexp_ne hproduct_ne
+        (by fun_prop)
+        differentiable_xiCanonicalProductOccurrences.differentiableAt
+    _ = logDeriv riemannXi 0 +
+        ∑' a : XiZeroOccurrence,
+          (1 / (s - a.value) + 1 / a.value) := by
+      rw [logDeriv_exp_affine, hB,
+        logDeriv_xiCanonicalProductOccurrences hs]
+
+/-- The open occurrence-indexed xi partial-fraction proposition is discharged
+by the normalized affine factorization. -/
+theorem xiLogDerivPartialFractionOccurrences :
+    XiLogDerivPartialFractionOccurrences := by
+  refine ⟨logDeriv riemannXi 0, ?_⟩
+  intro s hs
+  exact logDeriv_riemannXi_eq_zero_value_add_zero_sum hs
+
 end RHGarden

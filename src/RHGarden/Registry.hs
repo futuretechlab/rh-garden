@@ -232,7 +232,7 @@ xiCanonicalProductRef = Reference
 xiQuotientGrowthRef :: Reference
 xiQuotientGrowthRef = Reference
   { refShort = "RHGarden.LiQuotientGrowth"
-  , refCitation = "Lean primary-factor, Nevanlinna-characteristic, Poisson, quotient-growth, and unconditional affine-factorization theorems in formal/RHGarden/LiQuotientGrowth.lean; lake build is authoritative."
+  , refCitation = "Lean primary-factor, Nevanlinna-characteristic, Poisson, quotient-growth, normalized affine-factorization, and exact xi partial-fraction theorems in formal/RHGarden/LiQuotientGrowth.lean; lake build is authoritative."
   }
 
 classicalLiIdentityRef :: Reference
@@ -381,8 +381,17 @@ quotientGrowthToAffineFactorization :: RuntimeRepresentationEdge
 quotientGrowthToAffineFactorization = eraseRepresentationEdge $ representationEdge
   SXiQuotientSubquadraticGrowth SXiAffineFactorization "apply the generic exp-affine theorem"
   SufficientReduction leanCheckedTrust 1 xiQuotientGrowthRef
-  "RHGarden.riemannXi_eq_exp_affine_mul_canonicalProduct is the unconditional LeanChecked genus-one Hadamard representation."
-  (ExactInverse "The conclusion supplies the affine exponential factor multiplying the canonical product.")
+  "RHGarden.riemannXi_eq_half_mul_exp_logDeriv_zero_mul_canonicalProduct is the unconditional normalized genus-one Hadamard representation."
+  (ExactInverse "The conclusion fixes the constant factor at 1/2 and the linear coefficient at logDeriv riemannXi 0.")
+  Nothing
+
+canonicalProductToXiLogDerivPartialFraction :: RuntimeRepresentationEdge
+canonicalProductToXiLogDerivPartialFraction = eraseRepresentationEdge $ representationEdge
+  SXiCanonicalProduct SXiLogDerivPartialFraction
+  "normalize the affine factor and take the xi logarithmic derivative"
+  SufficientReduction leanCheckedTrust 1 xiQuotientGrowthRef
+  "RHGarden.xiLogDerivPartialFractionOccurrences discharges XiLogDerivPartialFractionOccurrences with B = logDeriv riemannXi 0."
+  (ReconstructionUpTo "The logarithmic derivative determines xi up to a nonzero multiplicative constant; the normalized factorization separately fixes xi(0)=1/2.")
   Nothing
 
 heightCutoffToStarPartial :: RuntimeRepresentationEdge
@@ -651,7 +660,7 @@ representationGraph =
   , divisorToRadialCutoff, divisorToHeightCutoff
   , divisorToOccurrences, occurrencesToCanonicalProduct, canonicalProductToLogDerivative
   , xiAndCanonicalProductToZeroFreeQuotient, zeroFreeQuotientToGrowth
-  , quotientGrowthToAffineFactorization
+  , quotientGrowthToAffineFactorization, canonicalProductToXiLogDerivPartialFraction
   , heightCutoffToStarPartial, heightCutoffToFiniteWeil, starPartialToConvergence
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil

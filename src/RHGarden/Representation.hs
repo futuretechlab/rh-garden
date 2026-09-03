@@ -38,6 +38,7 @@ data Representation
   | XiZeroFreeQuotient
   | XiQuotientSubquadraticGrowth
   | XiAffineFactorization
+  | XiLogDerivPartialFraction
   | MobiusVariable
   | XiAfterMobius
   | LogXiMobius
@@ -83,6 +84,7 @@ data SRepresentation (r :: Representation) where
   SXiZeroFreeQuotient :: SRepresentation 'XiZeroFreeQuotient
   SXiQuotientSubquadraticGrowth :: SRepresentation 'XiQuotientSubquadraticGrowth
   SXiAffineFactorization :: SRepresentation 'XiAffineFactorization
+  SXiLogDerivPartialFraction :: SRepresentation 'XiLogDerivPartialFraction
   SMobiusVariable :: SRepresentation 'MobiusVariable
   SXiAfterMobius :: SRepresentation 'XiAfterMobius
   SLogXiMobius :: SRepresentation 'LogXiMobius
@@ -129,6 +131,7 @@ representationValue SXiCanonicalProductLogDerivative = XiCanonicalProductLogDeri
 representationValue SXiZeroFreeQuotient = XiZeroFreeQuotient
 representationValue SXiQuotientSubquadraticGrowth = XiQuotientSubquadraticGrowth
 representationValue SXiAffineFactorization = XiAffineFactorization
+representationValue SXiLogDerivPartialFraction = XiLogDerivPartialFraction
 representationValue SMobiusVariable = MobiusVariable
 representationValue SXiAfterMobius = XiAfterMobius
 representationValue SLogXiMobius = LogXiMobius
@@ -172,7 +175,8 @@ representationLabel XiCanonicalProduct = "locally uniformly convergent intrinsic
 representationLabel XiCanonicalProductLogDerivative = "occurrence-indexed logarithmic derivative of the xi canonical product"
 representationLabel XiZeroFreeQuotient = "entire everywhere-nonzero xi/canonical-product quotient"
 representationLabel XiQuotientSubquadraticGrowth = "proved subquadratic growth bound for the xi quotient"
-representationLabel XiAffineFactorization = "LeanChecked xi as an affine exponential times its canonical product"
+representationLabel XiAffineFactorization = "normalized LeanChecked xi genus-one canonical product"
+representationLabel XiLogDerivPartialFraction = "exact occurrence-indexed partial fraction for the xi logarithmic derivative"
 representationLabel MobiusVariable = "Mobius coordinate m(z)=-z/(1-z)"
 representationLabel XiAfterMobius = "phi(z)=xi(-z/(1-z))"
 representationLabel LogXiMobius = "logarithmic derivative d/dz log phi(z)"
