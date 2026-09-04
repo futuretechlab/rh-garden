@@ -281,12 +281,14 @@ zero-free parameter `omega=1/2` and
 RiemannHypothesis <-> 0 in SuzukiShiftedPositivitySet.
 ```
 
-This equivalence does not assert membership. The pinned arithmetic audit
-found no ready-made triangular-test formula: Zeta23's unconditional
-`EF_lit_zetaZeroConfig` requires a compactly supported `C^2` test, while
-Suzuki uses a piecewise-linear triangular cutoff. The first exact formal
-frontier is its smoothing/limit specialization and Gamma-bracket evaluation.
-On the shifted side the first exact obstruction is a two-variable Fubini
-calculation for nested Volterra integrals, needed for both the semigroup law
-and equation (11.2); the shifted Landau/eventual-positivity theorem comes
-after it. Full Weil-form PSD and general Krein--Langer remain separate.
+This equivalence does not assert membership. The zero-side/prime-side bridge
+is now LeanChecked: `RHGarden.SuzukiTriangle` extends Zeta23's compactly
+supported `C^2` explicit formula to Suzuki's piecewise-linear triangular test
+by normalized smooth convolution. The zero sum, finite prime sum, pole terms,
+and Gamma bracket are all passed through the limit, and the Gamma bracket is
+evaluated exactly. Consequently `suzukiPsi_eq_primeSide` and the prime-free
+archimedean formula on `0 <= t < log 2` are unconditional. On the shifted side
+the first exact obstruction remains a two-variable Fubini calculation for
+nested Volterra integrals, needed for both the semigroup law and equation
+(11.2); the shifted Landau/eventual-positivity theorem comes after it. Full
+Weil-form PSD and general Krein--Langer remain separate.

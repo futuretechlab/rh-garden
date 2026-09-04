@@ -208,11 +208,14 @@ components (including a genuinely finite von Mangoldt cutoff) and equation
 for `0 <= t < log 2`, continuity/evenness/normalization of the shifted family,
 positivity preservation for a nonnegative rightward shift, the parameterized
 zero-free half-plane geometry, and
-`RiemannHypothesis ↔ 0 ∈ SuzukiShiftedPositivitySet`. The zero-side/prime-side
-identity is not yet LeanChecked: pinned Zeta23 proves the explicit formula for
-`C_c^2` tests, while Suzuki's triangular cutoff needs a smoothing limit. The
-general Volterra semigroup, shifted transform, and Theorem 11.1 criterion are
-similarly isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
+`RiemannHypothesis ↔ 0 ∈ SuzukiShiftedPositivitySet`.
+`RHGarden/SuzukiTriangle.lean` proves the zero-side/prime-side identity by
+extending pinned Zeta23's `C_c^2` explicit formula to the triangular cutoff
+with normalized smooth convolutions. It checks the Fourier transform, uniform
+zero-side domination, finite prime-side limit passage, Gamma domination, exact
+vertical-digamma integral, and the Basel/Catalan/Lerch constants. The general
+Volterra semigroup, shifted transform, and Theorem 11.1 criterion remain
+isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
 
 ## Open targets
 
@@ -224,10 +227,9 @@ similarly isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
   `SuzukiPsiNonnegative`, `KernelPSD riemannScrewKernel`, Li positivity, or an
   appropriately strong Weil-form positivity theorem. The Suzuki converse and
   its specialized screw-to-Nevanlinna bridge are already checked.
-- Extend Zeta23's `C_c^2` Weil explicit formula to Suzuki's triangular cutoff;
-  this is the exact missing bridge between the defined zero-side and
-  prime-side functions. A separate Fubini calculation for the shifted
-  Volterra terms is needed for equation (11.2) and Theorem 11.1.
+- Prove the two-variable Fubini calculation for the shifted Volterra terms;
+  this is needed for the semigroup law, equation (11.2), and Theorem 11.1.
+  The base zero-side/prime-side formula is already LeanChecked.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

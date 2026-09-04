@@ -47,9 +47,9 @@ noncomputable def suzukiPsiPrimeSide (t : ℝ) : ℝ :=
     suzukiPsiPrimeSide (-t) = suzukiPsiPrimeSide t := by
   simp [suzukiPsiPrimeSide]
 
-/-- The exact explicit-formula bridge asserted by Suzuki (1.1).  Its
-formal proof requires specializing the pinned `Zeta23` Weil explicit formula
-from smooth tests to the triangular cutoff. -/
+/-- The exact explicit-formula bridge asserted by Suzuki (1.1). It is
+discharged in `RHGarden.SuzukiTriangle` by specializing the pinned `Zeta23`
+Weil explicit formula from smooth tests to the triangular cutoff. -/
 def SuzukiPsiPrimeSideFormula : Prop :=
   ∀ t : ℝ, suzukiPsi t = suzukiPsiPrimeSide t
 
@@ -93,7 +93,7 @@ theorem suzukiPsiPrimeSideNonneg_eq_archimedean_of_lt_log_two
   rw [suzukiPsiPrimeSideNonneg,
     suzukiPsiPrimeContribution_eq_zero_of_lt_log_two ht0 ht2, sub_zero]
 
-theorem suzukiPsi_eq_archimedean_of_lt_log_two
+theorem suzukiPsi_eq_archimedean_of_lt_log_two_of_formula
     (hEF : SuzukiPsiPrimeSideFormula) {t : ℝ}
     (ht0 : 0 ≤ t) (ht2 : t < Real.log 2) :
     suzukiPsi t = suzukiPsiArchimedean t := by

@@ -109,6 +109,15 @@ suzukiShiftedRef = Reference
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
 
+suzukiTriangleRef :: Reference
+suzukiTriangleRef = Reference
+  { refShort = "RHGarden.suzukiPsi_eq_primeSide"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiTriangle.lean; normalized smooth " ++
+      "convolution extends the pinned Zeta23 C_c^2 Weil explicit formula to the " ++
+      "triangular test, including the zero, prime, pole, and Gamma limits."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -614,8 +623,8 @@ suzukiPsiZeroToPrime :: RuntimeRepresentationEdge
 suzukiPsiZeroToPrime = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SSuzukiPsiPrimeSide
   "specialize the Weil explicit formula to Suzuki's triangular cutoff"
-  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Suzuki equation (1.1). RHGarden defines every term and checks the prime-free cutoff algebra, but the pinned Zeta23 theorem currently accepts C_c^2 tests; the smoothing limit to the triangular test is not yet LeanChecked."
+  EquivalentTheorem leanCheckedTrust 3 suzukiTriangleRef
+  "RHGarden.suzukiPsi_eq_primeSide proves Suzuki equation (1.1). A normalized smooth convolution approximation admits the tent into Zeta23's C_c^2 explicit formula; zero, prime, pole, and Gamma terms all pass to the limit."
   (ExactInverse "Equation (1.1) identifies the same real-even function.")
   Nothing
 
@@ -623,8 +632,8 @@ suzukiPsiPrimeToZero :: RuntimeRepresentationEdge
 suzukiPsiPrimeToZero = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiPrimeSide SSuzukiPsiZeroSide
   "read Suzuki's explicit formula as the zero-side Psi"
-  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Reverse orientation of Suzuki equation (1.1); the C_c^2-to-triangular smoothing step remains open formalization."
+  EquivalentTheorem leanCheckedTrust 3 suzukiTriangleRef
+  "Reverse orientation of the LeanChecked theorem RHGarden.suzukiPsi_eq_primeSide."
   (ExactInverse "Equation (1.1) identifies the same real-even function.")
   Nothing
 

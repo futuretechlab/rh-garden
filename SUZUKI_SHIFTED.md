@@ -23,14 +23,16 @@ LeanChecked to vanish when `0 <= t < log 2`, so the defined prime-side
 expression is purely archimedean on that interval.
 
 The equality of the existing zero-side series with this prime-side expression
-is currently **LiteratureCertified / OpenFormalization**. The pinned Zeta23
-theorem `Zeta23.WeilEF.EF_lit_zetaZeroConfig` proves the explicit formula for
-compactly supported `C^2` tests. Suzuki's formula uses the triangular test
-`u |-> max (t-|u|) 0`, which is not `C^2` at its corners. The exact missing
-theorem is the smoothing/limit extension of the pinned explicit formula to
-that triangular test, including the resulting Gamma-bracket evaluation.
-Consequently no local positivity theorem for zero-side `suzukiPsi` is claimed
-here yet.
+is **LeanChecked** as `suzukiPsi_eq_primeSide`. The proof starts from the pinned
+Zeta23 theorem `Zeta23.WeilEF.EF_lit_zetaZeroConfig`, whose tests are compactly
+supported and `C^2`. It convolves the triangular test
+`u |-> max (t-|u|) 0` with normalized smooth bumps, proves uniform support and
+Lipschitz control, and passes the zero, finite-prime, pole, and Gamma-bracket
+terms to the limit. The final Gamma integral is evaluated from Zeta23's
+vertical digamma series, a Cauchy-kernel Fourier integral, the Basel sum, the
+series definition of Catalan's constant, and the real Lerch series. Thus the
+prime-free identity `suzukiPsi_eq_archimedean_of_lt_log_two` is unconditional.
+No local positivity theorem is claimed here.
 
 ## Shifted family
 
@@ -90,16 +92,17 @@ global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
 
 ## Trust boundary and next frontier
 
-- LeanChecked: arithmetic definitions, finite cutoff and prime-free interval,
-  shifted-family definitions/basic analysis, zero-free half-plane geometry,
-  and the RH/zero-membership bookkeeping equivalence.
-- LiteratureCertified: zero-side = prime-side (Suzuki (1.1)) and the shifted
-  zero-free/eventual-positivity criterion (Suzuki Theorem 11.1).
-- OpenFormalization: triangular-test smoothing, the full Volterra semigroup,
-  shifted transform (11.2), and shifted Landau continuation.
+- LeanChecked: zero-side = prime-side (Suzuki (1.1)), the triangular-test
+  smoothing and complete Gamma evaluation, the finite cutoff and prime-free
+  interval, shifted-family definitions/basic analysis, zero-free half-plane
+  geometry, and the RH/zero-membership bookkeeping equivalence.
+- LiteratureCertified: the shifted zero-free/eventual-positivity criterion
+  (Suzuki Theorem 11.1).
+- OpenFormalization: the full Volterra semigroup, shifted transform (11.2),
+  and shifted Landau continuation.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
-The next formal frontier is the triangular-test extension of Zeta23's explicit
-formula. Independently, the next shifted frontier is a generic Fubini theorem
-for the Volterra shift, which should deliver both the semigroup and transform
-identities.
+The next formal frontier is a generic Fubini theorem for the Volterra shift,
+which should deliver both the semigroup and transform identities. The new
+prime-side identity also opens symbolic or interval-certified investigations
+of positivity between successive prime thresholds.

@@ -278,7 +278,8 @@ LeanChecked bookkeeping theorem is
 RiemannHypothesis <-> 0 in SuzukiShiftedPositivitySet.
 ```
 
-No membership statement is proved. Zero-side/prime-side equality and the
-shifted eventual-positivity criterion retain LiteratureCertified status until
-the triangular explicit-formula smoothing and shifted Fubini/Landau steps are
+No membership statement is proved. Zero-side/prime-side equality is now
+LeanChecked through the triangular explicit-formula smoothing in
+`RHGarden.SuzukiTriangle`. The shifted eventual-positivity criterion retains
+LiteratureCertified status until the shifted Fubini/Landau steps are
 formalized.
