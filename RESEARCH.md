@@ -266,3 +266,27 @@ the Riemann screw kernel is PSD, hence RH), or attack an equivalent Li/Weil
 positivity statement. Full Weil-form PSD and general Krein--Langer theory
 remain distinct from the specialized theorem proved here. No positivity
 theorem for the Li sequence, screw kernel, or full Weil form is claimed.
+
+## Prime-side and shifted Suzuki frontier
+
+The zero-side positivity frontier now has two additional formalized
+coordinates. `RHGarden.SuzukiShifted` defines every term of Suzuki's
+prime-side equation (1.1), proves the finite Mangoldt contribution vanishes
+on `0 <= t < log 2`, and defines the continuous real-even shifted Volterra
+family of equation (11.1). It also defines global/eventual positivity sets and
+the monotone zero-free-half-plane family, proving the unconditional safe
+zero-free parameter `omega=1/2` and
+
+```text
+RiemannHypothesis <-> 0 in SuzukiShiftedPositivitySet.
+```
+
+This equivalence does not assert membership. The pinned arithmetic audit
+found no ready-made triangular-test formula: Zeta23's unconditional
+`EF_lit_zetaZeroConfig` requires a compactly supported `C^2` test, while
+Suzuki uses a piecewise-linear triangular cutoff. The first exact formal
+frontier is its smoothing/limit specialization and Gamma-bracket evaluation.
+On the shifted side the first exact obstruction is a two-variable Fubini
+calculation for nested Volterra integrals, needed for both the semigroup law
+and equation (11.2); the shifted Landau/eventual-positivity theorem comes
+after it. Full Weil-form PSD and general Krein--Langer remain separate.

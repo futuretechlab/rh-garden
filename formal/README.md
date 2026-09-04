@@ -202,6 +202,18 @@ This discharges the project-specific `ScrewToNevanlinnaBridge`; it does not
 formalize general Krein--Langer theory and does not assert kernel positivity
 or RH.
 
+`RHGarden/SuzukiShifted.lean` defines Suzuki's equation (1.1) prime-side
+components (including a genuinely finite von Mangoldt cutoff) and equation
+(11.1) shifted Volterra family. Lean checks the prime contribution vanishes
+for `0 <= t < log 2`, continuity/evenness/normalization of the shifted family,
+positivity preservation for a nonnegative rightward shift, the parameterized
+zero-free half-plane geometry, and
+`RiemannHypothesis ↔ 0 ∈ SuzukiShiftedPositivitySet`. The zero-side/prime-side
+identity is not yet LeanChecked: pinned Zeta23 proves the explicit formula for
+`C_c^2` tests, while Suzuki's triangular cutoff needs a smoothing limit. The
+general Volterra semigroup, shifted transform, and Theorem 11.1 criterion are
+similarly isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
@@ -212,6 +224,10 @@ or RH.
   `SuzukiPsiNonnegative`, `KernelPSD riemannScrewKernel`, Li positivity, or an
   appropriately strong Weil-form positivity theorem. The Suzuki converse and
   its specialized screw-to-Nevanlinna bridge are already checked.
+- Extend Zeta23's `C_c^2` Weil explicit formula to Suzuki's triangular cutoff;
+  this is the exact missing bridge between the defined zero-side and
+  prime-side functions. A separate Fubini calculation for the shifted
+  Volterra terms is needed for equation (11.2) and Theorem 11.1.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

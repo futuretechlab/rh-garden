@@ -266,3 +266,19 @@ the equivalent open statements `SuzukiPsiNonnegative`,
 `KernelPSD riemannScrewKernel`, or RH. The present work supplies only the
 representation and equivalence. Full Weil-form PSD and the general
 Krein--Langer correspondence remain separate, unformalized questions.
+
+## Prime-side and shifted continuation
+
+The follow-on district is documented in `SUZUKI_SHIFTED.md`. It defines the
+finite Mangoldt/archimedean expression of Suzuki (1.1), the Volterra family of
+(11.1), its positivity parameter sets, and `XiZeroFreeRightOf`. The new
+LeanChecked bookkeeping theorem is
+
+```text
+RiemannHypothesis <-> 0 in SuzukiShiftedPositivitySet.
+```
+
+No membership statement is proved. Zero-side/prime-side equality and the
+shifted eventual-positivity criterion retain LiteratureCertified status until
+the triangular explicit-formula smoothing and shifted Fubini/Landau steps are
+formalized.

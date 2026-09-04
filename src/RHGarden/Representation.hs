@@ -55,6 +55,11 @@ data Representation
   | WeilLiQuadraticValues
   | XiSpectralParameters
   | SuzukiPsiZeroSide
+  | SuzukiPsiPrimeSide
+  | SuzukiPsiShiftedFamily
+  | XiZeroFreeHalfPlane
+  | SuzukiShiftedPositivitySet
+  | SuzukiShiftedEventualPositivitySet
   | RiemannScrew
   | RiemannScrewKernel
   | IntegralScrewQuadraticForm
@@ -108,6 +113,11 @@ data SRepresentation (r :: Representation) where
   SWeilLiQuadraticValues :: SRepresentation 'WeilLiQuadraticValues
   SXiSpectralParameters :: SRepresentation 'XiSpectralParameters
   SSuzukiPsiZeroSide :: SRepresentation 'SuzukiPsiZeroSide
+  SSuzukiPsiPrimeSide :: SRepresentation 'SuzukiPsiPrimeSide
+  SSuzukiPsiShiftedFamily :: SRepresentation 'SuzukiPsiShiftedFamily
+  SXiZeroFreeHalfPlane :: SRepresentation 'XiZeroFreeHalfPlane
+  SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
+  SSuzukiShiftedEventualPositivitySet :: SRepresentation 'SuzukiShiftedEventualPositivitySet
   SRiemannScrew :: SRepresentation 'RiemannScrew
   SRiemannScrewKernel :: SRepresentation 'RiemannScrewKernel
   SIntegralScrewQuadraticForm :: SRepresentation 'IntegralScrewQuadraticForm
@@ -162,6 +172,11 @@ representationValue SFiniteWeilCutoffValues = FiniteWeilCutoffValues
 representationValue SWeilLiQuadraticValues = WeilLiQuadraticValues
 representationValue SXiSpectralParameters = XiSpectralParameters
 representationValue SSuzukiPsiZeroSide = SuzukiPsiZeroSide
+representationValue SSuzukiPsiPrimeSide = SuzukiPsiPrimeSide
+representationValue SSuzukiPsiShiftedFamily = SuzukiPsiShiftedFamily
+representationValue SXiZeroFreeHalfPlane = XiZeroFreeHalfPlane
+representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
+representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualPositivitySet
 representationValue SRiemannScrew = RiemannScrew
 representationValue SRiemannScrewKernel = RiemannScrewKernel
 representationValue SIntegralScrewQuadraticForm = IntegralScrewQuadraticForm
@@ -214,6 +229,11 @@ representationLabel FiniteWeilCutoffValues = "multiplicity-preserving finite Wei
 representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil values on the Li test family"
 representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral coordinates gamma=i(rho-1/2)"
 representationLabel SuzukiPsiZeroSide = "absolutely convergent zero-side Suzuki Psi series with nonzero spectral denominators"
+representationLabel SuzukiPsiPrimeSide = "Suzuki equation (1.1) finite-Mangoldt prime-side expression for Psi"
+representationLabel SuzukiPsiShiftedFamily = "Suzuki Volterra family Psi_omega"
+representationLabel XiZeroFreeHalfPlane = "parameterized xi zero-free right half-planes Re(s)>1/2+omega"
+representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"
+representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shifted Suzuki Psi is eventually nonnegative"
 representationLabel RiemannScrew = "continuous real-even zero-side Riemann screw function g=-Psi"
 representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
 representationLabel IntegralScrewQuadraticForm = "compactly supported integral Hermitian form of the Riemann screw kernel"

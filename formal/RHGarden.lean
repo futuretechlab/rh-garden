@@ -29,3 +29,4 @@ import RHGarden.XiMidpoint
 import RHGarden.XiNevanlinna
 import RHGarden.KernelIntegral
 import RHGarden.SuzukiPointwise
+import RHGarden.SuzukiShifted

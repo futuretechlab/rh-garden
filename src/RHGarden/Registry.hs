@@ -100,6 +100,15 @@ suzukiPointwiseRef = Reference
       "Tonelli exponential summation, and the Landau boundary principle are kernel checked."
   }
 
+suzukiShiftedRef :: Reference
+suzukiShiftedRef = Reference
+  { refShort = "RHGarden.SuzukiShifted"
+  , refCitation =
+      "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean; " ++
+      "Suzuki, Aspects of the screw function corresponding to the Riemann " ++
+      "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -601,6 +610,78 @@ xiSpectralToSuzukiPsi = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The summed function does not by itself reconstruct the labelled spectral divisor.")
   Nothing
 
+suzukiPsiZeroToPrime :: RuntimeRepresentationEdge
+suzukiPsiZeroToPrime = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiZeroSide SSuzukiPsiPrimeSide
+  "specialize the Weil explicit formula to Suzuki's triangular cutoff"
+  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
+  "Suzuki equation (1.1). RHGarden defines every term and checks the prime-free cutoff algebra, but the pinned Zeta23 theorem currently accepts C_c^2 tests; the smoothing limit to the triangular test is not yet LeanChecked."
+  (ExactInverse "Equation (1.1) identifies the same real-even function.")
+  Nothing
+
+suzukiPsiPrimeToZero :: RuntimeRepresentationEdge
+suzukiPsiPrimeToZero = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiPrimeSide SSuzukiPsiZeroSide
+  "read Suzuki's explicit formula as the zero-side Psi"
+  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
+  "Reverse orientation of Suzuki equation (1.1); the C_c^2-to-triangular smoothing step remains open formalization."
+  (ExactInverse "Equation (1.1) identifies the same real-even function.")
+  Nothing
+
+suzukiPsiToShiftedFamily :: RuntimeRepresentationEdge
+suzukiPsiToShiftedFamily = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiZeroSide SSuzukiPsiShiftedFamily
+  "apply Suzuki's explicit Volterra shift operator"
+  ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
+  "RHGarden.suzukiPsiShifted is equation (11.1); zero parameter, zero value, evenness, continuity, and positivity of a nonnegative rightward shift are LeanChecked."
+  (ExactInverse "The omega=0 member is definitionally reduced to the original Psi by a Lean theorem.")
+  Nothing
+
+xiToZeroFreeHalfPlane :: RuntimeRepresentationEdge
+xiToZeroFreeHalfPlane = eraseRepresentationEdge $ representationEdge
+  SXiFunction SXiZeroFreeHalfPlane
+  "record the parameterized zero-free right half-plane predicates"
+  ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
+  "RHGarden.XiZeroFreeRightOf is defined and proved monotone; omega=1/2 is unconditional and omega=0 is LeanChecked equivalent to xi RH."
+  (NoReconstruction "The family of zero-free predicates records zero locations, not the full xi function.")
+  Nothing
+
+shiftedFamilyToPositivitySet :: RuntimeRepresentationEdge
+shiftedFamilyToPositivitySet = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiShiftedFamily SSuzukiShiftedPositivitySet
+  "form the global shifted-positivity parameter set"
+  ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
+  "The set is defined exactly by forall t, 0 <= Psi_omega(t); Lean checks that membership at omega=0 is SuzukiPsiNonnegative."
+  (NoReconstruction "A Boolean parameter set does not reconstruct the shifted functions.")
+  Nothing
+
+shiftedFamilyToEventualPositivitySet :: RuntimeRepresentationEdge
+shiftedFamilyToEventualPositivitySet = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiShiftedFamily SSuzukiShiftedEventualPositivitySet
+  "form the eventual shifted-positivity parameter set"
+  ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
+  "The set is defined exactly by eventual pointwise nonnegativity of Psi_omega."
+  (NoReconstruction "An eventual-positivity parameter set does not reconstruct the shifted functions.")
+  Nothing
+
+zeroFreeToShiftedEventual :: RuntimeRepresentationEdge
+zeroFreeToShiftedEventual = eraseRepresentationEdge $ representationEdge
+  SXiZeroFreeHalfPlane SSuzukiShiftedEventualPositivitySet
+  "Suzuki shifted zero-free/eventual-positivity criterion"
+  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
+  "Suzuki Theorem 11.1; RHGarden isolates the exact proposition SuzukiShiftedEventualCriterion, but its shifted transform and Landau adaptation are not yet LeanChecked."
+  (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
+  Nothing
+
+shiftedEventualToZeroFree :: RuntimeRepresentationEdge
+shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
+  SSuzukiShiftedEventualPositivitySet SXiZeroFreeHalfPlane
+  "Suzuki eventual-positivity/zero-free criterion"
+  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
+  "Reverse orientation of Suzuki Theorem 11.1; shifted Laplace continuation remains open formalization."
+  (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
+  Nothing
+
 suzukiPsiToRiemannScrew :: RuntimeRepresentationEdge
 suzukiPsiToRiemannScrew = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SRiemannScrew "take g=-Psi and prove compact-local normal convergence"
@@ -876,6 +957,10 @@ representationGraph =
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
   , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToRiemannScrew
+  , suzukiPsiZeroToPrime, suzukiPsiPrimeToZero, suzukiPsiToShiftedFamily
+  , xiToZeroFreeHalfPlane, shiftedFamilyToPositivitySet
+  , shiftedFamilyToEventualPositivitySet
+  , zeroFreeToShiftedEventual, shiftedEventualToZeroFree
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
   , riemannScrewKernelToIntegralForm
   , suzukiPsiToScrewKernel
