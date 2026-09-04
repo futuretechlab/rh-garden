@@ -65,6 +65,7 @@ routes mode graph = do
       , WeilLiPositive
       , WeilFormPSD
       , ScrewKernelPSD
+      , SuzukiPsiNonnegative
       , ScrewFunction
       , XiNevanlinnaFunction
       , NymanBeurlingDense
@@ -98,7 +99,7 @@ submissionStatus = do
   putStrLn "  1. LiPositive: prove lambda_n >= 0 for every n >= 1."
   putStrLn "  2. WeilLiPositive: equivalently prove nonnegativity on every Li-test diagonal."
   putStrLn "  3. WeilFormPSD: prove positive semidefiniteness on the full Weil test space."
-  putStrLn "  4. ScrewToNevanlinnaBridge: formalize the zero-mean truncated-exponential convolution limit."
+  putStrLn "  4. NonnegativeLaplaceBoundaryPrinciple: formalize Landau's boundary theorem for nonnegative Laplace transforms."
   putStrLn "  5. NymanBeurlingDense: prove the required L2 closure/density statement."
   putStrLn "  6. LagariasInequality: prove the divisor-sum inequality for every n >= 1."
   putStrLn "  7. SelfAdjointXiRealization: explicitly construct and certify the Hilbert-Polya operator."
@@ -403,6 +404,20 @@ formalStatus = do
     , "integrableOn_riemannScrew_exp"
     , "integral_riemannScrew_exp_eq_xiNevanlinnaQ_neg"
     , "riemannScrew_nonpos_of_kernelPSD"
+    , "xiNevanlinnaQ_neg"
+    , "integral_riemannScrew_exp_eq_xiNevanlinnaQ"
+    , "integral_suzukiPsi_exp_eq_xiNevanlinnaQ"
+    , "suzukiPsiLaplace_eq_Q"
+    , "riemannScrewKernel_self"
+    , "suzukiPsi_nonnegative_of_kernelPSD"
+    , "riemannZeta_real_re_neg_of_half_lt_of_lt_one"
+    , "riemannZeta_real_ne_zero_of_half_lt_of_lt_one"
+    , "riemannXi_real_right_half_ne_zero"
+    , "laplaceConvergesAt_mono"
+    , "laplaceConvergesAt_suzukiPsi_of_half_lt"
+    , "meromorphic_suzukiPsiLaplaceContinuation"
+    , "analyticAt_suzukiPsiLaplaceContinuation_of_pos"
+    , "integrableOn_laplace_first_moment_of_lt"
     , "continuousOn_kernelQuadraticIntegrand"
     , "integrableOn_kernelQuadraticIntegrand"
     , "KernelPSD.weighted_sum_nonneg"

@@ -113,11 +113,21 @@ integral_0^infinity g(t) * exp(i*z*t) dt
   = (i/z^2) * Q_xi(-z).
 ```
 
-The argument `-z` is forced by the conventions used here:
+The argument `-z` is forced by the raw spectral conventions used here:
 `gamma=i*(rho-1/2)`, `rho=1/2-i*gamma`, and the transform kernel is
 `exp(+i*z*t)`, so its exponent combines as `gamma+z`.  A formula using
-`Q_xi(z)` instead requires reversing either the spectral coordinate or the
-Fourier sign.
+`Q_xi(z)` follows from the newly LeanChecked global oddness identity
+
+```text
+Q_xi(-z) = -Q_xi(z).
+```
+
+Thus Lean now also checks the normalized Suzuki formulas
+
+```text
+integral_0^infinity g(t) exp(i*z*t) dt = -(i/z^2) Q_xi(z),
+integral_0^infinity Psi(t) exp(i*z*t) dt = (i/z^2) Q_xi(z).
+```
 
 Suzuki's 2023 Theorem 1.2 and equations (1.2), (1.6), (1.7), and (1.8) provide
 the literature context.  The final historical implication from the screw
@@ -126,7 +136,9 @@ property to the Nevanlinna property uses Krein--Langer theory.
 The pinned Mathlib revision has upper-half-plane types, complex Poisson
 formulas, matrix positivity, and Riesz--Markov infrastructure, but no
 Krein--Langer theorem, Bochner representation for this increment kernel, or
-specialized screw-to-Nevanlinna bridge.
+specialized screw-to-Nevanlinna bridge. It also contains no Landau boundary
+theorem for one-sided Laplace transforms of nonnegative continuous
+functions.
 
 ## Sampled positivity and integral quadratic forms
 
@@ -157,22 +169,73 @@ integral integral K(t,u) phi(t) conjugate(phi(u))
 
 A concrete continuous compact cutoff and its truncated exponential test are
 defined, and their Hermitian forms are LeanChecked nonnegative under sampled
-kernel PSD. What is not yet checked is the limiting computation identifying
-these two-variable quadratic values with `Im Q_xi`. A zero-mean correction
-introduces cross terms, and the existing one-sided Fourier--Laplace transform
-does not by itself evaluate that convolutional quadratic limit. This is now
-the first precise Krein--Langer obstruction; no high-strip sign theorem is
-claimed.
+kernel PSD. The two-variable limiting computation identifying those values
+with `Im Q_xi` remains unchecked, but it is no longer the preferred route:
+the pointwise diagonal and Landau argument below isolate a smaller
+specialized obstruction. No high-strip sign theorem is claimed.
 
-RH Garden therefore still isolates exactly
+## Pointwise positivity and the Landau route
+
+Suzuki 2023, Theorem 1.7 gives the shorter specialized criterion
+
+```text
+RH <-> forall t : real, 0 <= Psi(t).
+```
+
+RH Garden now defines `SuzukiPsiNonnegative` and Lean checks the diagonal
+identity and its immediate consequence
+
+```text
+riemannScrewKernel(t,t) = 2 * Psi(t),
+KernelPSD riemannScrewKernel -> SuzukiPsiNonnegative.
+```
+
+With the right-half-plane parameter `z=i*w`, Lean defines
+`suzukiPsiLaplace` and its explicit xi continuation and proves, for
+`Re w>1/2`,
+
+```text
+Laplace(Psi)(w) = -(i/w^2) Q_xi(i*w).
+```
+
+The continuation is LeanChecked meromorphic, and it is LeanChecked analytic
+at every positive real `w`. The latter uses a new uniform real-axis result:
+the pinned `N=1` Euler--Maclaurin bound proves `Re zeta(s)<0` for every real
+`1/2<s<1`; the standard zero-free theorem handles `s>=1`, with `xi(1) != 0`
+handled separately. Consequently `xi(1/2+w) != 0` for all real `w>=0`.
+
+The elementary Laplace infrastructure is also checked: convergence is upward
+closed in the real parameter, complex parameters have the decay of their
+real parts, and convergence at `sigma` gives integrability of the first
+exponential moment at every `tau>sigma`.
+
+The exact remaining theorem is now isolated as
+
+```text
+NonnegativeLaplaceBoundaryPrinciple
+```
+
+in `RHGarden.SuzukiPointwise`. It is the specialized Landau statement that a
+nonnegative continuous Laplace transform with a meromorphic continuation
+regular on the positive real axis cannot have a positive abscissa of
+convergence. The first missing formal step beyond the checked first-moment
+bound is an all-orders differentiation/Taylor theorem identifying the Taylor
+coefficients with nonnegative moment integrals, followed by a Tonelli passage
+through the exponential power series. Mathlib has general dominated
+differentiation and monotone convergence, but no theorem assembling this
+Landau argument.
+
+RH Garden therefore still isolates
 
 ```text
 ScrewToNevanlinnaBridge :=
   KernelPSD riemannScrewKernel -> XiNevanlinna
 ```
 
-as literature-certified/open formalization.  It is not an axiom and is not
-used to produce a Lean theorem.
+as literature-certified/open formalization. The preferred specialized path
+is now `KernelPSD -> Psi>=0 -> Landau -> XiTZerosReal -> XiNevanlinna`, not the
+two-variable truncated-convolution limit. Neither open proposition is
+assumed or used to produce an unconditional Lean theorem.
 
 ## Midpoint and literal denominators
 
@@ -200,8 +263,8 @@ Thus every spectral denominator in the displayed Suzuki formulas is
 unconditionally and literally nonzero. No RH or zero-counting hypothesis is
 used.
 
-The next frontier is the truncated zero-mean exponential limit: construct a
-normalized compact bump, evaluate the resulting convolutional Hermitian form,
-and prove that its limit has the sign-correct expression in
-`xiNevanlinnaQ`. The sampled-to-integral extension itself is now LeanChecked.
-No Nevanlinna positivity statement or RH is proved.
+The next frontier is `NonnegativeLaplaceBoundaryPrinciple`: formalize the
+all-order Laplace moment derivative formula, identify the analytic Taylor
+coefficients at a putative positive convergence boundary, and use Tonelli on
+the nonnegative exponential series to force convergence to the left of that
+boundary. No Nevanlinna positivity statement or RH is proved.

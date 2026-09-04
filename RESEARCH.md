@@ -178,6 +178,26 @@ correct Fourier--Laplace identity
 integral_0^infinity g(t)e^(izt) dt = (i/z^2) Q_xi(-z).
 ```
 
+`RHGarden.SuzukiPointwise` now proves that `Q_xi` is odd and normalizes this
+to Suzuki's form
+
+```text
+integral g(t)e^(izt) dt = -(i/z^2) Q_xi(z),
+integral Psi(t)e^(izt) dt = (i/z^2) Q_xi(z).
+```
+
+It defines `SuzukiPsiNonnegative` and LeanChecks
+
+```text
+KernelPSD riemannScrewKernel -> SuzukiPsiNonnegative
+```
+
+from the exact diagonal `K(t,t)=2*Psi(t)`. The one-sided Laplace transform
+and explicit xi continuation are checked on `Re w>1/2`; the continuation is
+meromorphic and regular at every positive real parameter. A uniform pinned
+Euler--Maclaurin argument proves `Re zeta(s)<0` for real `1/2<s<1`, supplying
+the only previously missing positive-real-axis xi nonvanishing input.
+
 `RHGarden.KernelIntegral` now proves the missing finite-to-continuous
 positivity passage. For every jointly continuous complex kernel, finite
 sampled `KernelPSD` implies nonnegativity of its compact-interval double
@@ -187,11 +207,14 @@ Riemann-screw specialization, the bounded-support whole-line Hermitian form,
 the zero-mean convolution simplification, and compact truncated-exponential
 test positivity are all LeanChecked.
 
-Only `ScrewToNevanlinnaBridge` remains literature-certified. The remaining
-formal gap is no longer finite versus integral positivity: it is the
-Krein--Langer limiting calculation that converts zero-mean truncated
-exponential convolution forms into the sign-correct imaginary part of
-`Q_xi`. The pinned library contains no theorem performing this step.
+The preferred converse route is now Suzuki 2023, Theorem 1.7 rather than the
+two-variable truncated-convolution limit. The exact remaining formal theorem
+is `NonnegativeLaplaceBoundaryPrinciple`: Landau's statement that a
+nonnegative continuous Laplace transform must be singular at a finite real
+abscissa of convergence. Upward closure of convergence, complex-parameter
+domination, and the first exponential-moment estimate are LeanChecked. The
+first missing analytic assembly is the all-order moment derivative/Taylor
+identity and Tonelli passage through the nonnegative exponential series.
 
 ## Garden trust state
 
@@ -216,6 +239,7 @@ The criterion reductions
 
 ```text
 LiPositive <-> WeilLiPositive
+ScrewKernelPSD -> SuzukiPsiNonnegative
 ```
 
 are also LeanChecked. No edge promotes either proposition to a proof, and no
@@ -223,12 +247,14 @@ edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
 ## Exact next frontier
 
-The next Suzuki frontier inside the single isolated proposition
-`ScrewToNevanlinnaBridge` is the truncated zero-mean exponential limit:
-construct and normalize a compact bump, evaluate all convolutional cross
-terms, and identify the limit with the sign-correct imaginary part of
-`Q_xi`. The sampled-to-integral extension and downstream implication
-`XiNevanlinna -> XiTZerosReal` are now LeanChecked, as are midpoint
-nonvanishing, literal denominators, continuity, and the high-strip transform.
+The next Suzuki frontier is the isolated generic proposition
+`NonnegativeLaplaceBoundaryPrinciple`. Its intended proof differentiates the
+Laplace transform to all orders strictly inside the convergence half-plane,
+uses analyticity at a putative positive boundary to extend its Taylor series,
+and applies Tonelli to identify that series with a Laplace integral to the
+left of the boundary. The first-moment domination needed for the first
+derivative is already LeanChecked. Once this Landau theorem is available, the
+remaining specialized task is analytic uniqueness between the full
+right-half-plane Laplace integral and the meromorphic xi continuation.
 
 No positivity theorem for the Li sequence or full Weil form is claimed.

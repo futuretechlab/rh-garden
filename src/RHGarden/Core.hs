@@ -44,6 +44,7 @@ data Criterion
   | WeilLiPositive
   | WeilFormPSD
   | ScrewKernelPSD
+  | SuzukiPsiNonnegative
   | ScrewFunction
   | XiNevanlinnaFunction
   | NymanBeurlingDense
@@ -60,6 +61,7 @@ data SCriterion (c :: Criterion) where
   SWeilLiPositive         :: SCriterion 'WeilLiPositive
   SWeilFormPSD            :: SCriterion 'WeilFormPSD
   SScrewKernelPSD          :: SCriterion 'ScrewKernelPSD
+  SSuzukiPsiNonnegative    :: SCriterion 'SuzukiPsiNonnegative
   SScrewFunction           :: SCriterion 'ScrewFunction
   SXiNevanlinnaFunction    :: SCriterion 'XiNevanlinnaFunction
   SNymanBeurlingDense     :: SCriterion 'NymanBeurlingDense
@@ -76,6 +78,7 @@ criterionValue SLiPositive               = LiPositive
 criterionValue SWeilLiPositive           = WeilLiPositive
 criterionValue SWeilFormPSD              = WeilFormPSD
 criterionValue SScrewKernelPSD            = ScrewKernelPSD
+criterionValue SSuzukiPsiNonnegative      = SuzukiPsiNonnegative
 criterionValue SScrewFunction             = ScrewFunction
 criterionValue SXiNevanlinnaFunction      = XiNevanlinnaFunction
 criterionValue SNymanBeurlingDense       = NymanBeurlingDense
@@ -90,6 +93,7 @@ criterionLabel LiPositive = "Li coefficients lambda_n are nonnegative for every 
 criterionLabel WeilLiPositive = "Diagonal Weil values are nonnegative on every Li test G_n"
 criterionLabel WeilFormPSD = "Full Weil form is positive semidefinite on its complete test-function space"
 criterionLabel ScrewKernelPSD = "Suzuki's zero-side Riemann screw kernel is positive semidefinite"
+criterionLabel SuzukiPsiNonnegative = "Suzuki's zero-side Psi(t) is nonnegative for every real t"
 criterionLabel ScrewFunction = "The zero-side Riemann function satisfies Suzuki's screw-function axioms"
 criterionLabel XiNevanlinnaFunction = "Q_xi is analytic with nonnegative imaginary part on the upper half-plane"
 criterionLabel NymanBeurlingDense = "Nyman-Beurling closure/density criterion"

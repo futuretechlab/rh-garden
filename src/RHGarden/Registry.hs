@@ -89,6 +89,15 @@ xiNevanlinnaRef = Reference
       "screw continuity, and the high-strip Fourier-Laplace transform are kernel checked."
   }
 
+suzukiPointwiseRef :: Reference
+suzukiPointwiseRef = Reference
+  { refShort = "RHGarden.suzukiPsi_nonnegative_of_kernelPSD"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiPointwise.lean: Q_xi oddness, " ++
+      "the normalized Psi Laplace transform, the screw-kernel diagonal, " ++
+      "positive-real-axis xi nonvanishing, and the first Laplace-moment bound are kernel checked."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -124,6 +133,20 @@ screwPSDFromXiT = eraseReduction $ leanSufficient
   1 suzukiScrewRef
   "RHGarden.riemannScrewKernel_psd_of_XiTZerosReal rewrites the zero-side kernel as an occurrence-indexed Gram sum and passes finite-cutoff positivity to the limit."
 
+suzukiPsiNonnegativeFromScrewPSD :: RuntimeReduction
+suzukiPsiNonnegativeFromScrewPSD = eraseReduction $ leanSufficient
+  SSuzukiPsiNonnegative SScrewKernelPSD
+  "the screw-kernel diagonal is twice Suzuki's Psi"
+  1 suzukiPointwiseRef
+  "RHGarden.riemannScrewKernel_self and RHGarden.suzukiPsi_nonnegative_of_kernelPSD are LeanChecked."
+
+xiTFromSuzukiPsiNonnegative :: RuntimeReduction
+xiTFromSuzukiPsiNonnegative = eraseReduction $ literatureSufficient
+  SXiZerosReal SSuzukiPsiNonnegative
+  "Suzuki pointwise positivity criterion via Landau's Laplace boundary theorem"
+  3 suzukiConverseRef
+  "The exact remaining Lean proposition is RHGarden.NonnegativeLaplaceBoundaryPrinciple. All initial-transform, real-axis regularity, and first-moment domination inputs are LeanChecked."
+
 xiNevanlinnaFromXiT :: RuntimeReduction
 xiNevanlinnaFromXiT = eraseReduction $ leanEquiv
   SXiNevanlinnaFunction SXiZerosReal
@@ -155,9 +178,9 @@ kernelPSDFromScrewFunction = eraseReduction $ leanEquiv
 xiNevanlinnaFromScrewFunction :: RuntimeReduction
 xiNevanlinnaFromScrewFunction = eraseReduction $ literatureSufficient
   SXiNevanlinnaFunction SScrewFunction
-  "Krein-Langer screw-to-Nevanlinna bridge"
-  5 suzukiConverseRef
-  "Exactly RHGarden.ScrewToNevanlinnaBridge. Sampled-to-integral positivity is LeanChecked; the remaining open step is the zero-mean truncated-exponential convolution limit identifying Im Q_xi."
+  "specialized Suzuki pointwise/Landau bridge"
+  4 suzukiConverseRef
+  "Exactly RHGarden.ScrewToNevanlinnaBridge. The preferred specialized route is KernelPSD -> Psi>=0 -> Landau Laplace boundary -> XiTZerosReal -> XiNevanlinna; RHGarden.NonnegativeLaplaceBoundaryPrinciple is the remaining open analytic theorem."
 
 rhToLi :: RuntimeReduction
 rhToLi = eraseReduction $ literatureEquiv
@@ -243,7 +266,8 @@ certifiedGraph :: [RuntimeReduction]
 certifiedGraph =
   [ rhToXiHypothesis, xiHypothesisToRh
   , xiHypothesisToXiT, xiTToXiHypothesis
-  , screwPSDFromXiT
+  , screwPSDFromXiT, suzukiPsiNonnegativeFromScrewPSD
+  , xiTFromSuzukiPsiNonnegative
   , xiNevanlinnaFromXiT, xiTFromXiNevanlinna
   , screwFunctionFromKernelPSD, kernelPSDFromScrewFunction
   , xiNevanlinnaFromScrewFunction

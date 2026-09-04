@@ -50,6 +50,12 @@ main = do
       Nothing -> False
   check "Suzuki PSD converse remains outside kernel mode" $
     shortestRoute KernelMode certifiedGraph XiZerosReal ScrewKernelPSD == Nothing
+  check "screw-kernel PSD LeanChecks Suzuki pointwise nonnegativity" $
+    case shortestRoute KernelMode certifiedGraph SuzukiPsiNonnegative ScrewKernelPSD of
+      Just _ -> True
+      Nothing -> False
+  check "Suzuki pointwise converse remains at the Landau boundary" $
+    shortestRoute KernelMode certifiedGraph XiZerosReal SuzukiPsiNonnegative == Nothing
   check "Xi critical-line reality and the Nevanlinna criterion are LeanChecked equivalent" $
     case shortestRoute KernelMode certifiedGraph XiZerosReal XiNevanlinnaFunction of
       Just _ -> True
