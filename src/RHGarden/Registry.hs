@@ -74,10 +74,11 @@ suzukiScrewRef = Reference
 
 suzukiConverseRef :: Reference
 suzukiConverseRef = Reference
-  { refShort = "Suzuki screw-function criterion"
+  { refShort = "RHGarden.XiTZerosReal_of_suzukiPsi_nonneg"
   , refCitation =
-      "M. Suzuki, screw-function formulations of the Riemann hypothesis; the converse " ++
-      "from global kernel positivity to critical-line reality is not formalized here."
+      "Lean theorems in formal/RHGarden/SuzukiPointwise.lean; the all-moment " ++
+      "Landau boundary argument, analytic continuation, pointwise Suzuki criterion, " ++
+      "and specialized screw-kernel converse are kernel checked."
   }
 
 xiNevanlinnaRef :: Reference
@@ -95,7 +96,8 @@ suzukiPointwiseRef = Reference
   , refCitation =
       "Lean theorems in formal/RHGarden/SuzukiPointwise.lean: Q_xi oddness, " ++
       "the normalized Psi Laplace transform, the screw-kernel diagonal, " ++
-      "positive-real-axis xi nonvanishing, and the first Laplace-moment bound are kernel checked."
+      "positive-real-axis xi nonvanishing, all Laplace moments and derivatives, " ++
+      "Tonelli exponential summation, and the Landau boundary principle are kernel checked."
   }
 
 rhToXiHypothesis :: RuntimeReduction
@@ -141,11 +143,11 @@ suzukiPsiNonnegativeFromScrewPSD = eraseReduction $ leanSufficient
   "RHGarden.riemannScrewKernel_self and RHGarden.suzukiPsi_nonnegative_of_kernelPSD are LeanChecked."
 
 xiTFromSuzukiPsiNonnegative :: RuntimeReduction
-xiTFromSuzukiPsiNonnegative = eraseReduction $ literatureSufficient
+xiTFromSuzukiPsiNonnegative = eraseReduction $ leanSufficient
   SXiZerosReal SSuzukiPsiNonnegative
   "Suzuki pointwise positivity criterion via Landau's Laplace boundary theorem"
-  3 suzukiConverseRef
-  "The exact remaining Lean proposition is RHGarden.NonnegativeLaplaceBoundaryPrinciple. All initial-transform, real-axis regularity, and first-moment domination inputs are LeanChecked."
+  1 suzukiConverseRef
+  "RHGarden.XiTZerosReal_of_suzukiPsi_nonneg is LeanChecked. It is a conditional criterion and does not prove pointwise positivity."
 
 xiNevanlinnaFromXiT :: RuntimeReduction
 xiNevanlinnaFromXiT = eraseReduction $ leanEquiv
@@ -176,11 +178,11 @@ kernelPSDFromScrewFunction = eraseReduction $ leanEquiv
   "Reverse direction of the same LeanChecked equivalence of open propositions."
 
 xiNevanlinnaFromScrewFunction :: RuntimeReduction
-xiNevanlinnaFromScrewFunction = eraseReduction $ literatureSufficient
+xiNevanlinnaFromScrewFunction = eraseReduction $ leanSufficient
   SXiNevanlinnaFunction SScrewFunction
   "specialized Suzuki pointwise/Landau bridge"
-  4 suzukiConverseRef
-  "Exactly RHGarden.ScrewToNevanlinnaBridge. The preferred specialized route is KernelPSD -> Psi>=0 -> Landau Laplace boundary -> XiTZerosReal -> XiNevanlinna; RHGarden.NonnegativeLaplaceBoundaryPrinciple is the remaining open analytic theorem."
+  1 suzukiConverseRef
+  "The LeanChecked composition is ScrewFunction -> KernelPSD -> Psi>=0 -> Landau -> XiTZerosReal -> XiNevanlinna. It is specialized to the Riemann screw function, not a general Krein--Langer theorem."
 
 rhToLi :: RuntimeReduction
 rhToLi = eraseReduction $ literatureEquiv
@@ -649,7 +651,7 @@ suzukiGramToScrewKernel = eraseRepresentationEdge $ representationEdge
   SSuzukiGramKernel SRiemannScrewKernel "evaluate the critical-line Suzuki Gram expansion"
   ExactRepresentation leanCheckedTrust 1 suzukiScrewRef
   "RHGarden.riemannScrewKernel_eq_gram_of_XiTZerosReal identifies the supplied critical-line Gram expansion with the zero-side screw kernel. The XiTZerosReal witness belongs to the source representation and is not inferred from the kernel."
-  (NoReconstruction "The kernel alone does not recover a real-spectral Gram witness; Suzuki's converse remains literature-certified.")
+  (NoReconstruction "No direct representation reconstruction is registered here. At the criterion level, kernel PSD now LeanChecks Xi spectral reality, which in turn supplies the Gram identity.")
   Nothing
 
 nontrivialZetaZeroToXiZero :: RuntimeRepresentationEdge

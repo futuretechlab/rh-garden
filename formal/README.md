@@ -184,15 +184,34 @@ screw axioms exactly to kernel PSD, and establishes the absolutely convergent
 high-strip transform `(i/z^2) Q_xi(-z)` for the repository's Fourier and
 spectral sign conventions.
 
+`RHGarden/SuzukiPointwise.lean` formalizes the specialized Landau route for
+Suzuki's pointwise criterion. It proves all polynomial Laplace-moment bounds,
+the all-orders derivative identity, the nonnegative Tonelli/exponential-series
+identity, and `nonnegativeLaplaceBoundaryPrinciple`. Analytic continuation of
+the resulting full right-half-plane Psi transform then excludes nonreal xi
+spectral zeros. Consequently the following are LeanChecked equivalences of
+open propositions:
+
+```text
+SuzukiPsiNonnegative -> XiTZerosReal
+XiTZerosReal <-> KernelPSD riemannScrewKernel
+RiemannHypothesis <-> KernelPSD riemannScrewKernel.
+```
+
+This discharges the project-specific `ScrewToNevanlinnaBridge`; it does not
+formalize general Krein--Langer theory and does not assert kernel positivity
+or RH.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
 - Li-test Weil positivity and full Weil-form PSD remain open. The finite and
   infinite Weil-Li identities are checked, including absolute convergence of
   the infinite scalar and its equality to twice the classical Li coefficient.
-- Formalize the isolated `ScrewToNevanlinnaBridge`. The Nevanlinna-to-real-
-  spectrum implication, forward critical-line Gram/PSD implication, transform,
-  continuity, and midpoint denominator nonvanishing are already checked.
+- Prove one of the equivalent open positivity statements: pointwise
+  `SuzukiPsiNonnegative`, `KernelPSD riemannScrewKernel`, Li positivity, or an
+  appropriately strong Weil-form positivity theorem. The Suzuki converse and
+  its specialized screw-to-Nevanlinna bridge are already checked.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

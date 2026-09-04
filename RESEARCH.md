@@ -207,14 +207,25 @@ Riemann-screw specialization, the bounded-support whole-line Hermitian form,
 the zero-mean convolution simplification, and compact truncated-exponential
 test positivity are all LeanChecked.
 
-The preferred converse route is now Suzuki 2023, Theorem 1.7 rather than the
-two-variable truncated-convolution limit. The exact remaining formal theorem
-is `NonnegativeLaplaceBoundaryPrinciple`: Landau's statement that a
-nonnegative continuous Laplace transform must be singular at a finite real
-abscissa of convergence. Upward closure of convergence, complex-parameter
-domination, and the first exponential-moment estimate are LeanChecked. The
-first missing analytic assembly is the all-order moment derivative/Taylor
-identity and Tonelli passage through the nonnegative exponential series.
+The Suzuki 2023, Theorem 1.7 route is now LeanChecked. The generic
+`NonnegativeLaplaceBoundaryPrinciple` is proved by all-order moment
+integrability, differentiated Laplace integrals, Taylor expansion, and a
+Tonelli passage through the nonnegative exponential series. For nonnegative
+`Psi`, this extends the Laplace transform analytically across the full right
+half-plane. Meromorphic uniqueness with the explicit xi continuation and the
+logarithmic-derivative pole theorem then force every spectral parameter to be
+real. Thus Lean checks
+
+```text
+SuzukiPsiNonnegative -> XiTZerosReal
+ScrewKernelPSD <-> XiTZerosReal
+RiemannHypothesis <-> ScrewKernelPSD.
+```
+
+These are conditional implications and equivalences of open propositions;
+they do not prove any positivity assertion or RH. The historical general
+Krein--Langer correspondence remains literature context rather than a
+formalized theorem.
 
 ## Garden trust state
 
@@ -240,6 +251,8 @@ The criterion reductions
 ```text
 LiPositive <-> WeilLiPositive
 ScrewKernelPSD -> SuzukiPsiNonnegative
+SuzukiPsiNonnegative -> XiTZerosReal
+ScrewKernelPSD <-> XiTZerosReal
 ```
 
 are also LeanChecked. No edge promotes either proposition to a proof, and no
@@ -247,14 +260,9 @@ edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
 ## Exact next frontier
 
-The next Suzuki frontier is the isolated generic proposition
-`NonnegativeLaplaceBoundaryPrinciple`. Its intended proof differentiates the
-Laplace transform to all orders strictly inside the convergence half-plane,
-uses analyticity at a putative positive boundary to extend its Taylor series,
-and applies Tonelli to identify that series with a Laplace integral to the
-left of the boundary. The first-moment domination needed for the first
-derivative is already LeanChecked. Once this Landau theorem is available, the
-remaining specialized task is analytic uniqueness between the full
-right-half-plane Laplace integral and the meromorphic xi continuation.
-
-No positivity theorem for the Li sequence or full Weil form is claimed.
+The representation and converse are complete; the next mathematical frontier
+is the open positivity itself. One must prove `SuzukiPsiNonnegative` (equivalently
+the Riemann screw kernel is PSD, hence RH), or attack an equivalent Li/Weil
+positivity statement. Full Weil-form PSD and general Krein--Langer theory
+remain distinct from the specialized theorem proved here. No positivity
+theorem for the Li sequence, screw kernel, or full Weil form is claimed.

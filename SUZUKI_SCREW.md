@@ -134,11 +134,10 @@ the literature context.  The final historical implication from the screw
 property to the Nevanlinna property uses Krein--Langer theory.
 
 The pinned Mathlib revision has upper-half-plane types, complex Poisson
-formulas, matrix positivity, and Riesz--Markov infrastructure, but no
-Krein--Langer theorem, Bochner representation for this increment kernel, or
-specialized screw-to-Nevanlinna bridge. It also contains no Landau boundary
-theorem for one-sided Laplace transforms of nonnegative continuous
-functions.
+formulas, matrix positivity, and Riesz--Markov infrastructure, but no general
+Krein--Langer theorem or Bochner representation for this increment kernel.
+RH Garden does not add that general correspondence: its converse below is a
+specialized theorem for the Riemann screw function.
 
 ## Sampled positivity and integral quadratic forms
 
@@ -204,38 +203,37 @@ the pinned `N=1` Euler--Maclaurin bound proves `Re zeta(s)<0` for every real
 `1/2<s<1`; the standard zero-free theorem handles `s>=1`, with `xi(1) != 0`
 handled separately. Consequently `xi(1/2+w) != 0` for all real `w>=0`.
 
-The elementary Laplace infrastructure is also checked: convergence is upward
-closed in the real parameter, complex parameters have the decay of their
-real parts, and convergence at `sigma` gives integrability of the first
-exponential moment at every `tau>sigma`.
-
-The exact remaining theorem is now isolated as
-
-```text
-NonnegativeLaplaceBoundaryPrinciple
-```
-
-in `RHGarden.SuzukiPointwise`. It is the specialized Landau statement that a
-nonnegative continuous Laplace transform with a meromorphic continuation
-regular on the positive real axis cannot have a positive abscissa of
-convergence. The first missing formal step beyond the checked first-moment
-bound is an all-orders differentiation/Taylor theorem identifying the Taylor
-coefficients with nonnegative moment integrals, followed by a Tonelli passage
-through the exponential power series. Mathlib has general dominated
-differentiation and monotone convergence, but no theorem assembling this
-Landau argument.
-
-RH Garden therefore still isolates
+The complete specialized Landau argument is now LeanChecked. Convergence is
+upward closed in the real parameter, convergence with a strict margin gives
+all polynomially weighted moments, and iterated complex derivatives equal
+the corresponding signed real moments. A Tonelli theorem for the
+nonnegative exponential power series converts Taylor convergence into
+Laplace convergence strictly to the left. This proves
 
 ```text
-ScrewToNevanlinnaBridge :=
-  KernelPSD riemannScrewKernel -> XiNevanlinna
+nonnegativeLaplaceBoundaryPrinciple :
+  NonnegativeLaplaceBoundaryPrinciple.
 ```
 
-as literature-certified/open formalization. The preferred specialized path
-is now `KernelPSD -> Psi>=0 -> Landau -> XiTZerosReal -> XiNevanlinna`, not the
-two-variable truncated-convolution limit. Neither open proposition is
-assumed or used to produce an unconditional Lean theorem.
+Applied to `Psi`, it proves convergence and analyticity of its Laplace
+integral on the full right half-plane. Meromorphic uniqueness with the
+explicit xi continuation shows that continuation has nonnegative
+meromorphic order there. A hypothetical spectral zero in the upper half-plane
+would instead give a genuine logarithmic-derivative pole; reflection excludes
+the lower half-plane. Lean therefore checks
+
+```text
+SuzukiPsiNonnegative -> XiTZerosReal,
+KernelPSD riemannScrewKernel <-> XiTZerosReal,
+RiemannHypothesis <-> KernelPSD riemannScrewKernel,
+KernelPSD riemannScrewKernel -> XiNevanlinna.
+```
+
+These are equivalences or conditional implications between open
+propositions. They prove neither kernel PSD nor RH. In particular, the
+project-facing `ScrewToNevanlinnaBridge` is discharged only for this Riemann
+kernel by the route `KernelPSD -> Psi>=0 -> Landau -> XiTZerosReal ->
+XiNevanlinna`; no general Krein--Langer theorem is claimed.
 
 ## Midpoint and literal denominators
 
@@ -263,8 +261,8 @@ Thus every spectral denominator in the displayed Suzuki formulas is
 unconditionally and literally nonzero. No RH or zero-counting hypothesis is
 used.
 
-The next frontier is `NonnegativeLaplaceBoundaryPrinciple`: formalize the
-all-order Laplace moment derivative formula, identify the analytic Taylor
-coefficients at a putative positive convergence boundary, and use Tonelli on
-the nonnegative exponential series to force convergence to the left of that
-boundary. No Nevanlinna positivity statement or RH is proved.
+The exact next mathematical frontier is positivity itself: prove any one of
+the equivalent open statements `SuzukiPsiNonnegative`,
+`KernelPSD riemannScrewKernel`, or RH. The present work supplies only the
+representation and equivalence. Full Weil-form PSD and the general
+Krein--Langer correspondence remain separate, unformalized questions.

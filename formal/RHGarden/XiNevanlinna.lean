@@ -297,11 +297,13 @@ theorem xiNevanlinna_of_XiTZerosReal :
       im_xiSpectralCorrectedTerm_nonneg_of_real hz
         ((xiTZerosReal_iff_spectralParameters_real.mp hRH) a)
 
-/-- A zero of xi is a genuine pole of its logarithmic derivative.  The proof
-uses analytic order, so it does not assume that the zero is simple. -/
-private theorem not_analyticAt_logDeriv_riemannXi_of_zero {ρ : ℂ}
-    (hρ : riemannXi ρ = 0) :
-    ¬ AnalyticAt ℂ (logDeriv riemannXi) ρ := by
+/-- At a genuine xi zero, its logarithmic derivative has no finite
+punctured limit.  This is the removable-singularity form of the pole
+obstruction, with multiplicity handled by analytic order. -/
+theorem not_tendsto_logDeriv_riemannXi_of_zero {ρ : ℂ}
+    (hρ : riemannXi ρ = 0) (c : ℂ) :
+    ¬ Tendsto (logDeriv riemannXi)
+      (nhdsWithin ρ ({ρ} : Set ℂ)ᶜ) (nhds c) := by
   intro hld
   have htop := analyticOrderAt_riemannXi_ne_top ρ
   obtain ⟨g, hg, hg0, hfg⟩ :=
@@ -352,13 +354,14 @@ private theorem not_analyticAt_logDeriv_riemannXi_of_zero {ρ : ℂ}
   have hleft : Tendsto
       (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
       (𝓝[≠] ρ) (𝓝 0) := by
-    have hc : ContinuousAt
-        (fun s : ℂ => (s - ρ) * logDeriv riemannXi s) ρ :=
-      (continuousAt_id.sub continuousAt_const).mul hld.continuousAt
-    have hc0 : Tendsto
-        (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
-        (𝓝 ρ) (𝓝 0) := by simpa using hc.tendsto
-    exact hc0.mono_left nhdsWithin_le_nhds
+    have hsub : Tendsto (fun s : ℂ => s - ρ)
+        (nhdsWithin ρ ({ρ} : Set ℂ)ᶜ) (nhds 0) := by
+      have hc : Tendsto (fun s : ℂ => s - ρ) (nhds ρ) (nhds 0) := by
+        have hc' : ContinuousAt (fun s : ℂ => s - ρ) ρ :=
+          continuousAt_id.sub continuousAt_const
+        simpa using hc'.tendsto
+      exact hc.mono_left nhdsWithin_le_nhds
+    simpa using hsub.mul hld
   have hglog : ContinuousAt (logDeriv g) ρ := by
     rw [logDeriv]
     exact hg.deriv.continuousAt.div hg.continuousAt hg0
@@ -382,6 +385,13 @@ private theorem not_analyticAt_logDeriv_riemannXi_of_zero {ρ : ℂ}
   have hzero_n : (0 : ℂ) = n := tendsto_nhds_unique hleft hright'
   have hnzero : (n : ℂ) = 0 := hzero_n.symm
   exact hn (Nat.cast_eq_zero.mp hnzero)
+
+private theorem not_analyticAt_logDeriv_riemannXi_of_zero {ρ : ℂ}
+    (hρ : riemannXi ρ = 0) :
+    ¬ AnalyticAt ℂ (logDeriv riemannXi) ρ := by
+  intro hld
+  exact not_tendsto_logDeriv_riemannXi_of_zero hρ _
+    (hld.continuousAt.tendsto.mono_left nhdsWithin_le_nhds)
 
 private theorem analyticAt_logDeriv_riemannXi_of_analyticAt_xiNevanlinnaQ
     {z : ℂ} (hQ : AnalyticAt ℂ xiNevanlinnaQ z) :
