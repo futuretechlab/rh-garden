@@ -57,6 +57,7 @@ data Representation
   | SuzukiPsiZeroSide
   | RiemannScrew
   | RiemannScrewKernel
+  | IntegralScrewQuadraticForm
   | SuzukiGramKernel
   | XiNevanlinnaTransformHighStrip
   | XiTaylorAtOne
@@ -109,6 +110,7 @@ data SRepresentation (r :: Representation) where
   SSuzukiPsiZeroSide :: SRepresentation 'SuzukiPsiZeroSide
   SRiemannScrew :: SRepresentation 'RiemannScrew
   SRiemannScrewKernel :: SRepresentation 'RiemannScrewKernel
+  SIntegralScrewQuadraticForm :: SRepresentation 'IntegralScrewQuadraticForm
   SSuzukiGramKernel :: SRepresentation 'SuzukiGramKernel
   SXiNevanlinnaTransformHighStrip :: SRepresentation 'XiNevanlinnaTransformHighStrip
   SXiTaylorAtOne :: SRepresentation 'XiTaylorAtOne
@@ -162,6 +164,7 @@ representationValue SXiSpectralParameters = XiSpectralParameters
 representationValue SSuzukiPsiZeroSide = SuzukiPsiZeroSide
 representationValue SRiemannScrew = RiemannScrew
 representationValue SRiemannScrewKernel = RiemannScrewKernel
+representationValue SIntegralScrewQuadraticForm = IntegralScrewQuadraticForm
 representationValue SSuzukiGramKernel = SuzukiGramKernel
 representationValue SXiNevanlinnaTransformHighStrip = XiNevanlinnaTransformHighStrip
 representationValue SXiTaylorAtOne = XiTaylorAtOne
@@ -213,6 +216,7 @@ representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral c
 representationLabel SuzukiPsiZeroSide = "absolutely convergent zero-side Suzuki Psi series with nonzero spectral denominators"
 representationLabel RiemannScrew = "continuous real-even zero-side Riemann screw function g=-Psi"
 representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
+representationLabel IntegralScrewQuadraticForm = "compactly supported integral Hermitian form of the Riemann screw kernel"
 representationLabel SuzukiGramKernel = "critical-line spectral Gram expansion of the Riemann screw kernel"
 representationLabel XiNevanlinnaTransformHighStrip = "Fourier-Laplace transform (i/z^2) Q_xi(-z) on Im z>1/2"
 representationLabel XiTaylorAtOne = "formal Taylor data of F(u)=2*xi(1+u) at u=0"

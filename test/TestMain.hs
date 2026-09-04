@@ -118,6 +118,10 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph RiemannScrew XiNevanlinnaTransformHighStrip of
       Just _ -> True
       Nothing -> False
+  check "sampled screw-kernel positivity reaches the compact integral form" $
+    case shortestRepresentationRoute KernelMode representationGraph RiemannScrewKernel IntegralScrewQuadraticForm of
+      Just route -> routeEndsAt route IntegralScrewQuadraticForm
+      Nothing -> False
   check "a supplied Suzuki Gram representation evaluates to the screw kernel" $
     case shortestRepresentationRoute KernelMode representationGraph SuzukiGramKernel RiemannScrewKernel of
       Just _ -> True

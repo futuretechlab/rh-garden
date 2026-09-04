@@ -126,7 +126,45 @@ property to the Nevanlinna property uses Krein--Langer theory.
 The pinned Mathlib revision has upper-half-plane types, complex Poisson
 formulas, matrix positivity, and Riesz--Markov infrastructure, but no
 Krein--Langer theorem, Bochner representation for this increment kernel, or
-specialized screw-to-Nevanlinna bridge.  RH Garden therefore isolates exactly
+specialized screw-to-Nevanlinna bridge.
+
+## Sampled positivity and integral quadratic forms
+
+`RHGarden.KernelIntegral` now connects the two presentations of kernel
+positivity used in the screw-function literature. For any jointly continuous
+complex kernel, Lean checks
+
+```text
+KernelPSD K -> IntegralKernelPSD K,
+```
+
+where the right side asserts nonnegativity of the double Lebesgue integral on
+every symmetric compact interval against every continuous test function.
+The proof approximates the identity map of the interval by finite-range
+simple functions. Their measurable fibers supply nonnegative quadrature
+weights, `KernelPSD.weighted_sum_nonneg` supplies positivity of every finite
+approximant, and dominated convergence on the compact rectangle passes it to
+the integral.
+
+For the Riemann screw kernel, Lean also checks joint continuity, positivity of
+the whole-line Hermitian form for continuous tests with bounded support, and
+the zero-mean cancellation
+
+```text
+integral integral K(t,u) phi(t) conjugate(phi(u))
+  = integral integral g(t-u) phi(t) conjugate(phi(u)).
+```
+
+A concrete continuous compact cutoff and its truncated exponential test are
+defined, and their Hermitian forms are LeanChecked nonnegative under sampled
+kernel PSD. What is not yet checked is the limiting computation identifying
+these two-variable quadratic values with `Im Q_xi`. A zero-mean correction
+introduces cross terms, and the existing one-sided Fourier--Laplace transform
+does not by itself evaluate that convolutional quadratic limit. This is now
+the first precise Krein--Langer obstruction; no high-strip sign theorem is
+claimed.
+
+RH Garden therefore still isolates exactly
 
 ```text
 ScrewToNevanlinnaBridge :=
@@ -162,6 +200,8 @@ Thus every spectral denominator in the displayed Suzuki formulas is
 unconditionally and literally nonzero. No RH or zero-counting hypothesis is
 used.
 
-The next frontier is a proof of `ScrewToNevanlinnaBridge`, beginning with the
-extension of finite sampled kernel positivity to the integral test functions
-used in the Krein--Langer argument.  No positivity statement or RH is proved.
+The next frontier is the truncated zero-mean exponential limit: construct a
+normalized compact bump, evaluate the resulting convolutional Hermitian form,
+and prove that its limit has the sign-correct expression in
+`xiNevanlinnaQ`. The sampled-to-integral extension itself is now LeanChecked.
+No Nevanlinna positivity statement or RH is proved.

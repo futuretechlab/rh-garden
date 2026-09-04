@@ -157,7 +157,7 @@ xiNevanlinnaFromScrewFunction = eraseReduction $ literatureSufficient
   SXiNevanlinnaFunction SScrewFunction
   "Krein-Langer screw-to-Nevanlinna bridge"
   5 suzukiConverseRef
-  "Exactly RHGarden.ScrewToNevanlinnaBridge. Pinned Mathlib has no theorem implementing this positive-kernel representation step."
+  "Exactly RHGarden.ScrewToNevanlinnaBridge. Sampled-to-integral positivity is LeanChecked; the remaining open step is the zero-mean truncated-exponential convolution limit identifying Im Q_xi."
 
 rhToLi :: RuntimeReduction
 rhToLi = eraseReduction $ literatureEquiv
@@ -600,6 +600,18 @@ riemannScrewToNevanlinnaTransform = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The checked theorem records the high-strip transform identity; no inverse-transform theorem is asserted.")
   Nothing
 
+riemannScrewKernelToIntegralForm :: RuntimeRepresentationEdge
+riemannScrewKernelToIntegralForm = eraseRepresentationEdge $ representationEdge
+  SRiemannScrewKernel SIntegralScrewQuadraticForm
+  "extend sampled kernel positivity to compact integral quadratic forms"
+  ExactRepresentation leanCheckedTrust 1
+  (Reference
+    "RHGarden.integralRiemannScrewKernelPSD_of_kernelPSD"
+    "Lean theorem in formal/RHGarden/KernelIntegral.lean; finite-range approximation and dominated convergence are kernel checked.")
+  "RHGarden.integralKernelPSD_of_kernelPSD is generic for continuous complex kernels; its screw-kernel specialization and compact-support Hermitian-form theorem are LeanChecked."
+  (NoReconstruction "Only the sampled-to-integral positivity direction is registered; point-mass approximation for the converse is not yet formalized.")
+  Nothing
+
 suzukiPsiToScrewKernel :: RuntimeRepresentationEdge
 suzukiPsiToScrewKernel = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SRiemannScrewKernel "take Suzuki's translation-difference screw kernel"
@@ -839,6 +851,7 @@ representationGraph =
   , classicalLiToStarConvergence, starConvergenceToWeil
   , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToRiemannScrew
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
+  , riemannScrewKernelToIntegralForm
   , suzukiPsiToScrewKernel
   , suzukiGramToScrewKernel
   , nontrivialZetaZeroToXiZero, xiZeroToNontrivialZetaZero

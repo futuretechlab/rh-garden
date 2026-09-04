@@ -178,9 +178,20 @@ correct Fourier--Laplace identity
 integral_0^infinity g(t)e^(izt) dt = (i/z^2) Q_xi(-z).
 ```
 
-Only `ScrewToNevanlinnaBridge` remains literature-certified. The pinned
-library contains no Krein--Langer or equivalent positive-kernel theorem from
-which that implication can be instantiated.
+`RHGarden.KernelIntegral` now proves the missing finite-to-continuous
+positivity passage. For every jointly continuous complex kernel, finite
+sampled `KernelPSD` implies nonnegativity of its compact-interval double
+integral against continuous tests. The proof uses finite-range approximants,
+their fiber measures as positive weights, and dominated convergence. Its
+Riemann-screw specialization, the bounded-support whole-line Hermitian form,
+the zero-mean convolution simplification, and compact truncated-exponential
+test positivity are all LeanChecked.
+
+Only `ScrewToNevanlinnaBridge` remains literature-certified. The remaining
+formal gap is no longer finite versus integral positivity: it is the
+Krein--Langer limiting calculation that converts zero-mean truncated
+exponential convolution forms into the sign-correct imaginary part of
+`Q_xi`. The pinned library contains no theorem performing this step.
 
 ## Garden trust state
 
@@ -196,6 +207,7 @@ XiDivisor -> XiSpectralParameters
 XiSpectralParameters -> SuzukiPsiZeroSide
 SuzukiPsiZeroSide -> RiemannScrew
 RiemannScrew -> RiemannScrewKernel
+RiemannScrewKernel -> IntegralScrewQuadraticForm
 RiemannScrew -> XiNevanlinnaTransformHighStrip
 SuzukiGramKernel -> RiemannScrewKernel
 ```
@@ -211,9 +223,12 @@ edge connects the unformalized full `WeilFormPSD` criterion to RH.
 
 ## Exact next frontier
 
-The next Suzuki frontier is the single isolated proposition
-`ScrewToNevanlinnaBridge`, from kernel PSD to `XiNevanlinna`. The downstream
-implication `XiNevanlinna -> XiTZerosReal` is now LeanChecked, as are midpoint
+The next Suzuki frontier inside the single isolated proposition
+`ScrewToNevanlinnaBridge` is the truncated zero-mean exponential limit:
+construct and normalize a compact bump, evaluate all convolutional cross
+terms, and identify the limit with the sign-correct imaginary part of
+`Q_xi`. The sampled-to-integral extension and downstream implication
+`XiNevanlinna -> XiTZerosReal` are now LeanChecked, as are midpoint
 nonvanishing, literal denominators, continuity, and the high-strip transform.
 
 No positivity theorem for the Li sequence or full Weil form is claimed.

@@ -27,3 +27,4 @@ import RHGarden.LiWeilInfinite
 import RHGarden.SuzukiScrew
 import RHGarden.XiMidpoint
 import RHGarden.XiNevanlinna
+import RHGarden.KernelIntegral
