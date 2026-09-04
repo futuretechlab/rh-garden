@@ -287,8 +287,18 @@ supported `C^2` explicit formula to Suzuki's piecewise-linear triangular test
 by normalized smooth convolution. The zero sum, finite prime sum, pole terms,
 and Gamma bracket are all passed through the limit, and the Gamma bracket is
 evaluated exactly. Consequently `suzukiPsi_eq_primeSide` and the prime-free
-archimedean formula on `0 <= t < log 2` are unconditional. On the shifted side
-the first exact obstruction remains a two-variable Fubini calculation for
+archimedean formula on `0 <= t < log 2` are unconditional.
+`RHGarden.SuzukiLocalPositive` differentiates that formula exactly and proves
+that `artanh(exp(-t/2))` tends to positive infinity while the remaining
+derivative terms stay bounded near zero. Hence the unconditional theorem
+`exists_suzukiPsi_pos_near_zero` supplies some `delta>0` with
+`Psi(t)>0` on `0<t<delta`; evenness gives local symmetric nonnegativity, and
+`G_g(t,t)=2 Psi(t)` gives local diagonal screw-kernel nonnegativity. This is
+strictly weaker than global `SuzukiPsiNonnegative` and much weaker than
+`KernelPSD`; neither open proposition is discharged. Positivity all the way
+to `log 2` and the first-prime interval remain open.
+
+On the shifted side the first exact obstruction remains a two-variable Fubini calculation for
 nested Volterra integrals, needed for both the semigroup law and equation
 (11.2); the shifted Landau/eventual-positivity theorem comes after it. Full
 Weil-form PSD and general Krein--Langer remain separate.

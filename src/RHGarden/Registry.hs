@@ -118,6 +118,15 @@ suzukiTriangleRef = Reference
       "triangular test, including the zero, prime, pole, and Gamma limits."
   }
 
+suzukiLocalPositiveRef :: Reference
+suzukiLocalPositiveRef = Reference
+  { refShort = "RHGarden.exists_suzukiPsi_pos_near_zero"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiLocalPositive.lean; the prime-free " ++
+      "derivative, its divergent artanh term, strict local monotonicity, and local " ++
+      "Psi/diagonal-kernel positivity are kernel checked."
+  }
+
 rhToXiHypothesis :: RuntimeReduction
 rhToXiHypothesis = eraseReduction $ leanEquiv
   SRH SXiRiemannHypothesis
@@ -637,6 +646,24 @@ suzukiPsiPrimeToZero = eraseRepresentationEdge $ representationEdge
   (ExactInverse "Equation (1.1) identifies the same real-even function.")
   Nothing
 
+suzukiPsiPrimeToLocalPositive :: RuntimeRepresentationEdge
+suzukiPsiPrimeToLocalPositive = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiPrimeSide SSuzukiPsiLocalPositive
+  "differentiate the prime-free archimedean formula near zero"
+  SufficientReduction leanCheckedTrust 2 suzukiLocalPositiveRef
+  "RHGarden.exists_suzukiPsi_pos_near_zero is unconditional; artanh(exp(-t/2)) dominates the continuous regular derivative part."
+  (NoReconstruction "Local positivity does not recover the global prime-side formula.")
+  Nothing
+
+suzukiLocalPositiveToDiagonal :: RuntimeRepresentationEdge
+suzukiLocalPositiveToDiagonal = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiLocalPositive SScrewKernelDiagonalLocalPositive
+  "use G_g(t,t)=2 Psi(t)"
+  SufficientReduction leanCheckedTrust 1 suzukiLocalPositiveRef
+  "RHGarden.exists_riemannScrewKernel_diagonal_nonneg proves only a local diagonal inequality, not kernel PSD."
+  (NoReconstruction "A diagonal inequality does not reconstruct Psi or control off-diagonal quadratic forms.")
+  Nothing
+
 suzukiPsiToShiftedFamily :: RuntimeRepresentationEdge
 suzukiPsiToShiftedFamily = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SSuzukiPsiShiftedFamily
@@ -966,7 +993,9 @@ representationGraph =
   , localCountToReciprocalSquare, reciprocalSquareToStar, localCountToLiStar
   , classicalLiToStarConvergence, starConvergenceToWeil
   , divisorToXiSpectral, xiSpectralToSuzukiPsi, suzukiPsiToRiemannScrew
-  , suzukiPsiZeroToPrime, suzukiPsiPrimeToZero, suzukiPsiToShiftedFamily
+  , suzukiPsiZeroToPrime, suzukiPsiPrimeToZero
+  , suzukiPsiPrimeToLocalPositive, suzukiLocalPositiveToDiagonal
+  , suzukiPsiToShiftedFamily
   , xiToZeroFreeHalfPlane, shiftedFamilyToPositivitySet
   , shiftedFamilyToEventualPositivitySet
   , zeroFreeToShiftedEventual, shiftedEventualToZeroFree

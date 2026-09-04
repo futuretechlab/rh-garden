@@ -32,7 +32,22 @@ terms to the limit. The final Gamma integral is evaluated from Zeta23's
 vertical digamma series, a Cauchy-kernel Fourier integral, the Basel sum, the
 series definition of Catalan's constant, and the real Lerch series. Thus the
 prime-free identity `suzukiPsi_eq_archimedean_of_lt_log_two` is unconditional.
-No local positivity theorem is claimed here.
+
+`RHGarden.SuzukiLocalPositive` now differentiates this exact archimedean
+formula on `0 < t < log 2`. In the normalization of the checked formula the
+derivative is
+
+```text
+2 (exp(t/2)-exp(-t/2))
+  + [((Re digamma(1/4)-log pi)/2) + pi/2]
+  - arctan(exp(t/2)) + artanh(exp(-t/2)).
+```
+
+The last term tends to `+infinity` as `t -> 0+`, while the other terms form a
+continuous, locally bounded function. Lean therefore checks
+`exists_suzukiPsi_pos_near_zero`: there is a symbolic `delta>0` for which
+`Psi(t)>0` whenever `0<t<delta`. This is a genuine unconditional local
+positivity theorem, not the open global statement `SuzukiPsiNonnegative`.
 
 ## Shifted family
 
@@ -94,15 +109,18 @@ global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
 
 - LeanChecked: zero-side = prime-side (Suzuki (1.1)), the triangular-test
   smoothing and complete Gamma evaluation, the finite cutoff and prime-free
-  interval, shifted-family definitions/basic analysis, zero-free half-plane
-  geometry, and the RH/zero-membership bookkeeping equivalence.
+  interval, strict positivity on some punctured neighborhood of zero,
+  shifted-family definitions/basic analysis, zero-free half-plane geometry,
+  and the RH/zero-membership bookkeeping equivalence.
 - LiteratureCertified: the shifted zero-free/eventual-positivity criterion
   (Suzuki Theorem 11.1).
 - OpenFormalization: the full Volterra semigroup, shifted transform (11.2),
   and shifted Landau continuation.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
-The next formal frontier is a generic Fubini theorem for the Volterra shift,
+Positivity through the whole interval `(0, log 2]` has not been established;
+neither has the first-prime interval `[log 2, log 3)`. The next formal frontier
+is a generic Fubini theorem for the Volterra shift,
 which should deliver both the semigroup and transform identities. The new
 prime-side identity also opens symbolic or interval-certified investigations
 of positivity between successive prime thresholds.

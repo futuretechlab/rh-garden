@@ -56,6 +56,8 @@ data Representation
   | XiSpectralParameters
   | SuzukiPsiZeroSide
   | SuzukiPsiPrimeSide
+  | SuzukiPsiLocalPositive
+  | ScrewKernelDiagonalLocalPositive
   | SuzukiPsiShiftedFamily
   | XiZeroFreeHalfPlane
   | SuzukiShiftedPositivitySet
@@ -114,6 +116,8 @@ data SRepresentation (r :: Representation) where
   SXiSpectralParameters :: SRepresentation 'XiSpectralParameters
   SSuzukiPsiZeroSide :: SRepresentation 'SuzukiPsiZeroSide
   SSuzukiPsiPrimeSide :: SRepresentation 'SuzukiPsiPrimeSide
+  SSuzukiPsiLocalPositive :: SRepresentation 'SuzukiPsiLocalPositive
+  SScrewKernelDiagonalLocalPositive :: SRepresentation 'ScrewKernelDiagonalLocalPositive
   SSuzukiPsiShiftedFamily :: SRepresentation 'SuzukiPsiShiftedFamily
   SXiZeroFreeHalfPlane :: SRepresentation 'XiZeroFreeHalfPlane
   SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
@@ -173,6 +177,8 @@ representationValue SWeilLiQuadraticValues = WeilLiQuadraticValues
 representationValue SXiSpectralParameters = XiSpectralParameters
 representationValue SSuzukiPsiZeroSide = SuzukiPsiZeroSide
 representationValue SSuzukiPsiPrimeSide = SuzukiPsiPrimeSide
+representationValue SSuzukiPsiLocalPositive = SuzukiPsiLocalPositive
+representationValue SScrewKernelDiagonalLocalPositive = ScrewKernelDiagonalLocalPositive
 representationValue SSuzukiPsiShiftedFamily = SuzukiPsiShiftedFamily
 representationValue SXiZeroFreeHalfPlane = XiZeroFreeHalfPlane
 representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
@@ -230,6 +236,8 @@ representationLabel WeilLiQuadraticValues = "absolutely convergent diagonal Weil
 representationLabel XiSpectralParameters = "occurrence-indexed Suzuki spectral coordinates gamma=i(rho-1/2)"
 representationLabel SuzukiPsiZeroSide = "absolutely convergent zero-side Suzuki Psi series with nonzero spectral denominators"
 representationLabel SuzukiPsiPrimeSide = "Suzuki equation (1.1) finite-Mangoldt prime-side expression for Psi"
+representationLabel SuzukiPsiLocalPositive = "unconditional strict positivity of Suzuki Psi on a punctured neighborhood of zero"
+representationLabel ScrewKernelDiagonalLocalPositive = "local nonnegativity of the diagonal Riemann screw kernel"
 representationLabel SuzukiPsiShiftedFamily = "Suzuki Volterra family Psi_omega"
 representationLabel XiZeroFreeHalfPlane = "parameterized xi zero-free right half-planes Re(s)>1/2+omega"
 representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"

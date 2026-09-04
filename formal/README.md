@@ -217,6 +217,15 @@ vertical-digamma integral, and the Basel/Catalan/Lerch constants. The general
 Volterra semigroup, shifted transform, and Theorem 11.1 criterion remain
 isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
 
+`RHGarden/SuzukiLocalPositive.lean` differentiates the unconditional
+prime-free formula on `0<t<log 2`. It identifies the quarter-lattice derivative
+with `artanh(exp(-t/2)) + arctan(exp(-t/2))`, proves the `artanh` term tends to
+`+infinity`, and proves the regular part is continuous and locally bounded.
+Consequently Lean checks `exists_suzukiPsi_pos_near_zero`, a symmetric local
+nonnegativity interval, and local diagonal nonnegativity of
+`riemannScrewKernel`. No positivity claim is made for the whole prime-free
+interval, for the full real line, or for off-diagonal kernel quadratic forms.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.

@@ -283,3 +283,19 @@ LeanChecked through the triangular explicit-formula smoothing in
 `RHGarden.SuzukiTriangle`. The shifted eventual-positivity criterion retains
 LiteratureCertified status until the shifted Fubini/Landau steps are
 formalized.
+
+## Unconditional local positivity
+
+The LeanChecked prime-side identity makes `0 <= t < log 2` prime-free.
+`RHGarden.SuzukiLocalPositive` differentiates the exact archimedean expression
+there. The singular summand `artanh(exp(-t/2))` tends to `+infinity` at zero
+from the right, whereas the remaining derivative is continuous. Lean checks
+
+```text
+exists delta > 0, forall t, 0 < t < delta -> 0 < suzukiPsi t.
+```
+
+Evenness and `Psi(0)=0` give a symmetric local nonnegative interval, and the
+identity `riemannScrewKernel t t = 2*Psi(t)` gives local diagonal positivity.
+This does not establish sampled kernel PSD, global pointwise positivity, or
+RH. Positivity through `log 2` remains unproved.
