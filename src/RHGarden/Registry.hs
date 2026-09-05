@@ -104,7 +104,9 @@ suzukiShiftedRef :: Reference
 suzukiShiftedRef = Reference
   { refShort = "RHGarden.SuzukiShifted"
   , refCitation =
-      "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean; " ++
+      "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean and " ++
+      "formal/RHGarden/SuzukiShiftTransform.lean; the Volterra transforms, " ++
+      "shift semigroup, Suzuki equation (11.2), and positivity-order law are checked. " ++
       "Suzuki, Aspects of the screw function corresponding to the Riemann " ++
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
@@ -669,7 +671,7 @@ suzukiPsiToShiftedFamily = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SSuzukiPsiShiftedFamily
   "apply Suzuki's explicit Volterra shift operator"
   ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
-  "RHGarden.suzukiPsiShifted is equation (11.1); zero parameter, zero value, evenness, continuity, and positivity of a nonnegative rightward shift are LeanChecked."
+  "RHGarden.suzukiPsiShifted is equation (11.1); normalization, continuity, the full shift semigroup, equation (11.2), and positivity of a nonnegative rightward shift are LeanChecked."
   (ExactInverse "The omega=0 member is definitionally reduced to the original Psi by a Lean theorem.")
   Nothing
 
@@ -687,7 +689,7 @@ shiftedFamilyToPositivitySet = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiShiftedFamily SSuzukiShiftedPositivitySet
   "form the global shifted-positivity parameter set"
   ExactRepresentation leanCheckedTrust 1 suzukiShiftedRef
-  "The set is defined exactly by forall t, 0 <= Psi_omega(t); Lean checks that membership at omega=0 is SuzukiPsiNonnegative."
+  "The set is defined exactly by forall t, 0 <= Psi_omega(t); Lean checks membership at omega=0 is SuzukiPsiNonnegative and proves the set is upward closed from the shift semigroup."
   (NoReconstruction "A Boolean parameter set does not reconstruct the shifted functions.")
   Nothing
 
@@ -705,7 +707,7 @@ zeroFreeToShiftedEventual = eraseRepresentationEdge $ representationEdge
   SXiZeroFreeHalfPlane SSuzukiShiftedEventualPositivitySet
   "Suzuki shifted zero-free/eventual-positivity criterion"
   EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Suzuki Theorem 11.1; RHGarden isolates the exact proposition SuzukiShiftedEventualCriterion, but its shifted transform and Landau adaptation are not yet LeanChecked."
+  "Suzuki Theorem 11.1; equation (11.2) is LeanChecked, while the compact-tail Landau adaptation and the zero-free-to-eventual-positive direction remain open formalization."
   (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
   Nothing
 
@@ -714,7 +716,7 @@ shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
   SSuzukiShiftedEventualPositivitySet SXiZeroFreeHalfPlane
   "Suzuki eventual-positivity/zero-free criterion"
   EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Reverse orientation of Suzuki Theorem 11.1; shifted Laplace continuation remains open formalization."
+  "Reverse orientation of Suzuki Theorem 11.1; the shifted transform is checked, but eventual-nonnegative tail continuation remains open formalization."
   (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
   Nothing
 

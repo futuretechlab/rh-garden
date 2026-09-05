@@ -298,6 +298,24 @@ strictly weaker than global `SuzukiPsiNonnegative` and much weaker than
 `KernelPSD`; neither open proposition is discharged. Positivity all the way
 to `log 2` and the first-prime interval remain open.
 
+`RHGarden.SuzukiShiftTransform` now proves the generic first and second
+Volterra Fourier--Laplace transforms, the multiplier
+
+```text
+F_+(T_omega f)(z)
+  = ((z+i omega)^2/z^2) F_+(f)(z+i omega),
+```
+
+Suzuki equation (11.2) on the upper-half-plane convergence strip, and the
+semigroup identity `T_eta T_omega = T_(omega+eta)`. The function-level proof
+uses the FTC resolvent factorization `(I+omega J)^2 M_omega`, since the pinned
+library has no applicable one-sided transform uniqueness theorem. Global
+shifted positivity is consequently upward closed. The exact next formal
+frontier is Suzuki Theorem 11.1: eventual, rather than global, nonnegativity
+requires a compact-tail version of the Landau argument, and the reverse
+zero-free-to-eventual-positive direction still needs its shifted asymptotic
+argument.
+
 On the shifted side the first exact obstruction remains a two-variable Fubini calculation for
 nested Volterra integrals, needed for both the semigroup law and equation
 (11.2); the shifted Landau/eventual-positivity theorem comes after it. Full

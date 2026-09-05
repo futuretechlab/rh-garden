@@ -280,9 +280,11 @@ RiemannHypothesis <-> 0 in SuzukiShiftedPositivitySet.
 
 No membership statement is proved. Zero-side/prime-side equality is now
 LeanChecked through the triangular explicit-formula smoothing in
-`RHGarden.SuzukiTriangle`. The shifted eventual-positivity criterion retains
-LiteratureCertified status until the shifted Fubini/Landau steps are
-formalized.
+`RHGarden.SuzukiTriangle`. The Suzuki shift semigroup and equation (11.2) are
+also LeanChecked in `RHGarden.SuzukiShiftTransform`, including upward
+propagation of global shifted positivity. The shifted eventual-positivity
+criterion retains LiteratureCertified status until the compact-tail Landau
+and zero-free-to-eventual-positive steps are formalized.
 
 ## Unconditional local positivity
 

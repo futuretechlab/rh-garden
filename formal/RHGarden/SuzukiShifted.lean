@@ -339,10 +339,11 @@ theorem riemannHypothesis_iff_xiZeroFreeRightOf_zero :
   riemannHypothesis_iff_xiRiemannHypothesis.trans
     xiRiemannHypothesis_iff_xiZeroFreeRightOf_zero
 
-/-- Suzuki's equation (11.2), isolated as the remaining one-variable
-Fubini/Laplace calculation for the shifted family. -/
+/-- Suzuki's equation (11.2) on the upper half-plane portion of its
+convergence strip.  The positivity condition on `z.im` is also the natural
+domain of the generic one-sided Volterra transform used below. -/
 def SuzukiShiftedTransformFormula : Prop :=
-  ∀ (ω : ℝ) (z : ℂ), 1 / 2 - ω < z.im →
+  ∀ (ω : ℝ) (z : ℂ), 0 < z.im → 1 / 2 - ω < z.im →
     (∫ t : ℝ in Set.Ioi 0,
         (suzukiPsiShifted ω t : ℂ) *
           Complex.exp (Complex.I * z * (t : ℂ))) =

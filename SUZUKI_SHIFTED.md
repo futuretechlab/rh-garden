@@ -64,10 +64,19 @@ suzukiPsiShifted omega = SuzukiShift omega suzukiPsi.
 
 Lean checks zero parameter, value at zero, evenness, continuity, and the fact
 that a nonnegative function remains nonnegative after a shift by a
-nonnegative parameter. The semigroup endpoints (one shift parameter equal to
-zero) are also checked. The general composition law is isolated as
-`SuzukiShiftSemigroup`; proving it requires a new triangular two-variable
-Fubini calculation for nested Volterra integrals.
+nonnegative parameter. It now also checks the full semigroup law
+
+```text
+SuzukiShift eta (SuzukiShift omega f)
+  = SuzukiShift (omega + eta) f.
+```
+
+The proof in `RHGarden.SuzukiShiftTransform` writes the positive-half-line
+operator as `(I + omega J)^2 M_omega`. The fundamental theorem of calculus
+gives the resolvent identity commuting `J` past the exponential weight; this
+avoids expanding the entire nested Volterra expression. Consequently global
+positivity at one parameter propagates to every larger parameter, and
+`SuzukiShiftedPositivitySet` is LeanChecked upward closed.
 
 The global and eventual positivity parameter sets are defined. Lean checks
 
@@ -89,18 +98,38 @@ parameter `omega=1/2` from the critical strip, and
 RiemannHypothesis <-> XiZeroFreeRightOf 0.
 ```
 
-Suzuki equation (11.2) and Theorem 11.1 predict
+The same module proves the two generic Volterra transforms and hence the exact
+multiplier
+
+```text
+F_+(SuzukiShift omega f)(z)
+  = ((z + i omega)^2 / z^2) F_+(f)(z + i omega).
+```
+
+Applying this to `suzukiPsi` cancels the shifted square and proves Suzuki
+equation (11.2):
+
+```text
+integral_0^infinity Psi_omega(t) exp(i z t) dt
+  = -(1/z^2) logDeriv xi(1/2 + omega - i z).
+```
+
+The project theorem states `0 < Im z` explicitly, which is the natural domain
+of the separate Volterra transforms; for the primary Suzuki range
+`omega <= 1/2`, the strip condition `1/2-omega < Im z` implies it.
+
+Suzuki Theorem 11.1 predicts
 
 ```text
 XiZeroFreeRightOf omega
   <-> suzukiPsiShifted omega is eventually nonnegative.
 ```
 
-The corresponding propositions `SuzukiShiftedTransformFormula` and
-`SuzukiShiftedEventualCriterion` are now stated exactly, but not proved. The
-first missing analytic step is the Fubini evaluation of the one-sided
-Laplace transform of both Volterra terms; after that, the already formalized
-Landau machinery must be adapted to ignore a compact initial interval.
+`SuzukiShiftedTransformFormula` is now discharged. The remaining proposition
+`SuzukiShiftedEventualCriterion` is not: its reverse direction requires the
+Landau argument for a tail that is nonnegative only after a compact initial
+interval, while its forward direction needs the corresponding shifted
+asymptotic/continuation argument.
 
 Thus `omega=1/2` is LeanChecked safe on the xi-zero side, but eventual or
 global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
@@ -110,17 +139,19 @@ global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
 - LeanChecked: zero-side = prime-side (Suzuki (1.1)), the triangular-test
   smoothing and complete Gamma evaluation, the finite cutoff and prime-free
   interval, strict positivity on some punctured neighborhood of zero,
-  shifted-family definitions/basic analysis, zero-free half-plane geometry,
-  and the RH/zero-membership bookkeeping equivalence.
+  shifted-family definitions/basic analysis, the Volterra semigroup and
+  transform equation (11.2), rightward positivity propagation, zero-free
+  half-plane geometry, and the RH/zero-membership bookkeeping equivalence.
 - LiteratureCertified: the shifted zero-free/eventual-positivity criterion
   (Suzuki Theorem 11.1).
-- OpenFormalization: the full Volterra semigroup, shifted transform (11.2),
-  and shifted Landau continuation.
+- OpenFormalization: the shifted eventual-positivity criterion and its
+  compact-initial-interval Landau/asymptotic continuation.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
 Positivity through the whole interval `(0, log 2]` has not been established;
 neither has the first-prime interval `[log 2, log 3)`. The next formal frontier
-is a generic Fubini theorem for the Volterra shift,
-which should deliver both the semigroup and transform identities. The new
-prime-side identity also opens symbolic or interval-certified investigations
-of positivity between successive prime thresholds.
+is Suzuki Theorem 11.1: extend the completed Landau machinery from global
+nonnegativity to eventual nonnegativity and prove the opposite
+zero-free-to-eventual-positive implication. The prime-side identity also
+opens symbolic or interval-certified investigations of positivity between
+successive prime thresholds.
