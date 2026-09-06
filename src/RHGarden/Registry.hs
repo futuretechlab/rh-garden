@@ -102,11 +102,13 @@ suzukiPointwiseRef = Reference
 
 suzukiShiftedRef :: Reference
 suzukiShiftedRef = Reference
-  { refShort = "RHGarden.SuzukiShifted"
+  { refShort = "RHGarden.xiZeroFreeRightOf_of_shifted_eventually_nonnegative"
   , refCitation =
       "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean and " ++
-      "formal/RHGarden/SuzukiShiftTransform.lean; the Volterra transforms, " ++
-      "shift semigroup, Suzuki equation (11.2), and positivity-order law are checked. " ++
+      "formal/RHGarden/SuzukiShiftTransform.lean and SuzukiShiftedLandau.lean; the " ++
+      "Volterra transforms, shift semigroup, Suzuki equation (11.2), positivity-order " ++
+      "law, compact-tail Landau theorem, and eventual-positivity-to-zero-free direction " ++
+      "are checked. " ++
       "Suzuki, Aspects of the screw function corresponding to the Riemann " ++
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
@@ -706,18 +708,18 @@ zeroFreeToShiftedEventual :: RuntimeRepresentationEdge
 zeroFreeToShiftedEventual = eraseRepresentationEdge $ representationEdge
   SXiZeroFreeHalfPlane SSuzukiShiftedEventualPositivitySet
   "Suzuki shifted zero-free/eventual-positivity criterion"
-  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Suzuki Theorem 11.1; equation (11.2) is LeanChecked, while the compact-tail Landau adaptation and the zero-free-to-eventual-positive direction remain open formalization."
-  (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
+  SufficientReduction literatureCertifiedTrust 3 suzukiShiftedRef
+  "Forward half of Suzuki Theorem 11.1. Its shifted Nevanlinna-to-screw/asymptotic argument remains open formalization; the reverse half is LeanChecked separately."
+  (NoReconstruction "The LeanChecked reverse implication is recorded as a distinct directed edge.")
   Nothing
 
 shiftedEventualToZeroFree :: RuntimeRepresentationEdge
 shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
   SSuzukiShiftedEventualPositivitySet SXiZeroFreeHalfPlane
   "Suzuki eventual-positivity/zero-free criterion"
-  EquivalentTheorem literatureCertifiedTrust 3 suzukiShiftedRef
-  "Reverse orientation of Suzuki Theorem 11.1; the shifted transform is checked, but eventual-nonnegative tail continuation remains open formalization."
-  (ExactInverse "The literature theorem is an equivalence parameter by parameter.")
+  SufficientReduction leanCheckedTrust 4 suzukiShiftedRef
+  "RHGarden.xiZeroFreeRightOf_of_shifted_eventually_nonnegative: translate the nonnegative tail, subtract the entire compact initial transform, apply the checked Landau boundary principle, and exclude logarithmic-derivative poles."
+  (NoReconstruction "The zero-free-to-eventual-positive converse is still LiteratureCertified, not LeanChecked.")
   Nothing
 
 suzukiPsiToRiemannScrew :: RuntimeRepresentationEdge

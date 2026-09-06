@@ -311,10 +311,26 @@ semigroup identity `T_eta T_omega = T_(omega+eta)`. The function-level proof
 uses the FTC resolvent factorization `(I+omega J)^2 M_omega`, since the pinned
 library has no applicable one-sided transform uniqueness theorem. Global
 shifted positivity is consequently upward closed. The exact next formal
-frontier is Suzuki Theorem 11.1: eventual, rather than global, nonnegativity
-requires a compact-tail version of the Landau argument, and the reverse
-zero-free-to-eventual-positive direction still needs its shifted asymptotic
-argument.
+frontier is the remaining forward half of Suzuki Theorem 11.1.
+
+`RHGarden.SuzukiShiftedLandau` now supplies the compact-tail version of the
+Landau argument. It LeanChecks that the compact initial transform is entire,
+that translation identifies the remaining tail transform up to its exact
+exponential factor, and that eventual nonnegativity forces convergence and
+analyticity throughout `Re w>0`. Meromorphic uniqueness and the checked
+logarithmic-derivative pole obstruction prove
+
+```text
+SuzukiPsiShiftedEventuallyNonnegative omega
+  -> XiZeroFreeRightOf omega.
+```
+
+Thus one direction of Suzuki Theorem 11.1 is LeanChecked. The converse
+`XiZeroFreeRightOf omega -> SuzukiPsiShiftedEventuallyNonnegative omega`
+remains LiteratureCertified/OpenFormalization; it is the shifted
+Nevanlinna-to-screw/asymptotic side, not a consequence of Landau's theorem.
+In particular the unconditional zero-free parameter `omega=1/2` has not been
+promoted to eventual or global shifted positivity.
 
 On the shifted side the first exact obstruction remains a two-variable Fubini calculation for
 nested Volterra integrals, needed for both the semigroup law and equation

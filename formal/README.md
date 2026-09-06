@@ -214,10 +214,12 @@ extending pinned Zeta23's `C_c^2` explicit formula to the triangular cutoff
 with normalized smooth convolutions. It checks the Fourier transform, uniform
 zero-side domination, finite prime-side limit passage, Gamma domination, exact
 vertical-digamma integral, and the Basel/Catalan/Lerch constants. The general
-Volterra semigroup and shifted transform are now LeanChecked in
-`RHGarden/SuzukiShiftTransform.lean`; Suzuki's Theorem 11.1 eventual-
-positivity criterion remains isolated rather than assumed. See
-`SUZUKI_SHIFTED.md`.
+Volterra semigroup and shifted transform are LeanChecked in
+`RHGarden/SuzukiShiftTransform.lean`. `RHGarden/SuzukiShiftedLandau.lean`
+then proves the compact-tail Landau theorem and the checked implication
+`SuzukiPsiShiftedEventuallyNonnegative omega -> XiZeroFreeRightOf omega`.
+The opposite, zero-free-to-eventual-positive half of Suzuki's Theorem 11.1
+remains isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
 
 `RHGarden/SuzukiLocalPositive.lean` differentiates the unconditional
 prime-free formula on `0<t<log 2`. It identifies the quarter-lattice derivative

@@ -134,6 +134,14 @@ main = do
     case shortestRepresentationRoute KernelMode representationGraph RiemannScrewKernel IntegralScrewQuadraticForm of
       Just route -> routeEndsAt route IntegralScrewQuadraticForm
       Nothing -> False
+  check "shifted eventual positivity LeanChecks a zero-free half-plane" $
+    case shortestRepresentationRoute KernelMode representationGraph
+        SuzukiShiftedEventualPositivitySet XiZeroFreeHalfPlane of
+      Just route -> routeEndsAt route XiZeroFreeHalfPlane
+      Nothing -> False
+  check "zero-free to shifted eventual positivity remains literature-only" $
+    shortestRepresentationRoute KernelMode representationGraph
+      XiZeroFreeHalfPlane SuzukiShiftedEventualPositivitySet == Nothing
   check "a supplied Suzuki Gram representation evaluates to the screw kernel" $
     case shortestRepresentationRoute KernelMode representationGraph SuzukiGramKernel RiemannScrewKernel of
       Just _ -> True

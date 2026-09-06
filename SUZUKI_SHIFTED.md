@@ -125,14 +125,34 @@ XiZeroFreeRightOf omega
   <-> suzukiPsiShifted omega is eventually nonnegative.
 ```
 
-`SuzukiShiftedTransformFormula` is now discharged. The remaining proposition
-`SuzukiShiftedEventualCriterion` is not: its reverse direction requires the
-Landau argument for a tail that is nonnegative only after a compact initial
-interval, while its forward direction needs the corresponding shifted
-asymptotic/continuation argument.
+`RHGarden.SuzukiShiftedLandau` now LeanChecks the reverse direction. Given an
+eventual sign threshold `T`, it translates the nonnegative tail to `[0,∞)`,
+splits off the compact initial transform, and proves that this compact term is
+entire. The existing nonnegative Landau boundary theorem therefore applies to
+the translated tail. Meromorphic uniqueness on `Re w>0` and the genuine pole
+of `xi'/xi` at every xi zero give
+
+```text
+SuzukiPsiShiftedEventuallyNonnegative omega
+  -> XiZeroFreeRightOf omega.
+```
+
+Equivalently, the eventual-positivity parameter set is LeanChecked contained
+in the zero-free parameter set. This is one complete direction of Suzuki
+Theorem 11.1. The forward direction
+
+```text
+XiZeroFreeRightOf omega
+  -> SuzukiPsiShiftedEventuallyNonnegative omega
+```
+
+still requires the shifted Nevanlinna-to-screw/asymptotic side of Suzuki's
+argument and remains LiteratureCertified/OpenFormalization. Consequently the
+project proposition `SuzukiShiftedEventualCriterion` remains open.
 
 Thus `omega=1/2` is LeanChecked safe on the xi-zero side, but eventual or
-global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
+global shifted positivity at `omega=1/2` is not promoted to LeanChecked: that
+would use precisely the still-open forward implication.
 
 ## Trust boundary and next frontier
 
@@ -140,18 +160,18 @@ global shifted positivity at `omega=1/2` is not promoted to LeanChecked.
   smoothing and complete Gamma evaluation, the finite cutoff and prime-free
   interval, strict positivity on some punctured neighborhood of zero,
   shifted-family definitions/basic analysis, the Volterra semigroup and
-  transform equation (11.2), rightward positivity propagation, zero-free
+  transform equation (11.2), rightward positivity propagation, compact-tail
+  Landau theory, eventual positivity implies a zero-free half-plane, zero-free
   half-plane geometry, and the RH/zero-membership bookkeeping equivalence.
-- LiteratureCertified: the shifted zero-free/eventual-positivity criterion
-  (Suzuki Theorem 11.1).
-- OpenFormalization: the shifted eventual-positivity criterion and its
-  compact-initial-interval Landau/asymptotic continuation.
+- LiteratureCertified: the forward zero-free-to-eventual-positive half of
+  Suzuki Theorem 11.1.
+- OpenFormalization: the shifted Nevanlinna-to-screw/asymptotic proof of that
+  forward half.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
 Positivity through the whole interval `(0, log 2]` has not been established;
 neither has the first-prime interval `[log 2, log 3)`. The next formal frontier
-is Suzuki Theorem 11.1: extend the completed Landau machinery from global
-nonnegativity to eventual nonnegativity and prove the opposite
+is the remaining forward half of Suzuki Theorem 11.1: prove the
 zero-free-to-eventual-positive implication. The prime-side identity also
 opens symbolic or interval-certified investigations of positivity between
 successive prime thresholds.
