@@ -102,13 +102,15 @@ suzukiPointwiseRef = Reference
 
 suzukiShiftedRef :: Reference
 suzukiShiftedRef = Reference
-  { refShort = "RHGarden.xiZeroFreeRightOf_of_shifted_eventually_nonnegative"
+  { refShort = "RHGarden.xiZeroFreeRightOf_iff_xiShiftedNevanlinna"
   , refCitation =
       "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean and " ++
-      "formal/RHGarden/SuzukiShiftTransform.lean and SuzukiShiftedLandau.lean; the " ++
+      "formal/RHGarden/SuzukiShiftTransform.lean, SuzukiShiftedLandau.lean, and " ++
+      "SuzukiShiftedNevanlinna.lean; the " ++
       "Volterra transforms, shift semigroup, Suzuki equation (11.2), positivity-order " ++
       "law, compact-tail Landau theorem, and eventual-positivity-to-zero-free direction " ++
-      "are checked. " ++
+      "are checked. The zero-free half-plane is also LeanChecked equivalent to the " ++
+      "translated xi Nevanlinna property. " ++
       "Suzuki, Aspects of the screw function corresponding to the Riemann " ++
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
@@ -704,13 +706,31 @@ shiftedFamilyToEventualPositivitySet = eraseRepresentationEdge $ representationE
   (NoReconstruction "An eventual-positivity parameter set does not reconstruct the shifted functions.")
   Nothing
 
-zeroFreeToShiftedEventual :: RuntimeRepresentationEdge
-zeroFreeToShiftedEventual = eraseRepresentationEdge $ representationEdge
-  SXiZeroFreeHalfPlane SSuzukiShiftedEventualPositivitySet
-  "Suzuki shifted zero-free/eventual-positivity criterion"
+zeroFreeToShiftedNevanlinna :: RuntimeRepresentationEdge
+zeroFreeToShiftedNevanlinna = eraseRepresentationEdge $ representationEdge
+  SXiZeroFreeHalfPlane SXiShiftedNevanlinnaFunction
+  "pair the shifted spectral partial fraction into Herglotz kernels"
+  EquivalentTheorem leanCheckedTrust 2 suzukiShiftedRef
+  "RHGarden.xiZeroFreeRightOf_iff_xiShiftedNevanlinna: reflection pairs cancel the genus-one correction, and every shifted pole is on or below the real axis."
+  (ExactInverse "Upper-half-plane analyticity excludes a shifted spectral zero by the genuine log-derivative pole theorem.")
+  Nothing
+
+shiftedNevanlinnaToZeroFree :: RuntimeRepresentationEdge
+shiftedNevanlinnaToZeroFree = eraseRepresentationEdge $ representationEdge
+  SXiShiftedNevanlinnaFunction SXiZeroFreeHalfPlane
+  "exclude upper shifted spectral poles by analyticity"
+  EquivalentTheorem leanCheckedTrust 2 suzukiShiftedRef
+  "Reverse orientation of RHGarden.xiZeroFreeRightOf_iff_xiShiftedNevanlinna."
+  (ExactInverse "The spectral Herglotz sum reconstructs the forward implication.")
+  Nothing
+
+shiftedNevanlinnaToShiftedEventual :: RuntimeRepresentationEdge
+shiftedNevanlinnaToShiftedEventual = eraseRepresentationEdge $ representationEdge
+  SXiShiftedNevanlinnaFunction SSuzukiShiftedEventualPositivitySet
+  "recover the shifted screw function from its Herglotz transform"
   SufficientReduction literatureCertifiedTrust 3 suzukiShiftedRef
-  "Forward half of Suzuki Theorem 11.1. Its shifted Nevanlinna-to-screw/asymptotic argument remains open formalization; the reverse half is LeanChecked separately."
-  (NoReconstruction "The LeanChecked reverse implication is recorded as a distinct directed edge.")
+  "Suzuki's Nevanlinna-to-screw theorem gives global, hence eventual, nonnegativity. RHGarden isolates this as ShiftedNevanlinnaToPsiNonnegative; pinned Mathlib has no Herglotz representation or screw inversion theorem."
+  (NoReconstruction "The checked compact-tail Landau argument supplies only the opposite implication.")
   Nothing
 
 shiftedEventualToZeroFree :: RuntimeRepresentationEdge
@@ -1002,7 +1022,8 @@ representationGraph =
   , suzukiPsiToShiftedFamily
   , xiToZeroFreeHalfPlane, shiftedFamilyToPositivitySet
   , shiftedFamilyToEventualPositivitySet
-  , zeroFreeToShiftedEventual, shiftedEventualToZeroFree
+  , zeroFreeToShiftedNevanlinna, shiftedNevanlinnaToZeroFree
+  , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
   , riemannScrewKernelToIntegralForm
   , suzukiPsiToScrewKernel

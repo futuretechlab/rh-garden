@@ -283,8 +283,11 @@ LeanChecked through the triangular explicit-formula smoothing in
 `RHGarden.SuzukiTriangle`. The Suzuki shift semigroup and equation (11.2) are
 also LeanChecked in `RHGarden.SuzukiShiftTransform`, including upward
 propagation of global shifted positivity. The shifted eventual-positivity
-criterion retains LiteratureCertified status until the compact-tail Landau
-and zero-free-to-eventual-positive steps are formalized.
+criterion is now split precisely: compact-tail Landau proves eventual
+positivity implies zero-freeness, while
+`RHGarden.SuzukiShiftedNevanlinna` LeanChecks zero-freeness equivalent to the
+shifted Nevanlinna property. Only the Nevanlinna-to-screw inversion needed to
+recover global shifted positivity remains LiteratureCertified.
 
 ## Unconditional local positivity
 

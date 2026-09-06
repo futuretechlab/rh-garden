@@ -325,14 +325,22 @@ SuzukiPsiShiftedEventuallyNonnegative omega
   -> XiZeroFreeRightOf omega.
 ```
 
-Thus one direction of Suzuki Theorem 11.1 is LeanChecked. The converse
-`XiZeroFreeRightOf omega -> SuzukiPsiShiftedEventuallyNonnegative omega`
-remains LiteratureCertified/OpenFormalization; it is the shifted
-Nevanlinna-to-screw/asymptotic side, not a consequence of Landau's theorem.
+Thus one direction of Suzuki Theorem 11.1 is LeanChecked. The converse is now
+factored through `RHGarden.SuzukiShiftedNevanlinna`. Reflection-pairing in the
+exact shifted spectral partial fraction cancels the genus-one correction and
+LeanChecks
+
+```text
+XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega.
+```
+
+The normalized transform is `(i/z^2) Q_omega(z)`. The only remaining forward
+subedge is `ShiftedNevanlinnaToPsiNonnegative`, Suzuki's classical
+Herglotz-to-screw inversion. It remains LiteratureCertified/OpenFormalization
+because pinned Mathlib has no suitable upper-half-plane Herglotz
+representation or inverse screw-transform theorem.
 In particular the unconditional zero-free parameter `omega=1/2` has not been
 promoted to eventual or global shifted positivity.
 
-On the shifted side the first exact obstruction remains a two-variable Fubini calculation for
-nested Volterra integrals, needed for both the semigroup law and equation
-(11.2); the shifted Landau/eventual-positivity theorem comes after it. Full
-Weil-form PSD and general Krein--Langer remain separate.
+The earlier Volterra/Fubini and compact-tail Landau obstructions are closed.
+Full Weil-form PSD and general Krein--Langer remain separate.

@@ -218,8 +218,12 @@ Volterra semigroup and shifted transform are LeanChecked in
 `RHGarden/SuzukiShiftTransform.lean`. `RHGarden/SuzukiShiftedLandau.lean`
 then proves the compact-tail Landau theorem and the checked implication
 `SuzukiPsiShiftedEventuallyNonnegative omega -> XiZeroFreeRightOf omega`.
-The opposite, zero-free-to-eventual-positive half of Suzuki's Theorem 11.1
-remains isolated rather than assumed. See `SUZUKI_SHIFTED.md`.
+`RHGarden/SuzukiShiftedNevanlinna.lean` proves the translated spectral
+partial fraction and the representation equivalence
+`XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega`. The opposite,
+Nevanlinna-to-shifted-Psi half of Suzuki's Theorem 11.1 remains isolated as
+`ShiftedNevanlinnaToPsiNonnegative`, rather than assumed. See
+`SUZUKI_SHIFTED.md`.
 
 `RHGarden/SuzukiLocalPositive.lean` differentiates the unconditional
 prime-free formula on `0<t<log 2`. It identifies the quarter-lattice derivative
@@ -240,9 +244,10 @@ interval, for the full real line, or for off-diagonal kernel quadratic forms.
   `SuzukiPsiNonnegative`, `KernelPSD riemannScrewKernel`, Li positivity, or an
   appropriately strong Weil-form positivity theorem. The Suzuki converse and
   its specialized screw-to-Nevanlinna bridge are already checked.
-- Prove the two-variable Fubini calculation for the shifted Volterra terms;
-  this is needed for the semigroup law, equation (11.2), and Theorem 11.1.
-  The base zero-side/prime-side formula is already LeanChecked.
+- Formalize the upper-half-plane Herglotz-to-screw inversion needed for
+  `ShiftedNevanlinnaToPsiNonnegative`. The Volterra semigroup, equation
+  (11.2), compact-tail Landau direction, and shifted xi Nevanlinna criterion
+  are already LeanChecked.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

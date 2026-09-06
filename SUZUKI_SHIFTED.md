@@ -139,16 +139,48 @@ SuzukiPsiShiftedEventuallyNonnegative omega
 
 Equivalently, the eventual-positivity parameter set is LeanChecked contained
 in the zero-free parameter set. This is one complete direction of Suzuki
-Theorem 11.1. The forward direction
+Theorem 11.1.
+
+`RHGarden.SuzukiShiftedNevanlinna` now decomposes the forward direction. It
+defines
 
 ```text
-XiZeroFreeRightOf omega
-  -> SuzukiPsiShiftedEventuallyNonnegative omega
+Q_omega(z) = i * logDeriv xi(1/2 + omega - i*z)
+           = Q_xi(z+i*omega).
 ```
 
-still requires the shifted Nevanlinna-to-screw/asymptotic side of Suzuki's
-argument and remains LiteratureCertified/OpenFormalization. Consequently the
-project proposition `SuzukiShiftedEventualCriterion` remains open.
+The exact shifted partial fraction is LeanChecked. Zero-freeness puts every
+shifted spectral parameter `gamma-i*omega` on or below the real axis.
+Pairing `gamma` with `-gamma` cancels the sign-indefinite genus-one
+correction `-1/gamma`; the two remaining Cauchy kernels have nonnegative
+imaginary part in the upper half-plane. Conversely, upper-half-plane
+analyticity excludes a shifted spectral zero by the existing genuine-pole
+theorem for `xi'/xi`. Hence Lean checks
+
+```text
+XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega.
+```
+
+Equation (11.2) is also normalized as
+
+```text
+integral_0^infinity Psi_omega(t) exp(i*z*t) dt
+  = (i/z^2) Q_omega(z).
+```
+
+The remaining forward subedge is exactly the Herglotz-to-screw inversion
+
+```text
+XiShiftedNevanlinna omega
+  -> forall t, 0 <= Psi_omega(t).
+```
+
+Suzuki obtains this stronger global statement from the classical
+Nevanlinna/screw correspondence. Pinned Mathlib provides local
+Herglotz--Riesz/Poisson formulas but no upper-half-plane Herglotz
+representation or inverse screw-transform theorem. RH Garden therefore
+isolates this theorem as `ShiftedNevanlinnaToPsiNonnegative`; its conditional
+composition with the checked results discharges the full criterion.
 
 Thus `omega=1/2` is LeanChecked safe on the xi-zero side, but eventual or
 global shifted positivity at `omega=1/2` is not promoted to LeanChecked: that
@@ -161,17 +193,15 @@ would use precisely the still-open forward implication.
   interval, strict positivity on some punctured neighborhood of zero,
   shifted-family definitions/basic analysis, the Volterra semigroup and
   transform equation (11.2), rightward positivity propagation, compact-tail
-  Landau theory, eventual positivity implies a zero-free half-plane, zero-free
-  half-plane geometry, and the RH/zero-membership bookkeeping equivalence.
-- LiteratureCertified: the forward zero-free-to-eventual-positive half of
-  Suzuki Theorem 11.1.
-- OpenFormalization: the shifted Nevanlinna-to-screw/asymptotic proof of that
-  forward half.
+  Landau theory, eventual positivity implies a zero-free half-plane, and
+  `XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega`.
+- LiteratureCertified/OpenFormalization: only the shifted
+  Nevanlinna-to-screw inversion `ShiftedNevanlinnaToPsiNonnegative`.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
 Positivity through the whole interval `(0, log 2]` has not been established;
 neither has the first-prime interval `[log 2, log 3)`. The next formal frontier
-is the remaining forward half of Suzuki Theorem 11.1: prove the
-zero-free-to-eventual-positive implication. The prime-side identity also
+is the remaining Herglotz-to-screw subedge of Suzuki Theorem 11.1. The
+prime-side identity also
 opens symbolic or interval-certified investigations of positivity between
 successive prime thresholds.

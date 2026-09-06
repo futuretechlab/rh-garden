@@ -235,7 +235,7 @@ private theorem riemannXi_centered_ne_zero_of_XiTZerosReal
   simp only [Complex.neg_im] at him
   linarith
 
-private theorem analyticAt_xiNevanlinnaQ_of_centered_ne_zero {z : ℂ}
+theorem analyticAt_xiNevanlinnaQ_of_centered_ne_zero {z : ℂ}
     (hz : riemannXi ((1 / 2 : ℂ) - Complex.I * z) ≠ 0) :
     AnalyticAt ℂ xiNevanlinnaQ z := by
   have hxi : AnalyticAt ℂ riemannXi

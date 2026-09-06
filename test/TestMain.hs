@@ -64,6 +64,16 @@ main = do
     case shortestRoute KernelMode certifiedGraph XiZerosReal XiNevanlinnaFunction of
       Just _ -> True
       Nothing -> False
+  check "shifted xi zero-free and Nevanlinna representations are LeanChecked equivalent" $
+    case ( shortestRepresentationRoute KernelMode representationGraph
+             XiZeroFreeHalfPlane XiShiftedNevanlinnaFunction
+         , shortestRepresentationRoute KernelMode representationGraph
+             XiShiftedNevanlinnaFunction XiZeroFreeHalfPlane ) of
+      (Just _, Just _) -> True
+      _ -> False
+  check "shifted Nevanlinna-to-eventual-positivity remains literature-only" $
+    shortestRepresentationRoute KernelMode representationGraph
+      XiShiftedNevanlinnaFunction SuzukiShiftedEventualPositivitySet == Nothing
   check "the specialized screw-to-Nevanlinna bridge is LeanChecked" $
     case shortestRoute KernelMode certifiedGraph XiNevanlinnaFunction ScrewFunction of
       Just _ -> True
