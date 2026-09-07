@@ -102,15 +102,18 @@ suzukiPointwiseRef = Reference
 
 suzukiShiftedRef :: Reference
 suzukiShiftedRef = Reference
-  { refShort = "RHGarden.xiZeroFreeRightOf_iff_xiShiftedNevanlinna"
+  { refShort = "RHGarden.xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative"
   , refCitation =
       "Lean definitions and theorems in formal/RHGarden/SuzukiShifted.lean and " ++
       "formal/RHGarden/SuzukiShiftTransform.lean, SuzukiShiftedLandau.lean, and " ++
-      "SuzukiShiftedNevanlinna.lean; the " ++
+      "SuzukiShiftedNevanlinna.lean, and SuzukiShiftedHerglotz.lean; the " ++
       "Volterra transforms, shift semigroup, Suzuki equation (11.2), positivity-order " ++
       "law, compact-tail Landau theorem, and eventual-positivity-to-zero-free direction " ++
-      "are checked. The zero-free half-plane is also LeanChecked equivalent to the " ++
-      "translated xi Nevanlinna property. " ++
+      "are checked. The zero-free half-plane is LeanChecked equivalent to the " ++
+      "translated xi Nevanlinna property. The explicit lower-half-plane-pole Cauchy " ++
+      "measures, countable Herglotz representation, Gram screw kernel, transform " ++
+      "calculation, and one-sided Fourier uniqueness close both directions of " ++
+      "Suzuki Theorem 11.1. " ++
       "Suzuki, Aspects of the screw function corresponding to the Riemann " ++
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
@@ -724,13 +727,31 @@ shiftedNevanlinnaToZeroFree = eraseRepresentationEdge $ representationEdge
   (ExactInverse "The spectral Herglotz sum reconstructs the forward implication.")
   Nothing
 
+shiftedNevanlinnaToShiftedScrew :: RuntimeRepresentationEdge
+shiftedNevanlinnaToShiftedScrew = eraseRepresentationEdge $ representationEdge
+  SXiShiftedNevanlinnaFunction SShiftedScrewFunction
+  "reconstruct the positive-measure shifted screw function"
+  ExactRepresentation leanCheckedTrust 5 suzukiShiftedRef
+  "RHGarden.isScrewFunction_shiftedHerglotzScrew builds a continuous Hermitian screw function from the countable Cauchy measures of the shifted xi poles; RHGarden.integral_shiftedHerglotzScrew_exp_eq_xiNevanlinnaQShifted identifies its one-sided transform."
+  (ExactInverse "RHGarden.shiftedHerglotzScrew_eq_neg_suzukiPsiShifted identifies the reconstructed screw with the shifted Suzuki function after transform uniqueness.")
+  Nothing
+
+shiftedScrewToShiftedGlobalPositivity :: RuntimeRepresentationEdge
+shiftedScrewToShiftedGlobalPositivity = eraseRepresentationEdge $ representationEdge
+  SShiftedScrewFunction SSuzukiShiftedPositivitySet
+  "read global shifted positivity from the Gram screw diagonal"
+  SufficientReduction leanCheckedTrust 2 suzukiShiftedRef
+  "RHGarden.shiftedHerglotzScrew_eq_neg_suzukiPsiShifted and RHGarden.xiShiftedNevanlinna_implies_shiftedPsi_nonnegative identify the positive Gram-kernel diagonal with 2*Psi_omega(t)."
+  (NoReconstruction "Global pointwise positivity alone does not reconstruct the Herglotz measure or its screw function.")
+  Nothing
+
 shiftedNevanlinnaToShiftedEventual :: RuntimeRepresentationEdge
 shiftedNevanlinnaToShiftedEventual = eraseRepresentationEdge $ representationEdge
   SXiShiftedNevanlinnaFunction SSuzukiShiftedEventualPositivitySet
   "recover the shifted screw function from its Herglotz transform"
-  SufficientReduction literatureCertifiedTrust 3 suzukiShiftedRef
-  "Suzuki's Nevanlinna-to-screw theorem gives global, hence eventual, nonnegativity. RHGarden isolates this as ShiftedNevanlinnaToPsiNonnegative; pinned Mathlib has no Herglotz representation or screw inversion theorem."
-  (NoReconstruction "The checked compact-tail Landau argument supplies only the opposite implication.")
+  SufficientReduction leanCheckedTrust 5 suzukiShiftedRef
+  "RHGarden.shiftedNevanlinnaToPsiNonnegative reconstructs an explicit positive Herglotz measure from every shifted xi pole, builds its Gram screw kernel, and identifies the screw with -Psi_omega by a checked one-sided Fourier uniqueness theorem. It proves global, hence eventual, nonnegativity."
+  (ExactInverse "RHGarden.xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative together with the shifted xi Nevanlinna equivalence supplies the reverse implication.")
   Nothing
 
 shiftedEventualToZeroFree :: RuntimeRepresentationEdge
@@ -739,7 +760,7 @@ shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
   "Suzuki eventual-positivity/zero-free criterion"
   SufficientReduction leanCheckedTrust 4 suzukiShiftedRef
   "RHGarden.xiZeroFreeRightOf_of_shifted_eventually_nonnegative: translate the nonnegative tail, subtract the entire compact initial transform, apply the checked Landau boundary principle, and exclude logarithmic-derivative poles."
-  (NoReconstruction "The zero-free-to-eventual-positive converse is still LiteratureCertified, not LeanChecked.")
+  (ExactInverse "RHGarden.xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative proves the converse through the explicit Herglotz screw reconstruction.")
   Nothing
 
 suzukiPsiToRiemannScrew :: RuntimeRepresentationEdge
@@ -1023,6 +1044,7 @@ representationGraph =
   , xiToZeroFreeHalfPlane, shiftedFamilyToPositivitySet
   , shiftedFamilyToEventualPositivitySet
   , zeroFreeToShiftedNevanlinna, shiftedNevanlinnaToZeroFree
+  , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
   , riemannScrewKernelToIntegralForm

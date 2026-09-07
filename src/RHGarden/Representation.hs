@@ -61,6 +61,7 @@ data Representation
   | SuzukiPsiShiftedFamily
   | XiZeroFreeHalfPlane
   | XiShiftedNevanlinnaFunction
+  | ShiftedScrewFunction
   | SuzukiShiftedPositivitySet
   | SuzukiShiftedEventualPositivitySet
   | RiemannScrew
@@ -122,6 +123,7 @@ data SRepresentation (r :: Representation) where
   SSuzukiPsiShiftedFamily :: SRepresentation 'SuzukiPsiShiftedFamily
   SXiZeroFreeHalfPlane :: SRepresentation 'XiZeroFreeHalfPlane
   SXiShiftedNevanlinnaFunction :: SRepresentation 'XiShiftedNevanlinnaFunction
+  SShiftedScrewFunction :: SRepresentation 'ShiftedScrewFunction
   SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
   SSuzukiShiftedEventualPositivitySet :: SRepresentation 'SuzukiShiftedEventualPositivitySet
   SRiemannScrew :: SRepresentation 'RiemannScrew
@@ -184,6 +186,7 @@ representationValue SScrewKernelDiagonalLocalPositive = ScrewKernelDiagonalLocal
 representationValue SSuzukiPsiShiftedFamily = SuzukiPsiShiftedFamily
 representationValue SXiZeroFreeHalfPlane = XiZeroFreeHalfPlane
 representationValue SXiShiftedNevanlinnaFunction = XiShiftedNevanlinnaFunction
+representationValue SShiftedScrewFunction = ShiftedScrewFunction
 representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
 representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualPositivitySet
 representationValue SRiemannScrew = RiemannScrew
@@ -244,6 +247,7 @@ representationLabel ScrewKernelDiagonalLocalPositive = "local nonnegativity of t
 representationLabel SuzukiPsiShiftedFamily = "Suzuki Volterra family Psi_omega"
 representationLabel XiZeroFreeHalfPlane = "parameterized xi zero-free right half-planes Re(s)>1/2+omega"
 representationLabel XiShiftedNevanlinnaFunction = "translated xi Nevanlinna functions Q_omega on the upper half-plane"
+representationLabel ShiftedScrewFunction = "positive-measure shifted screw functions reconstructed from Q_omega"
 representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"
 representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shifted Suzuki Psi is eventually nonnegative"
 representationLabel RiemannScrew = "continuous real-even zero-side Riemann screw function g=-Psi"

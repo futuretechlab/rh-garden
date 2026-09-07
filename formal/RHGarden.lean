@@ -35,3 +35,4 @@ import RHGarden.SuzukiLocalPositive
 import RHGarden.SuzukiShiftTransform
 import RHGarden.SuzukiShiftedLandau
 import RHGarden.SuzukiShiftedNevanlinna
+import RHGarden.SuzukiShiftedHerglotz

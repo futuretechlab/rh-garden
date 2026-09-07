@@ -138,8 +138,7 @@ SuzukiPsiShiftedEventuallyNonnegative omega
 ```
 
 Equivalently, the eventual-positivity parameter set is LeanChecked contained
-in the zero-free parameter set. This is one complete direction of Suzuki
-Theorem 11.1.
+in the zero-free parameter set.
 
 `RHGarden.SuzukiShiftedNevanlinna` now decomposes the forward direction. It
 defines
@@ -168,23 +167,37 @@ integral_0^infinity Psi_omega(t) exp(i*z*t) dt
   = (i/z^2) Q_omega(z).
 ```
 
-The remaining forward subedge is exactly the Herglotz-to-screw inversion
+`RHGarden.SuzukiShiftedHerglotz` proves the forward subedge constructively.
+For a pole `alpha-i beta`, `beta>=0`, it uses the positive Cauchy probability
+measure with density
 
 ```text
-XiShiftedNevanlinna omega
-  -> forall t, 0 <= Psi_omega(t).
+beta / (pi * ((x-alpha)^2 + beta^2))
 ```
 
-Suzuki obtains this stronger global statement from the classical
-Nevanlinna/screw correspondence. Pinned Mathlib provides local
-Herglotz--Riesz/Poisson formulas but no upper-half-plane Herglotz
-representation or inverse screw-transform theorem. RH Garden therefore
-isolates this theorem as `ShiftedNevanlinnaToPsiNonnegative`; its conditional
-composition with the checked results discharges the full criterion.
+when `beta>0`, and the Dirac mass at `alpha` when `beta=0`. Lean checks that
+its upper-half-plane Cauchy transform is exactly the pole resolvent. Summing
+these measures over xi-zero occurrences gives an explicit Herglotz
+representation; reciprocal-square summability supplies the required
+weighted integrability. The associated feature integral is a positive Gram
+kernel and the kernel of a continuous normalized screw function.
 
-Thus `omega=1/2` is LeanChecked safe on the xi-zero side, but eventual or
-global shifted positivity at `omega=1/2` is not promoted to LeanChecked: that
-would use precisely the still-open forward implication.
+The reconstructed screw has transform `-(i/z^2) Q_omega(z)`. The file also
+proves a specialized one-sided transform uniqueness theorem: after fixing a
+positive damping height it reduces to ordinary Fourier uniqueness, which is
+derived from Mathlib's characteristic-function uniqueness for finite
+positive measures. This identifies the reconstructed screw with
+`-Psi_omega` and proves global nonnegativity. Consequently Lean checks the
+full criterion
+
+```text
+XiZeroFreeRightOf omega
+  <-> SuzukiPsiShiftedEventuallyNonnegative omega,
+```
+
+and the global and eventual shifted-positivity parameter sets both equal the
+zero-free parameter set. In particular `Psi_omega(t)>=0` for all real `t`
+whenever `omega>=1/2`.
 
 ## Trust boundary and next frontier
 
@@ -193,15 +206,15 @@ would use precisely the still-open forward implication.
   interval, strict positivity on some punctured neighborhood of zero,
   shifted-family definitions/basic analysis, the Volterra semigroup and
   transform equation (11.2), rightward positivity propagation, compact-tail
-  Landau theory, eventual positivity implies a zero-free half-plane, and
-  `XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega`.
-- LiteratureCertified/OpenFormalization: only the shifted
-  Nevanlinna-to-screw inversion `ShiftedNevanlinnaToPsiNonnegative`.
+  Landau theory, the shifted Nevanlinna equivalence, the explicit Herglotz
+  screw reconstruction, one-sided uniqueness, and all of Suzuki Theorem
+  11.1.
+- LiteratureCertified: the general Krein--Langer correspondence, which was
+  not needed for the specialized shifted-xi theorem.
 - Open mathematics: membership of `0` in the positivity set, equivalently RH.
 
 Positivity through the whole interval `(0, log 2]` has not been established;
-neither has the first-prime interval `[log 2, log 3)`. The next formal frontier
-is the remaining Herglotz-to-screw subedge of Suzuki Theorem 11.1. The
-prime-side identity also
-opens symbolic or interval-certified investigations of positivity between
-successive prime thresholds.
+neither has the first-prime interval `[log 2, log 3)`. The next mathematical
+frontier is to move the safe shifted parameter region left from `omega=1/2`
+toward `omega=0`, potentially using the prime-side identity for symbolic or
+interval-certified positivity between successive prime thresholds.

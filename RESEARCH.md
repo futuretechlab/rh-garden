@@ -310,8 +310,7 @@ Suzuki equation (11.2) on the upper-half-plane convergence strip, and the
 semigroup identity `T_eta T_omega = T_(omega+eta)`. The function-level proof
 uses the FTC resolvent factorization `(I+omega J)^2 M_omega`, since the pinned
 library has no applicable one-sided transform uniqueness theorem. Global
-shifted positivity is consequently upward closed. The exact next formal
-frontier is the remaining forward half of Suzuki Theorem 11.1.
+shifted positivity is consequently upward closed.
 
 `RHGarden.SuzukiShiftedLandau` now supplies the compact-tail version of the
 Landau argument. It LeanChecks that the compact initial transform is entire,
@@ -325,8 +324,8 @@ SuzukiPsiShiftedEventuallyNonnegative omega
   -> XiZeroFreeRightOf omega.
 ```
 
-Thus one direction of Suzuki Theorem 11.1 is LeanChecked. The converse is now
-factored through `RHGarden.SuzukiShiftedNevanlinna`. Reflection-pairing in the
+The converse is factored through `RHGarden.SuzukiShiftedNevanlinna`.
+Reflection-pairing in the
 exact shifted spectral partial fraction cancels the genus-one correction and
 LeanChecks
 
@@ -334,13 +333,31 @@ LeanChecks
 XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega.
 ```
 
-The normalized transform is `(i/z^2) Q_omega(z)`. The only remaining forward
-subedge is `ShiftedNevanlinnaToPsiNonnegative`, Suzuki's classical
-Herglotz-to-screw inversion. It remains LiteratureCertified/OpenFormalization
-because pinned Mathlib has no suitable upper-half-plane Herglotz
-representation or inverse screw-transform theorem.
-In particular the unconditional zero-free parameter `omega=1/2` has not been
-promoted to eventual or global shifted positivity.
+`RHGarden.SuzukiShiftedHerglotz` closes the remaining forward subedge without
+assuming the general Krein--Langer correspondence. Each shifted pole in the
+closed lower half-plane is represented by its positive Cauchy probability
+measure (a Dirac mass on the boundary and a Cauchy density below it). Their
+countable sum satisfies the Herglotz integrability condition by the existing
+reciprocal-square theorem. The resulting rank-one integral kernel is PSD and
+is the translation-difference kernel of an explicit continuous screw
+function. Its one-sided transform is `-(i/z^2) Q_omega(z)`. A new specialized
+Fourier uniqueness theorem, reduced to Mathlib's characteristic-function
+uniqueness for finite positive measures, identifies this screw with
+`-Psi_omega`. Hence Lean now checks
 
-The earlier Volterra/Fubini and compact-tail Landau obstructions are closed.
-Full Weil-form PSD and general Krein--Langer remain separate.
+```text
+XiZeroFreeRightOf omega
+  <-> XiShiftedNevanlinna omega
+  -> forall t, 0 <= Psi_omega(t),
+
+XiZeroFreeRightOf omega
+  <-> SuzukiPsiShiftedEventuallyNonnegative omega.
+```
+
+In particular `Psi_omega` is globally nonnegative for every
+`omega >= 1/2`.
+
+The shifted representation district is therefore complete. The actual
+mathematical frontier is to move the certified safe parameter region left
+from `omega=1/2` toward `omega=0`; membership at zero is equivalent to RH.
+Full Weil-form PSD and the general Krein--Langer theorem remain separate.

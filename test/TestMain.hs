@@ -71,9 +71,21 @@ main = do
              XiShiftedNevanlinnaFunction XiZeroFreeHalfPlane ) of
       (Just _, Just _) -> True
       _ -> False
-  check "shifted Nevanlinna-to-eventual-positivity remains literature-only" $
-    shortestRepresentationRoute KernelMode representationGraph
-      XiShiftedNevanlinnaFunction SuzukiShiftedEventualPositivitySet == Nothing
+  check "shifted Nevanlinna-to-eventual-positivity is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph
+      XiShiftedNevanlinnaFunction SuzukiShiftedEventualPositivitySet of
+      Just route -> routeEndsAt route SuzukiShiftedEventualPositivitySet
+      Nothing -> False
+  check "shifted Nevanlinna reconstructs a LeanChecked shifted screw function" $
+    case shortestRepresentationRoute KernelMode representationGraph
+      XiShiftedNevanlinnaFunction ShiftedScrewFunction of
+      Just route -> routeEndsAt route ShiftedScrewFunction
+      Nothing -> False
+  check "a shifted xi zero-free half-plane gives global shifted positivity" $
+    case shortestRepresentationRoute KernelMode representationGraph
+      XiZeroFreeHalfPlane SuzukiShiftedPositivitySet of
+      Just route -> routeEndsAt route SuzukiShiftedPositivitySet
+      Nothing -> False
   check "the specialized screw-to-Nevanlinna bridge is LeanChecked" $
     case shortestRoute KernelMode certifiedGraph XiNevanlinnaFunction ScrewFunction of
       Just _ -> True
@@ -149,9 +161,11 @@ main = do
         SuzukiShiftedEventualPositivitySet XiZeroFreeHalfPlane of
       Just route -> routeEndsAt route XiZeroFreeHalfPlane
       Nothing -> False
-  check "zero-free to shifted eventual positivity remains literature-only" $
-    shortestRepresentationRoute KernelMode representationGraph
-      XiZeroFreeHalfPlane SuzukiShiftedEventualPositivitySet == Nothing
+  check "zero-free to shifted eventual positivity is LeanChecked" $
+    case shortestRepresentationRoute KernelMode representationGraph
+      XiZeroFreeHalfPlane SuzukiShiftedEventualPositivitySet of
+      Just route -> routeEndsAt route SuzukiShiftedEventualPositivitySet
+      Nothing -> False
   check "a supplied Suzuki Gram representation evaluates to the screw kernel" $
     case shortestRepresentationRoute KernelMode representationGraph SuzukiGramKernel RiemannScrewKernel of
       Just _ -> True

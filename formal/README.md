@@ -220,10 +220,14 @@ then proves the compact-tail Landau theorem and the checked implication
 `SuzukiPsiShiftedEventuallyNonnegative omega -> XiZeroFreeRightOf omega`.
 `RHGarden/SuzukiShiftedNevanlinna.lean` proves the translated spectral
 partial fraction and the representation equivalence
-`XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega`. The opposite,
-Nevanlinna-to-shifted-Psi half of Suzuki's Theorem 11.1 remains isolated as
-`ShiftedNevanlinnaToPsiNonnegative`, rather than assumed. See
-`SUZUKI_SHIFTED.md`.
+`XiZeroFreeRightOf omega <-> XiShiftedNevanlinna omega`.
+`RHGarden/SuzukiShiftedHerglotz.lean` then reconstructs the positive Cauchy
+measure of every lower-half-plane shifted pole, sums those measures, builds
+the associated Gram screw kernel, proves its one-sided transform, and uses a
+checked Fourier uniqueness argument to identify the screw with
+`-suzukiPsiShifted omega`. This discharges
+`ShiftedNevanlinnaToPsiNonnegative` and both directions of Suzuki Theorem
+11.1. See `SUZUKI_SHIFTED.md`.
 
 `RHGarden/SuzukiLocalPositive.lean` differentiates the unconditional
 prime-free formula on `0<t<log 2`. It identifies the quarter-lattice derivative
@@ -244,10 +248,9 @@ interval, for the full real line, or for off-diagonal kernel quadratic forms.
   `SuzukiPsiNonnegative`, `KernelPSD riemannScrewKernel`, Li positivity, or an
   appropriately strong Weil-form positivity theorem. The Suzuki converse and
   its specialized screw-to-Nevanlinna bridge are already checked.
-- Formalize the upper-half-plane Herglotz-to-screw inversion needed for
-  `ShiftedNevanlinnaToPsiNonnegative`. The Volterra semigroup, equation
-  (11.2), compact-tail Landau direction, and shifted xi Nevanlinna criterion
-  are already LeanChecked.
+- Move the certified shifted-positivity/zero-free parameter frontier left
+  from the unconditional half-line `omega >= 1/2` toward `omega=0`. The
+  endpoint is equivalent to RH and is not proved.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`
