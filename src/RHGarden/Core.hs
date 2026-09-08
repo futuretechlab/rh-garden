@@ -12,6 +12,7 @@ module RHGarden.Core
   , leanCheckedTrust
   , exactExecutableTrust
   , literatureCertifiedTrust
+  , numericalEvidenceTrust
   , conjecturalTrust
   , Relation(..)
   , ObligationProperty(..)
@@ -105,13 +106,16 @@ data Trust
   = LeanChecked
   | ExactExecutable
   | LiteratureCertified
+  | NumericalEvidence
   | Conjectural
   deriving (Eq, Ord, Show)
 
-leanCheckedTrust, exactExecutableTrust, literatureCertifiedTrust, conjecturalTrust :: Trust
+leanCheckedTrust, exactExecutableTrust, literatureCertifiedTrust,
+  numericalEvidenceTrust, conjecturalTrust :: Trust
 leanCheckedTrust = LeanChecked
 exactExecutableTrust = ExactExecutable
 literatureCertifiedTrust = LiteratureCertified
+numericalEvidenceTrust = NumericalEvidence
 conjecturalTrust = Conjectural
 
 data Relation
@@ -264,7 +268,8 @@ admissibleInKernelMode :: RuntimeReduction -> Bool
 admissibleInKernelMode r = rrTrust r == LeanChecked
 
 admissibleInLiteratureMode :: RuntimeReduction -> Bool
-admissibleInLiteratureMode r = rrTrust r /= Conjectural
+admissibleInLiteratureMode r =
+  rrTrust r /= Conjectural && rrTrust r /= NumericalEvidence
 
 -- | Opaque placeholder for a future kernel proof term.  This module exports no
 -- constructor and Evidence exports no promotion function.

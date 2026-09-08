@@ -12,6 +12,7 @@ library
       RHGarden.Algebra
       RHGarden.Core
       RHGarden.Evidence
+      RHGarden.Explorer.Suzuki
       RHGarden.Mobius
       RHGarden.Registry
       RHGarden.Representation

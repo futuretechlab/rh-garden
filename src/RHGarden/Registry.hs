@@ -118,6 +118,16 @@ suzukiShiftedRef = Reference
       "zeta-function (2023), equations (1.1), (11.1), (11.2), Theorem 11.1."
   }
 
+suzukiExplorerRef :: Reference
+suzukiExplorerRef = Reference
+  { refShort = "RH Garden Suzuki Explorer"
+  , refCitation =
+      "src/RHGarden/Explorer/Suzuki.hs and EXPLORER.md. Floating-point scans, " ++
+      "candidate minima, correlations, and coefficient fits are explicitly " ++
+      "NumericalEvidence; formal/RHGarden/SuzukiExplorer.lean contains the " ++
+      "separate rational-data certificate interface."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -763,6 +773,33 @@ shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
   (ExactInverse "RHGarden.xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative proves the converse through the explicit Herglotz screw reconstruction.")
   Nothing
 
+suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
+suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
+  SSuzukiPositivityExplorer SCandidateCellCertificate
+  "search sampled prime cells for affine lower-bound candidates"
+  InformationLoss numericalEvidenceTrust 1 suzukiExplorerRef
+  "Dense sampling and derivative sign changes produce candidate minima; a finite slope search emits rationalized affine coefficients with candidate-only status."
+  (NoReconstruction "Candidate output neither reconstructs the scanned function nor certifies its lower bound.")
+  Nothing
+
+suzukiExplorerToTailCandidate :: RuntimeRepresentationEdge
+suzukiExplorerToTailCandidate = eraseRepresentationEdge $ representationEdge
+  SSuzukiPositivityExplorer SCandidateTailCertificate
+  "search for asymptotic shifted-Psi envelopes"
+  InformationLoss numericalEvidenceTrust 2 suzukiExplorerRef
+  "The Explorer records normalized envelopes and prime statistics for future tail-certificate design; no tail theorem is inferred."
+  (NoReconstruction "Finite numerical scans cannot certify an infinite tail.")
+  Nothing
+
+suzukiExplorerToOperatorCandidate :: RuntimeRepresentationEdge
+suzukiExplorerToOperatorCandidate = eraseRepresentationEdge $ representationEdge
+  SSuzukiPositivityExplorer SCandidateOperatorIdentity
+  "record candidate structural identities"
+  InformationLoss numericalEvidenceTrust 2 suzukiExplorerRef
+  "Patterns in minimizing branches may suggest operator identities, but the Explorer emits no formal implication."
+  (NoReconstruction "A numerical pattern is not an operator construction or proof.")
+  Nothing
+
 suzukiPsiToRiemannScrew :: RuntimeRepresentationEdge
 suzukiPsiToRiemannScrew = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiZeroSide SRiemannScrew "take g=-Psi and prove compact-local normal convergence"
@@ -1046,6 +1083,8 @@ representationGraph =
   , zeroFreeToShiftedNevanlinna, shiftedNevanlinnaToZeroFree
   , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
+  , suzukiExplorerToCellCandidate, suzukiExplorerToTailCandidate
+  , suzukiExplorerToOperatorCandidate
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
   , riemannScrewKernelToIntegralForm
   , suzukiPsiToScrewKernel

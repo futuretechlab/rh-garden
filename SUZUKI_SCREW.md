@@ -286,8 +286,10 @@ propagation of global shifted positivity. The shifted eventual-positivity
 criterion is now split precisely: compact-tail Landau proves eventual
 positivity implies zero-freeness, while
 `RHGarden.SuzukiShiftedNevanlinna` LeanChecks zero-freeness equivalent to the
-shifted Nevanlinna property. Only the Nevanlinna-to-screw inversion needed to
-recover global shifted positivity remains LiteratureCertified.
+shifted Nevanlinna property. `RHGarden.SuzukiShiftedHerglotz` reconstructs the
+specialized shifted screw from explicit positive Cauchy measures and checks
+the remaining implication. Thus Suzuki Theorem 11.1 is complete for this xi
+family; the general Krein--Langer theorem remains LiteratureCertified.
 
 ## Unconditional local positivity
 
@@ -304,3 +306,8 @@ Evenness and `Psi(0)=0` give a symmetric local nonnegative interval, and the
 identity `riemannScrewKernel t t = 2*Psi(t)` gives local diagonal positivity.
 This does not establish sampled kernel PSD, global pointwise positivity, or
 RH. Positivity through `log 2` remains unproved.
+
+The discovery layer in `EXPLORER.md` now searches shifted prime cells and
+emits only `NumericalEvidence`. Candidate coefficients do not enter Lean;
+they must be rationalized and proved through the formal cell-certificate
+interface before they can support any checked interval theorem.

@@ -30,7 +30,8 @@ allowed ExplorationMode = const True
 
 allowedTrust :: SearchMode -> Trust -> Bool
 allowedTrust KernelMode trust = trust == leanCheckedTrust
-allowedTrust LiteratureMode trust = trust /= conjecturalTrust
+allowedTrust LiteratureMode trust =
+  trust /= conjecturalTrust && trust /= numericalEvidenceTrust
 allowedTrust ExplorationMode _ = True
 
 -- | Dijkstra-like search.  The graph is intentionally tiny in v0.1, so a

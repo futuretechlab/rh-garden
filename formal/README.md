@@ -238,6 +238,15 @@ nonnegativity interval, and local diagonal nonnegativity of
 `riemannScrewKernel`. No positivity claim is made for the whole prime-free
 interval, for the full real line, or for off-diagonal kernel quadratic forms.
 
+`RHGarden/SuzukiExplorer.lean` packages the checked global shifted criterion,
+the exact shifted prime-side normalization, prime-cell floor/support lemmas,
+and `SuzukiCellLowerBoundCertificate`. A certificate contains rational data
+and explicit Lean proof fields for cell membership and both inequalities. The theorem
+`exists_suzukiPsi_nonnegative_on_firstCertifiedInterval` is an end-to-end
+formal smoke test obtained from the existing symbolic local theorem; it does
+not import floating-point evidence. The Haskell Explorer and its trust model
+are documented separately in `EXPLORER.md`.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
@@ -251,6 +260,10 @@ interval, for the full real line, or for off-diagonal kernel quadratic forms.
 - Move the certified shifted-positivity/zero-free parameter frontier left
   from the unconditional half-line `omega >= 1/2` toward `omega=0`. The
   endpoint is equivalent to RH and is not proved.
+- Use the Suzuki Explorer only to discover candidate cell inequalities, then
+  certify them independently through `SuzukiCellLowerBoundCertificate`.
+  A separate `SuzukiPsiTailCertificate` remains open and cannot be supplied
+  by a finite scan.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,
   analytic multiplicity, distinct radial and height `Multiset` cutoffs, exact
   cutoff counts, Lagarias height-ordered partial sums, and the open `Tendsto`

@@ -36,3 +36,4 @@ import RHGarden.SuzukiShiftTransform
 import RHGarden.SuzukiShiftedLandau
 import RHGarden.SuzukiShiftedNevanlinna
 import RHGarden.SuzukiShiftedHerglotz
+import RHGarden.SuzukiExplorer

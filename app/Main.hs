@@ -7,6 +7,7 @@ import Text.Read (readMaybe)
 
 import RHGarden.Core
 import RHGarden.Evidence
+import RHGarden.Explorer.Suzuki
 import RHGarden.Mobius
 import RHGarden.Registry
 import RHGarden.Representation
@@ -27,6 +28,10 @@ main = do
     ["submission"] -> submissionStatus
     ["formal-status"] -> formalStatus
     ["garden"] -> garden LiteratureMode
+    "explore-suzuki" : explorerArgs ->
+      case parseExplorerOptions explorerArgs of
+        Left err -> putStrLn err >> suzukiExplorerUsage
+        Right options -> runSuzukiExplorer options
     ["check-mobius"] -> putStr renderMobiusCheck
     ["path", fromText, toText] -> representationPath LiteratureMode fromText toText
     _ -> usage
@@ -47,6 +52,7 @@ overview = do
   putStrLn "  rh-garden check-lagarias 10000"
   putStrLn "  rh-garden check-mobius"
   putStrLn "  rh-garden garden"
+  putStrLn "  rh-garden explore-suzuki --omega 0.5 --t-max 6 --samples 801 --prime-cells"
   putStrLn "  rh-garden path XiFunction LiSequence"
   putStrLn "  rh-garden submission"
   putStrLn "  rh-garden formal-status"
@@ -518,6 +524,16 @@ formalStatus = do
     , "xiZeroFreeRightOf_iff_xiShiftedNevanlinna"
     , "xiShiftedNevanlinna_half"
     , "integral_suzukiPsiShifted_exp_eq_xiNevanlinnaQShifted"
+    , "xiZeroFreeRightOf_iff_shiftedGlobalNonnegative"
+    , "riemannHypothesis_iff_shifted_zero_nonnegative"
+    , "half_mem_suzukiShiftedPositivitySet"
+    , "mem_suzukiShiftedPositivitySet_iff_xiZeroFreeRightOf"
+    , "suzukiPsiShifted_eq_primeSide"
+    , "natFloor_exp_eq_of_mem_suzukiPrimeCell"
+    , "suzukiPsiPrimeContribution_eq_fixed_sum_on_cell"
+    , "SuzukiCellLowerBoundCertificate.shiftedPsi_nonnegative"
+    , "exists_firstSuzukiCellLowerBoundCertificate"
+    , "exists_suzukiPsi_nonnegative_on_firstCertifiedInterval"
     , "xiZeroFreeRightOf_implies_shiftedEventuallyNonnegative_of_bridge"
     , "xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative_of_bridge"
     , "suzukiShiftedEventualCriterion_of_nevanlinna_bridge"
@@ -545,7 +561,18 @@ formalStatus = do
 
 usage :: IO ()
 usage = do
-  putStrLn "usage: rh-garden [kernel | routes | explore | garden | path FROM TO | check-mobius | check-lagarias N | formal-status | submission]"
+  putStrLn "usage: rh-garden [kernel | routes | explore | explore-suzuki OPTIONS | garden | path FROM TO | check-mobius | check-lagarias N | formal-status | submission]"
+
+suzukiExplorerUsage :: IO ()
+suzukiExplorerUsage = do
+  putStrLn "Suzuki Explorer options:"
+  putStrLn "  --omega VALUE                         (repeatable)"
+  putStrLn "  --omega-min VALUE --omega-max VALUE --omega-count N"
+  putStrLn "  --t-min VALUE --t-max VALUE --samples N"
+  putStrLn "  --prime-cells"
+  putStrLn "  --output FILE [--format ascii|csv|json]"
+  putStrLn "  --certificate-output FILE"
+  putStrLn "All results are NumericalEvidence and candidate-only."
 
 garden :: SearchMode -> IO ()
 garden mode = do

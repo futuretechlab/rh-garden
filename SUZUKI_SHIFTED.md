@@ -218,3 +218,24 @@ neither has the first-prime interval `[log 2, log 3)`. The next mathematical
 frontier is to move the safe shifted parameter region left from `omega=1/2`
 toward `omega=0`, potentially using the prime-side identity for symbolic or
 interval-certified positivity between successive prime thresholds.
+
+## Searchable positivity frontier
+
+`RHGarden.SuzukiExplorer` packages the stronger checked global criterion
+
+```text
+XiZeroFreeRightOf omega
+  <-> forall t, 0 <= suzukiPsiShifted omega t
+```
+
+and its specialization at `omega=0`. It also defines the exact shifted
+prime-side evaluator as `SuzukiShift omega suzukiPsiPrimeSide`, exposes the
+fixed finite Mangoldt support on each cell `[log n,log(n+1))`, and supplies a
+rational-data cell-certificate interface.
+
+The Haskell `explore-suzuki` command searches this `(omega,t)` configuration
+space, records candidate cell minima and prime statistics, and proposes
+rationalized affine lower bounds. These outputs have the trust class
+`NumericalEvidence`; they have no route to a checked positivity or RH node.
+See `EXPLORER.md` for the command line, output schema, cross-check, and the
+separate Lean certification workflow.

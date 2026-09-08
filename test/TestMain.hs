@@ -8,6 +8,7 @@ import System.Exit (exitFailure)
 import RHGarden.Algebra
 import RHGarden.Core
 import RHGarden.Evidence
+import RHGarden.Explorer.Suzuki
 import RHGarden.Mobius
 import RHGarden.Registry
 import RHGarden.Representation
@@ -96,6 +97,26 @@ main = do
     case shortestRepresentationRoute ExplorationMode representationExplorationGraph WeilLiQuadraticValues LiSequence of
       Just _ -> True
       Nothing -> False
+  check "LiteratureMode rejects NumericalEvidence Explorer edges" $
+    shortestRepresentationRoute LiteratureMode representationGraph
+      SuzukiPositivityExplorer CandidateCellCertificate == Nothing
+  check "ExplorationMode accepts NumericalEvidence Explorer edges" $
+    case shortestRepresentationRoute ExplorationMode representationGraph
+      SuzukiPositivityExplorer CandidateCellCertificate of
+      Just route -> routeEndsAt route CandidateCellCertificate
+      Nothing -> False
+  check "Suzuki Explorer smoke scan returns both requested omega summaries" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerOmegas = [0, 0.5]
+        , explorerTMax = 1
+        , explorerSamples = 41
+        } of
+      Right report -> length (reportSummaries report) == 2 &&
+        not (null (reportCellMinima report)) &&
+        all validSuzukiSummary (reportSummaries report)
+      Left _ -> False
+  check "Suzuki numerical normalization has Psi(0)=0" $
+    suzukiPsiNumeric 0 == 0
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True
@@ -237,3 +258,9 @@ routeEndsAt route expected =
   case reverse (representationRouteSteps route) of
     edge:_ -> rreTo edge == expected
     [] -> False
+
+validSuzukiSummary :: OmegaSummary -> Bool
+validSuzukiSummary summary =
+  not (isNaN (summaryMinimum summary)) &&
+  not (isInfinite (summaryMinimum summary)) &&
+  summaryCrossCheckError summary < 0.01

@@ -64,6 +64,10 @@ data Representation
   | ShiftedScrewFunction
   | SuzukiShiftedPositivitySet
   | SuzukiShiftedEventualPositivitySet
+  | SuzukiPositivityExplorer
+  | CandidateCellCertificate
+  | CandidateTailCertificate
+  | CandidateOperatorIdentity
   | RiemannScrew
   | RiemannScrewKernel
   | IntegralScrewQuadraticForm
@@ -126,6 +130,10 @@ data SRepresentation (r :: Representation) where
   SShiftedScrewFunction :: SRepresentation 'ShiftedScrewFunction
   SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
   SSuzukiShiftedEventualPositivitySet :: SRepresentation 'SuzukiShiftedEventualPositivitySet
+  SSuzukiPositivityExplorer :: SRepresentation 'SuzukiPositivityExplorer
+  SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
+  SCandidateTailCertificate :: SRepresentation 'CandidateTailCertificate
+  SCandidateOperatorIdentity :: SRepresentation 'CandidateOperatorIdentity
   SRiemannScrew :: SRepresentation 'RiemannScrew
   SRiemannScrewKernel :: SRepresentation 'RiemannScrewKernel
   SIntegralScrewQuadraticForm :: SRepresentation 'IntegralScrewQuadraticForm
@@ -189,6 +197,10 @@ representationValue SXiShiftedNevanlinnaFunction = XiShiftedNevanlinnaFunction
 representationValue SShiftedScrewFunction = ShiftedScrewFunction
 representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
 representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualPositivitySet
+representationValue SSuzukiPositivityExplorer = SuzukiPositivityExplorer
+representationValue SCandidateCellCertificate = CandidateCellCertificate
+representationValue SCandidateTailCertificate = CandidateTailCertificate
+representationValue SCandidateOperatorIdentity = CandidateOperatorIdentity
 representationValue SRiemannScrew = RiemannScrew
 representationValue SRiemannScrewKernel = RiemannScrewKernel
 representationValue SIntegralScrewQuadraticForm = IntegralScrewQuadraticForm
@@ -250,6 +262,10 @@ representationLabel XiShiftedNevanlinnaFunction = "translated xi Nevanlinna func
 representationLabel ShiftedScrewFunction = "positive-measure shifted screw functions reconstructed from Q_omega"
 representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"
 representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shifted Suzuki Psi is eventually nonnegative"
+representationLabel SuzukiPositivityExplorer = "floating-point Suzuki (omega,t) configuration-space explorer"
+representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"
+representationLabel CandidateTailCertificate = "candidate asymptotic lower-bound data for a Suzuki tail"
+representationLabel CandidateOperatorIdentity = "candidate operator identity suggested by Suzuki exploration"
 representationLabel RiemannScrew = "continuous real-even zero-side Riemann screw function g=-Psi"
 representationLabel RiemannScrewKernel = "translation-difference kernel of the zero-side Riemann screw function"
 representationLabel IntegralScrewQuadraticForm = "compactly supported integral Hermitian form of the Riemann screw kernel"

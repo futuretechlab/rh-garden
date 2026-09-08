@@ -361,3 +361,36 @@ The shifted representation district is therefore complete. The actual
 mathematical frontier is to move the certified safe parameter region left
 from `omega=1/2` toward `omega=0`; membership at zero is equivalent to RH.
 Full Weil-form PSD and the general Krein--Langer theorem remain separate.
+
+## Numerical discovery and exact certificates
+
+`RHGarden.SuzukiExplorer` LeanChecks the global shifted criterion directly:
+
+```text
+XiZeroFreeRightOf omega
+  <-> forall t, 0 <= suzukiPsiShifted omega t,
+
+RiemannHypothesis
+  <-> forall t, 0 <= suzukiPsiShifted 0 t.
+```
+
+It also proves that shifting the certified prime-side expression gives the
+exact shifted function and that each cell `[log n,log(n+1))` has a fixed
+finite Mangoldt support. `SuzukiCellLowerBoundCertificate` is an exact
+rational-data interface: its proof fields, not its data, establish a cell
+lower bound. The first smoke-test theorem extracts an existential rational
+subinterval of the already checked local-positive neighborhood and certifies
+nonnegativity there.
+
+The companion `explore-suzuki` executable performs floating-point scans,
+candidate minimization, prime-statistic collection, and affine lower-bound
+fitting. Its graph edges have trust `NumericalEvidence`, which is rejected by
+both Kernel and Literature modes. Candidate data can only become checked by
+an independent Lean proof. A modest scan suggests changes in the dangerous
+minimizing cell as `omega` decreases, but this is neither a global bound nor
+evidence sufficient for RH. The certificate schema, numerical cross-check,
+and current patterns are documented in `EXPLORER.md`.
+
+The next research problem is to turn one recurring dangerous-cell pattern
+into a scalable exact lower bound and, separately, to discover a genuine
+infinite-tail certificate. A finite numerical scan cannot supply either.
