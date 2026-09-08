@@ -668,7 +668,7 @@ minimumOnCell options primes events omega points n =
           [] -> []
           [_] -> inside
           firstPoint : rest -> [firstPoint, lastPoint rest])
-      candidates = endpoints ++ derivativeRootCandidates inside
+      candidates = endpoints ++ uniqueCellDerivativeRootCandidates n inside
   in if right < left || null candidates then Nothing else
       let best = minimumBy (comparing shiftValue) candidates
           t = shiftT best
@@ -705,6 +705,33 @@ derivativeRootCandidates points = mapMaybeCell root (zip points (drop 1 points))
       where
         dl = shiftDerivative left
         dr = shiftDerivative right
+
+-- | For cells n >= 2, the Lean-checked strict-convexity theorem implies
+-- that the derivative is strictly increasing and has at most one zero.
+-- Consequently its signs at the first and last interior grid points decide
+-- whether an interior critical point exists.  Cell 1 retains the generic
+-- scanner because the uniform curvature theorem starts at log 2.
+uniqueCellDerivativeRootCandidates :: Int -> [ShiftPoint] -> [ShiftPoint]
+uniqueCellDerivativeRootCandidates n points
+  | n < 2 = derivativeRootCandidates points
+  | otherwise =
+      case interior of
+        left : rest
+          | not (null rest)
+          , let right = last rest
+          , isFinite (shiftDerivative left)
+          , isFinite (shiftDerivative right)
+          , shiftDerivative left <= 0
+          , 0 <= shiftDerivative right
+          , shiftDerivative left /= shiftDerivative right ->
+              [refineDerivativeRoot left right]
+        _ -> []
+  where
+    leftThreshold = log (fromIntegral n)
+    rightThreshold = log (fromIntegral (n + 1))
+    interior = filter (\point ->
+      leftThreshold + 1e-12 < shiftT point &&
+      shiftT point < rightThreshold - 1e-12) points
 
 refineDerivativeRoot :: ShiftPoint -> ShiftPoint -> ShiftPoint
 refineDerivativeRoot left right =
@@ -775,10 +802,24 @@ enumerateCriticalPoints omega points =
       , criticalMixedDerivative = shiftMixedDerivative root
       , criticalClassification = classifyRoot left right root
       }
-  | (left, right) <- zip points (drop 1 points)
-  , cellForT ((shiftT left + shiftT right) / 2) == cellForT (shiftT left + 1e-10)
-  , root <- derivativeRootCandidates [left, right]
+  | cell <- [minimumCell .. maximumCell]
+  , let leftThreshold = log (fromIntegral cell)
+  , let rightThreshold = log (fromIntegral (cell + 1))
+  , let inCell = filter (\point ->
+          leftThreshold - 1e-12 <= shiftT point &&
+          shiftT point <= rightThreshold + 1e-12) points
+  , root <- uniqueCellDerivativeRootCandidates cell inCell
+  , let neighbors = nearestBracket root inCell
+  , (left, right) <- maybe [] (: []) neighbors
   ]
+  where
+    cells = map (cellForT . shiftT) points
+    minimumCell = if null cells then 1 else minimum cells
+    maximumCell = if null cells then 0 else maximum cells
+    nearestBracket root candidates =
+      case break ((shiftT root <) . shiftT) candidates of
+        (before, right : _) | not (null before) -> Just (last before, right)
+        _ -> Nothing
 
 classifyRoot :: ShiftPoint -> ShiftPoint -> ShiftPoint -> CriticalClassification
 classifyRoot left right root

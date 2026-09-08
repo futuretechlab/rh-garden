@@ -37,3 +37,4 @@ import RHGarden.SuzukiShiftedLandau
 import RHGarden.SuzukiShiftedNevanlinna
 import RHGarden.SuzukiShiftedHerglotz
 import RHGarden.SuzukiExplorer
+import RHGarden.SuzukiConvexity

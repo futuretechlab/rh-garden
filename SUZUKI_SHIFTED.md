@@ -250,3 +250,24 @@ as `NumericalEvidence`. In Lean,
 `differentiableOn_suzukiPsiShifted_primeCellInterior` and the proof-bearing
 `SuzukiCellConvexCertificate` are the independent route by which a numerical
 candidate may eventually become a checked cell theorem.
+
+`RHGarden.SuzukiConvexity` now fixes the cell geometry exactly. Twice
+differentiating the Volterra shift gives
+
+```text
+(T_omega f)''(t) = exp(-omega*t) f''(t).
+```
+
+Within a prime cell the finite Mangoldt term is affine. With
+`y=exp(t/2)`, Lean derives
+
+```text
+Psi''(t) = y + 1/y - y^3/(y^4-1) >= 1
+```
+
+for every cell `n>=2`. Thus every `Psi_omega` is strictly convex on every
+such cell for every real omega; an interior critical point is unique and an
+interior fold cannot occur. The checked `SuzukiStrongConvexCellCertificate`
+turns this structure into a one-sample whole-cell verifier. Cells 2 at
+`omega=1/10` and 5 at `omega=1/20` remain uncertified because exact sample
+value and first-derivative bounds have not yet been supplied.

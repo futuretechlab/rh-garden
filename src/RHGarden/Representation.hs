@@ -65,6 +65,8 @@ data Representation
   | SuzukiShiftedPositivitySet
   | SuzukiShiftedEventualPositivitySet
   | SuzukiPositivityExplorer
+  | SuzukiPrimeCellStrictConvexity
+  | SuzukiStrongConvexCellCertificate
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -133,6 +135,8 @@ data SRepresentation (r :: Representation) where
   SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
   SSuzukiShiftedEventualPositivitySet :: SRepresentation 'SuzukiShiftedEventualPositivitySet
   SSuzukiPositivityExplorer :: SRepresentation 'SuzukiPositivityExplorer
+  SSuzukiPrimeCellStrictConvexity :: SRepresentation 'SuzukiPrimeCellStrictConvexity
+  SSuzukiStrongConvexCellCertificate :: SRepresentation 'SuzukiStrongConvexCellCertificate
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -202,6 +206,8 @@ representationValue SShiftedScrewFunction = ShiftedScrewFunction
 representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
 representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualPositivitySet
 representationValue SSuzukiPositivityExplorer = SuzukiPositivityExplorer
+representationValue SSuzukiPrimeCellStrictConvexity = SuzukiPrimeCellStrictConvexity
+representationValue SSuzukiStrongConvexCellCertificate = SuzukiStrongConvexCellCertificate
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -269,6 +275,8 @@ representationLabel ShiftedScrewFunction = "positive-measure shifted screw funct
 representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"
 representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shifted Suzuki Psi is eventually nonnegative"
 representationLabel SuzukiPositivityExplorer = "floating-point Suzuki (omega,t) configuration-space explorer"
+representationLabel SuzukiPrimeCellStrictConvexity = "universal strict convexity of shifted Suzuki Psi on prime cells n>=2"
+representationLabel SuzukiStrongConvexCellCertificate = "kernel-checked strong-convexity lower-bound certificate mechanism"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

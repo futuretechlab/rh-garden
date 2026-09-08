@@ -128,6 +128,17 @@ suzukiExplorerRef = Reference
       "separate rational-data certificate interface."
   }
 
+suzukiConvexityRef :: Reference
+suzukiConvexityRef = Reference
+  { refShort = "RHGarden.strictConvexOn_suzukiPsiShifted_primeCell"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiConvexity.lean: the two Volterra " ++
+      "corrections cancel in the second derivative, the fixed Mangoldt cell sum " ++
+      "is affine, the closed curvature is at least one above log 2, and every " ++
+      "real shift is strictly convex on every prime cell n>=2. The same module " ++
+      "contains the exact strong-convexity certificate verifier."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -773,6 +784,24 @@ shiftedEventualToZeroFree = eraseRepresentationEdge $ representationEdge
   (ExactInverse "RHGarden.xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative proves the converse through the explicit Herglotz screw reconstruction.")
   Nothing
 
+suzukiPrimeToCellStrictConvexity :: RuntimeRepresentationEdge
+suzukiPrimeToCellStrictConvexity = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiPrimeSide SSuzukiPrimeCellStrictConvexity
+  "differentiate the fixed-support prime-cell formula twice"
+  SufficientReduction leanCheckedTrust 2 suzukiConvexityRef
+  "RHGarden.secondDeriv_primeContribution_eq_zero_on_cell, RHGarden.exp_formula_ge_one_of_sqrt_two_le, and RHGarden.strictConvexOn_suzukiPsiShifted_primeCell prove universal shifted strict convexity for n>=2."
+  (NoReconstruction "Cellwise curvature discards the values and prime-dependent first-derivative slopes.")
+  Nothing
+
+cellStrictConvexityToStrongCertificate :: RuntimeRepresentationEdge
+cellStrictConvexityToStrongCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiPrimeCellStrictConvexity SSuzukiStrongConvexCellCertificate
+  "verify a cell lower bound from one sample and a curvature bound"
+  SufficientReduction leanCheckedTrust 1 suzukiConvexityRef
+  "RHGarden.lower_bound_of_secondDeriv_ge and RHGarden.SuzukiStrongConvexCellCertificate.positive_on_cell turn exact rational value, derivative, and curvature bounds into strict positivity on a complete closed cell."
+  (NoReconstruction "The verifier checks supplied exact bounds but does not synthesize a certificate or assert one exists for every cell.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1101,6 +1130,7 @@ representationGraph =
   , zeroFreeToShiftedNevanlinna, shiftedNevanlinnaToZeroFree
   , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
+  , suzukiPrimeToCellStrictConvexity, cellStrictConvexityToStrongCertificate
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

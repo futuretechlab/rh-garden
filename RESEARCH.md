@@ -391,9 +391,8 @@ minimizing cell as `omega` decreases, but this is neither a global bound nor
 evidence sufficient for RH. The certificate schema, numerical cross-check,
 and current patterns are documented in `EXPLORER.md`.
 
-The Explorer now enumerates every detected critical point in each prime
-cell, evaluates closed first/second/mixed derivatives, continues local
-minimum branches in `omega`, flags folds and prime-boundary collisions, and
+The Explorer evaluates closed first/second/mixed derivatives, continues local
+minimum branches in `omega`, and detects prime-boundary collisions and
 adaptively refines crossings of the numerical lower envelope. The fine
 `0 <= omega <= 0.05` scan resolves the coarse cell-14-to-207 jump into the
 candidate cascade `208 -> 34 -> 14 -> 5` as omega increases. At omega zero,
@@ -401,17 +400,21 @@ cell 208 narrowly beats cell 207 and a separate interior basin occurs in cell
 213; most of the surrounding 207--216 cluster consists of cell-boundary
 values. All of these facts remain `NumericalEvidence`.
 
-On the checked side, `differentiableOn_suzukiPsiShifted_primeCellInterior`
-proves exact cell-interior differentiability, while
-`SuzukiCellConvexCertificate` and `lowerBound_on_Icc_of_deriv_signs` provide
-a proof-field-based whole-cell verifier. Candidate cells 2 at omega `1/10`
-and 5 at omega `1/20` are numerically positive but not certified: exact
-uniform transcendental bounds for their archimedean/Volterra derivatives are
-the first missing proof component. The infinite tail remains wholly open.
+On the checked side, `RHGarden.SuzukiConvexity` proves the exact cancellation
+`(T_omega Psi)''=exp(-omega*t) Psi''`, zero second derivative of the fixed
+Mangoldt cell sum, and the closed lower bound `Psi''>=1` on every cell
+`n>=2`. Hence every shifted cell is strictly convex for every real omega,
+has at most one interior critical point, and admits no interior fold.
+`SuzukiStrongConvexCellCertificate` verifies a whole-cell lower bound from a
+single exact sample value/derivative bound and a curvature bound. Candidate
+cells 2 at omega `1/10` and 5 at omega `1/20` remain numerically positive but
+not certified: exact pointwise transcendental bounds at simple rational
+samples are the first missing proof component. The infinite tail remains
+wholly open.
 
-The next research problem is to build the small exact interval-bound library
-needed to certify cell 2 at omega `1/10`, then test whether the same convex
-certificate scales to cell 5. In parallel, the branch cascade suggests
+The next research problem is to build the small exact point-evaluation bound
+library needed to certify cell 2 at omega `1/10`, then test whether the same
+strong-convexity certificate scales to cell 5. In parallel, the branch cascade suggests
 studying why its winning cells are attached to particular Mangoldt boundary
 events. A genuine infinite-tail certificate remains a separate RH-sized
 requirement; a finite numerical scan cannot supply it.

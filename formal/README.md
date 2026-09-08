@@ -254,6 +254,17 @@ flank derivative signs, and a checked bracket lower bound into a whole-cell
 nonnegativity theorem. This is an exact verifier architecture only: no
 floating branch, crossing, or decimal minimum is imported into Lean.
 
+`RHGarden/SuzukiConvexity.lean` proves the exact second-derivative identity
+for the Volterra shift, the affine nature of each fixed Mangoldt cell sum,
+and the closed curvature formula
+`Psi''=y+1/y-y^3/(y^4-1)`. Lean checks `Psi''>=1` for every cell `n>=2`, so
+all real shifts are strictly convex there, have at most one interior critical
+point, and have no interior fold. Its generic
+`lower_bound_of_secondDeriv_ge` theorem and
+`SuzukiStrongConvexCellCertificate.positive_on_cell` reduce a whole-cell
+proof to exact value and derivative bounds at one rational sample plus a
+curvature bound.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
@@ -268,8 +279,10 @@ floating branch, crossing, or decimal minimum is imported into Lean.
   from the unconditional half-line `omega >= 1/2` toward `omega=0`. The
   endpoint is equivalent to RH and is not proved.
 - Use the Suzuki Explorer only to discover candidate cell inequalities, then
-  certify them independently through `SuzukiCellLowerBoundCertificate` or
-  `SuzukiCellConvexCertificate`.
+  certify them independently through `SuzukiCellLowerBoundCertificate`,
+  `SuzukiCellConvexCertificate`, or `SuzukiStrongConvexCellCertificate`.
+  Universal curvature is checked; the immediate finite-cell obstruction is
+  exact pointwise value/first-derivative bounding at rational samples.
   A separate `SuzukiPsiTailCertificate` remains open and cannot be supplied
   by a finite scan.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,

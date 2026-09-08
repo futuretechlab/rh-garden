@@ -134,6 +134,12 @@ main = do
         } of
       Right report -> not (null (reportCriticalPoints report)) &&
         not (null (reportBranches report)) &&
+        all (\point -> length
+          [other | other <- reportCriticalPoints report,
+            criticalCell other == criticalCell point,
+            abs (criticalOmega other - criticalOmega point) < 1e-12] == 1)
+          [point | point <- reportCriticalPoints report,
+            criticalCell point >= 2] &&
         all ((< 1e-3) . summaryDerivativeCheckError) (reportSummaries report)
       Left _ -> False
   check "Suzuki closed shifted derivative agrees with finite differences" $

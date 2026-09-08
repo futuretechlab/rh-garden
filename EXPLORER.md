@@ -97,7 +97,8 @@ g'(t)  = exp(-omega*t) (f'(t)+omega*f(t)) + omega^2 J0(t),
 g''(t) = exp(-omega*t) f''(t).
 ```
 
-The cancellation in the second identity is exact. A mixed derivative gives
+The cancellation in the second identity is exact and is now independently
+LeanChecked in `RHGarden.SuzukiConvexity`. A mixed derivative gives
 the implicit-branch predictor `dt/domega=-Psi_{t omega}/Psi_{tt}` whenever
 the curvature is nonzero. Regression tests compare `g'` with centered finite
 differences of the independent adaptive-Simpson value evaluator and compare
@@ -105,14 +106,21 @@ differences of the independent adaptive-Simpson value evaluator and compare
 
 ## Critical points and branches
 
-Each cell search includes both endpoints and every detected interior root of
-`dPsiDt`. Roots are adaptively bracketed and refined, then classified from
-derivative sign changes and `d2PsiDt2` as `local_min`, `local_max`, or
-`uncertain`. It does not assume a unique minimum per cell. The branch mode
-continues these roots through adjacent omega samples, using the prior root
-and the implicit derivative as a predictor for associating the next
-adaptively corrected root. It flags small-curvature folds and collisions with
-prime-cell boundaries.
+Lean proves substantially more geometry than the original root scanner used.
+On every prime cell `n >= 2`, the Mangoldt contribution is affine and
+
+```text
+Psi''(t) = y + 1/y - y^3/(y^4-1) >= 1,  y=exp(t/2).
+```
+
+Together with `(T_omega Psi)''=exp(-omega*t) Psi''`, this makes every shifted
+cell strictly convex for every real `omega`. The Explorer therefore checks
+only the derivative signs at the two interior ends: if they bracket zero it
+refines the unique critical point, otherwise the minimum is at an endpoint.
+Cell 1 retains the generic scanner. Multiple detected interior roots in a
+cell `n >= 2` are now a regression failure. An interior fold is formally
+impossible; branches can instead meet prime boundaries or cease to win the
+global lower envelope.
 
 For simultaneous minimum branches A and B, the crossings mode brackets sign
 changes of `m_A(omega)-m_B(omega)` and recomputes both cell minima while
@@ -131,9 +139,9 @@ from cell 14 to the 207 region. In increasing omega order, its numerical
 lower envelope is
 
 ```text
-cell 208 --0.01474808--> cell 34
-         --0.02270314--> cell 14
-         --0.02706489--> cell 5.
+cell 208 --0.01474830--> cell 34
+         --0.02270270--> cell 14
+         --0.02706459--> cell 5.
 ```
 
 The candidate common minima at these crossings are respectively about
@@ -209,6 +217,20 @@ cell, and `SuzukiCellConvexCertificate.shiftedPsi_nonnegative_on_cell`
 specializes it to shifted Psi. The formal development also proves
 `differentiableOn_suzukiPsiShifted_primeCellInterior`.
 
+`SuzukiStrongConvexCellCertificate` is simpler and no longer needs a
+critical bracket. A rational sample point supplies a checked value lower
+bound and derivative absolute upper bound, while a positive curvature lower
+bound supplies
+
+```text
+Psi_omega(t) >= Psi_omega(x)
+  - |Psi_omega'(x)|^2/(2*m).
+```
+
+The generic theorem `lower_bound_of_secondDeriv_ge` and the certificate's
+`positive_on_cell` verifier are LeanChecked. Numerical values still provide
+no proof fields.
+
 The numerical candidates currently found for the requested certification
 tests are:
 
@@ -217,10 +239,11 @@ omega=1/10, cell 2: t*=0.89237347, Psi=0.04090532, curvature=1.310889
 omega=1/20, cell 5: t*=1.7799955,  Psi=0.03788844, curvature=2.2167661
 ```
 
-Neither cell is Lean-certified yet. The first exact missing ingredient is a
-small rigorous interval-bound library for the archimedean and Volterra
-transcendental terms (including the first/second derivative bounds) on those
-whole cells. No decimal approximation is admitted as a certificate.
+Neither cell is Lean-certified yet. Universal curvature is no longer the
+obstruction. The first exact missing ingredient is now narrower: rigorous
+pointwise lower/upper bounds for `Psi_omega(x)` and
+`|Psi_omega'(x)|` at a simple rational sample (starting with `x=9/10` for
+cell 2). No decimal approximation is admitted as a certificate.
 
 The full workflow is:
 
