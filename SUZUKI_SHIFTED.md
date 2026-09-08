@@ -239,3 +239,14 @@ rationalized affine lower bounds. These outputs have the trust class
 `NumericalEvidence`; they have no route to a checked positivity or RH node.
 See `EXPLORER.md` for the command line, output schema, cross-check, and the
 separate Lean certification workflow.
+
+The Explorer additionally tracks analytic critical-point branches rather
+than merely densifying a rectangular sample. Closed derivative formulas,
+adaptive root refinement, curvature classification, implicit-function
+prediction, and lower-envelope crossing bisection resolve the low-omega
+candidate cascade as `208 -> 34 -> 14 -> 5` when omega increases from zero.
+The graph records `SuzukiMinimumBranches` and `SuzukiEnvelopeCrossings` only
+as `NumericalEvidence`. In Lean,
+`differentiableOn_suzukiPsiShifted_primeCellInterior` and the proof-bearing
+`SuzukiCellConvexCertificate` are the independent route by which a numerical
+candidate may eventually become a checked cell theorem.

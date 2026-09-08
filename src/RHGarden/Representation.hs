@@ -65,6 +65,8 @@ data Representation
   | SuzukiShiftedPositivitySet
   | SuzukiShiftedEventualPositivitySet
   | SuzukiPositivityExplorer
+  | SuzukiMinimumBranches
+  | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
   | CandidateTailCertificate
   | CandidateOperatorIdentity
@@ -131,6 +133,8 @@ data SRepresentation (r :: Representation) where
   SSuzukiShiftedPositivitySet :: SRepresentation 'SuzukiShiftedPositivitySet
   SSuzukiShiftedEventualPositivitySet :: SRepresentation 'SuzukiShiftedEventualPositivitySet
   SSuzukiPositivityExplorer :: SRepresentation 'SuzukiPositivityExplorer
+  SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
+  SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
   SCandidateTailCertificate :: SRepresentation 'CandidateTailCertificate
   SCandidateOperatorIdentity :: SRepresentation 'CandidateOperatorIdentity
@@ -198,6 +202,8 @@ representationValue SShiftedScrewFunction = ShiftedScrewFunction
 representationValue SSuzukiShiftedPositivitySet = SuzukiShiftedPositivitySet
 representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualPositivitySet
 representationValue SSuzukiPositivityExplorer = SuzukiPositivityExplorer
+representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
+representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
 representationValue SCandidateTailCertificate = CandidateTailCertificate
 representationValue SCandidateOperatorIdentity = CandidateOperatorIdentity
@@ -263,6 +269,8 @@ representationLabel ShiftedScrewFunction = "positive-measure shifted screw funct
 representationLabel SuzukiShiftedPositivitySet = "parameters where shifted Suzuki Psi is globally nonnegative"
 representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shifted Suzuki Psi is eventually nonnegative"
 representationLabel SuzukiPositivityExplorer = "floating-point Suzuki (omega,t) configuration-space explorer"
+representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
+representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"
 representationLabel CandidateTailCertificate = "candidate asymptotic lower-bound data for a Suzuki tail"
 representationLabel CandidateOperatorIdentity = "candidate operator identity suggested by Suzuki exploration"

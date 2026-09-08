@@ -283,6 +283,13 @@ private theorem hasDerivAt_suzukiPsiArchimedean {t : ℝ} (ht : 0 < t) :
   rw [hcoeff]
   exact harch
 
+/-- The archimedean side is differentiable at every positive argument.
+This public wrapper deliberately hides the special-function derivative
+normalization; prime-cell arguments only need differentiability. -/
+theorem differentiableAt_suzukiPsiArchimedean_of_pos {t : ℝ} (ht : 0 < t) :
+    DifferentiableAt ℝ suzukiPsiArchimedean t :=
+  (hasDerivAt_suzukiPsiArchimedean ht).differentiableAt
+
 /-- Exact derivative formula for Suzuki's zero/prime-side function before
 the first prime enters the explicit formula. -/
 theorem hasDerivAt_suzukiPsi_primeFree {t : ℝ}

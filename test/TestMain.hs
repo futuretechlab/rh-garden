@@ -105,6 +105,14 @@ main = do
       SuzukiPositivityExplorer CandidateCellCertificate of
       Just route -> routeEndsAt route CandidateCellCertificate
       Nothing -> False
+  check "KernelMode rejects numerical Suzuki branch/crossing geometry" $
+    shortestRepresentationRoute KernelMode representationGraph
+      SuzukiPositivityExplorer SuzukiEnvelopeCrossings == Nothing
+  check "ExplorationMode accepts the Suzuki branch-to-crossing route" $
+    case shortestRepresentationRoute ExplorationMode representationGraph
+      SuzukiPositivityExplorer SuzukiEnvelopeCrossings of
+      Just route -> routeEndsAt route SuzukiEnvelopeCrossings
+      Nothing -> False
   check "Suzuki Explorer smoke scan returns both requested omega summaries" $
     case exploreSuzuki defaultExplorerOptions
         { explorerOmegas = [0, 0.5]
@@ -117,6 +125,34 @@ main = do
       Left _ -> False
   check "Suzuki numerical normalization has Psi(0)=0" $
     suzukiPsiNumeric 0 == 0
+  check "Suzuki branch scan enumerates classified interior minima" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = BranchesMode
+        , explorerOmegas = [0, 0.05]
+        , explorerTMax = 2
+        , explorerSamples = 1001
+        } of
+      Right report -> not (null (reportCriticalPoints report)) &&
+        not (null (reportBranches report)) &&
+        all ((< 1e-3) . summaryDerivativeCheckError) (reportSummaries report)
+      Left _ -> False
+  check "Suzuki closed shifted derivative agrees with finite differences" $
+    and
+      [ let h = 1e-5
+            finiteDifference =
+              (psiShiftedNumeric omega (t + h) -
+                psiShiftedNumeric omega (t - h)) / (2 * h)
+        in abs (dPsiDt omega t - finiteDifference) < 3e-5
+      | (omega, t) <- [(0, 0.46), (0.025, 1.31), (0.05, 1.78), (0.1, 0.9)]
+      ]
+  check "Suzuki closed shifted curvature agrees with derivative differences" $
+    and
+      [ let h = 1e-5
+            finiteDifference =
+              (dPsiDt omega (t + h) - dPsiDt omega (t - h)) / (2 * h)
+        in abs (d2PsiDt2 omega t - finiteDifference) < 3e-5
+      | (omega, t) <- [(0.025, 1.31), (0.05, 1.78), (0.1, 0.9)]
+      ]
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

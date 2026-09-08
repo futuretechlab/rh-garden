@@ -782,6 +782,24 @@ suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "Candidate output neither reconstructs the scanned function nor certifies its lower bound.")
   Nothing
 
+suzukiExplorerToMinimumBranches :: RuntimeRepresentationEdge
+suzukiExplorerToMinimumBranches = eraseRepresentationEdge $ representationEdge
+  SSuzukiPositivityExplorer SSuzukiMinimumBranches
+  "continue every detected interior critical point across omega"
+  InformationLoss numericalEvidenceTrust 1 suzukiExplorerRef
+  "Closed first, second, and mixed derivative evaluators drive adaptive root bracketing, classification, and implicit-function predictors. Every branch remains NumericalEvidence."
+  (NoReconstruction "A sampled numerical branch neither reconstructs the exact function nor proves that no branch was missed.")
+  Nothing
+
+suzukiMinimumBranchesToEnvelopeCrossings :: RuntimeRepresentationEdge
+suzukiMinimumBranchesToEnvelopeCrossings = eraseRepresentationEdge $ representationEdge
+  SSuzukiMinimumBranches SSuzukiEnvelopeCrossings
+  "compare simultaneous local-minimum branches and refine candidate crossings"
+  InformationLoss numericalEvidenceTrust 1 suzukiExplorerRef
+  "Sign changes in differences of branch values are adaptively bisected in omega; the reported transitions and common minima are candidate numerical geometry only."
+  (NoReconstruction "The lower envelope loses nonwinning branches and numerical crossings are not exact equalities.")
+  Nothing
+
 suzukiExplorerToTailCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToTailCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateTailCertificate
@@ -1083,7 +1101,8 @@ representationGraph =
   , zeroFreeToShiftedNevanlinna, shiftedNevanlinnaToZeroFree
   , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
-  , suzukiExplorerToCellCandidate, suzukiExplorerToTailCandidate
+  , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
+  , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate
   , riemannScrewToKernel, riemannScrewToNevanlinnaTransform
   , riemannScrewKernelToIntegralForm

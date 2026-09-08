@@ -28,7 +28,7 @@ with Suzuki's certified Volterra shift. The arithmetic support is fixed on
 the half-open prime cell `[log n, log (n+1))`; Lean checks the corresponding
 floor identity and fixed finite Mangoldt sum for the base contribution.
 
-## Running a scan
+## Running scans and branch searches
 
 For example:
 
@@ -44,6 +44,27 @@ Alternatively use `--omega-min`, `--omega-max`, and `--omega-count` for a
 uniform parameter grid. Output may be ASCII, CSV, or JSON. The arithmetic
 cutoff is deliberately capped at two million cells.
 
+The first positional argument selects a focused search mode:
+
+```text
+cabal run rh-garden -- explore-suzuki branches \
+  --omega-min 0 --omega-max 0.05 --omega-count 11 \
+  --t-max 6 --samples 6001
+
+cabal run rh-garden -- explore-suzuki crossings \
+  --omega-min 0 --omega-max 0.05 --omega-count 11 \
+  --t-max 6 --samples 6001
+
+cabal run rh-garden -- explore-suzuki cluster \
+  --omega 0 --cell-min 180 --cell-max 240 \
+  --t-max 5.5 --samples 30001
+
+cabal run rh-garden -- explore-suzuki certificate-status
+```
+
+Other modes are `scan` and `cell`. The cell bounds restrict the reported
+critical points and cluster ranking. Every mode supports CSV/JSON output.
+
 The evaluator uses `Double` for discovery. It computes the base
 archimedean term by integrating the checked prime-free derivative formula,
 subtracts the finite von Mangoldt ramps, and applies the Volterra shift by a
@@ -58,11 +79,45 @@ The maximum difference between these paths is reported as the cross-check
 error. Agreement catches sign and normalization mistakes, but remains only
 floating-point evidence.
 
-## Candidate minima and metadata
+## Analytic derivative evaluator
 
-Each cell search uses endpoints, dense samples, and linearly interpolated
-derivative sign changes. It reports a candidate minimum, not a rigorous
-minimum. Alongside it the Explorer records
+The Explorer evaluates closed first and second derivatives of the exact
+shifted arithmetic expression, independently of the value evaluator. If
+`f=Psi`, `g=T_omega f`, and
+
+```text
+J0(t) = integral_0^t exp(-omega*u) f(u) du,
+J1(t) = integral_0^t (t-u) exp(-omega*u) f(u) du,
+```
+
+then direct differentiation gives
+
+```text
+g'(t)  = exp(-omega*t) (f'(t)+omega*f(t)) + omega^2 J0(t),
+g''(t) = exp(-omega*t) f''(t).
+```
+
+The cancellation in the second identity is exact. A mixed derivative gives
+the implicit-branch predictor `dt/domega=-Psi_{t omega}/Psi_{tt}` whenever
+the curvature is nonzero. Regression tests compare `g'` with centered finite
+differences of the independent adaptive-Simpson value evaluator and compare
+`g''` with finite differences of `g'`; discrepancies are reported.
+
+## Critical points and branches
+
+Each cell search includes both endpoints and every detected interior root of
+`dPsiDt`. Roots are adaptively bracketed and refined, then classified from
+derivative sign changes and `d2PsiDt2` as `local_min`, `local_max`, or
+`uncertain`. It does not assume a unique minimum per cell. The branch mode
+continues these roots through adjacent omega samples, using the prior root
+and the implicit derivative as a predictor for associating the next
+adaptively corrected root. It flags small-curvature folds and collisions with
+prime-cell boundaries.
+
+For simultaneous minimum branches A and B, the crossings mode brackets sign
+changes of `m_A(omega)-m_B(omega)` and recomputes both cell minima while
+bisecting in omega. These are candidate crossings, not exact equations.
+Alongside every cell minimum the Explorer records
 
 - `Psi_omega(t)/t` and `Psi_omega(t)/t^2`;
 - `exp(-t/2) Psi_omega(t)` and `exp(-omega*t) Psi_omega(t)`;
@@ -71,13 +126,39 @@ minimum. Alongside it the Explorer records
 - Chebyshev `theta(n)`, `psi(n)`, and `psi(n)-n`;
 - prime-power events at cell boundaries.
 
-A modest scan over `0.05 <= t <= 8` found candidate minimizing branches at
-the lower endpoint for `omega=0.125`, then in cells 2, 5, 14, and 207 as the
-sampled parameter decreased through `0.10`, `0.05`, `0.025`, and `0`.
-At `omega=0` the candidate lies at `t` about `5.338`, with nearby dangerous
-cells clustered around 207--216. This apparent branch cascade is a search
-lead only. Finer sampling, higher precision, and exact interval certification
-are all still required.
+The refined scan on `0 <= omega <= 0.05` resolves the earlier apparent jump
+from cell 14 to the 207 region. In increasing omega order, its numerical
+lower envelope is
+
+```text
+cell 208 --0.01474808--> cell 34
+         --0.02270314--> cell 14
+         --0.02706489--> cell 5.
+```
+
+The candidate common minima at these crossings are respectively about
+`0.033040519`, `0.034777470`, and `0.035483865`. Thus the old coarse scan
+missed cell 34, and the initial `1,2,5,14,...` Catalan coincidence does not
+continue.
+
+At `omega=0`, a 30,001-node scan of cells 180--240 finds cell 208 best at
+`t=5.33809175`, `Psi=0.0280226237`, with cell 207 only `2.21e-6` higher.
+Cells 209, 206, and 213 follow. The detailed root classification shows two
+interior basins (cells 208 and 213); most other close competitors are
+prime-threshold endpoints. This is not one smooth critical branch crossing
+all cells 207--216.
+
+The report also fits only low-complexity diagnostics (`log(cell)` against
+`1/omega` and `log(1/omega)`, and `t*` against `log(cell)`). These short scans
+do not yet support a stable scaling law.
+
+Nor is the cascade explained by a prime event at the winning cell itself.
+Cells 14, 34, and 208 have no prime-power event at either boundary in this
+scan; their surrounding prime gaps are 4, 6, and 12, while the recorded
+Chebyshev `psi(n)-n` values are approximately `-1.205`, `-1.396`, and
+`-1.854`. This tentatively points toward accumulated Mangoldt slope between
+events rather than a single boundary impulse, but the sample is far too
+small for a statistical conclusion.
 
 ## Candidate lower bounds
 
@@ -118,6 +199,28 @@ theorem to extract a positive rational `q < log 2`, constructs the zero
 affine certificate on `[0,q]`, and proves
 `exists_suzukiPsi_nonnegative_on_firstCertifiedInterval`. No floating-point
 output is imported into this proof.
+
+`SuzukiCellConvexCertificate` is the stronger branch-aware verifier. It
+contains a rational critical bracket, proof that the bracket lies inside its
+prime cell, derivative signs on the two flanks, a lower bound on the bracket,
+and nonnegativity of that bound. The generic checked theorem
+`lowerBound_on_Icc_of_deriv_signs` propagates the bracket bound to the whole
+cell, and `SuzukiCellConvexCertificate.shiftedPsi_nonnegative_on_cell`
+specializes it to shifted Psi. The formal development also proves
+`differentiableOn_suzukiPsiShifted_primeCellInterior`.
+
+The numerical candidates currently found for the requested certification
+tests are:
+
+```text
+omega=1/10, cell 2: t*=0.89237347, Psi=0.04090532, curvature=1.310889
+omega=1/20, cell 5: t*=1.7799955,  Psi=0.03788844, curvature=2.2167661
+```
+
+Neither cell is Lean-certified yet. The first exact missing ingredient is a
+small rigorous interval-bound library for the archimedean and Volterra
+transcendental terms (including the first/second derivative bounds) on those
+whole cells. No decimal approximation is admitted as a certificate.
 
 The full workflow is:
 

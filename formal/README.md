@@ -247,6 +247,13 @@ formal smoke test obtained from the existing symbolic local theorem; it does
 not import floating-point evidence. The Haskell Explorer and its trust model
 are documented separately in `EXPLORER.md`.
 
+The same file now proves cell-interior differentiability for both unshifted
+and shifted Psi. Its generic `lowerBound_on_Icc_of_deriv_signs` theorem and
+`SuzukiCellConvexCertificate` interface turn a rational critical bracket,
+flank derivative signs, and a checked bracket lower bound into a whole-cell
+nonnegativity theorem. This is an exact verifier architecture only: no
+floating branch, crossing, or decimal minimum is imported into Lean.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
@@ -261,7 +268,8 @@ are documented separately in `EXPLORER.md`.
   from the unconditional half-line `omega >= 1/2` toward `omega=0`. The
   endpoint is equivalent to RH and is not proved.
 - Use the Suzuki Explorer only to discover candidate cell inequalities, then
-  certify them independently through `SuzukiCellLowerBoundCertificate`.
+  certify them independently through `SuzukiCellLowerBoundCertificate` or
+  `SuzukiCellConvexCertificate`.
   A separate `SuzukiPsiTailCertificate` remains open and cannot be supplied
   by a finite scan.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,

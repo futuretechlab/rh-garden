@@ -1,9 +1,15 @@
 module RHGarden.Explorer.Suzuki
   ( CandidateStatus(..)
+  , ExplorerMode(..)
   , ExplorerOptions(..)
   , ExplorerReport(..)
   , OmegaSummary(..)
   , CellMinimum(..)
+  , CriticalPoint(..)
+  , CriticalClassification(..)
+  , BranchPoint(..)
+  , EnvelopeCrossing(..)
+  , BifurcationEvent(..)
   , CandidateCertificate(..)
   , defaultExplorerOptions
   , parseExplorerOptions
@@ -14,10 +20,14 @@ module RHGarden.Explorer.Suzuki
   , renderCertificatesJson
   , runSuzukiExplorer
   , suzukiPsiNumeric
+  , psiShiftedNumeric
+  , dPsiDt
+  , d2PsiDt2
   ) where
 
 import Data.Char (toLower)
-import Data.List (intercalate, isSuffixOf, maximumBy, minimumBy, nubBy, sort, sortOn)
+import Data.List (intercalate, isSuffixOf, maximumBy, minimumBy,
+  nubBy, sort, sortOn)
 import Data.Ord (comparing)
 import Numeric (showFFloat)
 import Text.Read (readMaybe)
@@ -34,8 +44,18 @@ data CandidateStatus
 data OutputFormat = OutputAscii | OutputCsv | OutputJson
   deriving (Eq, Ord, Show, Read)
 
+data ExplorerMode
+  = ScanMode
+  | BranchesMode
+  | CrossingsMode
+  | CellMode
+  | ClusterMode
+  | CertificateStatusMode
+  deriving (Eq, Ord, Show, Read)
+
 data ExplorerOptions = ExplorerOptions
-  { explorerOmegas :: [Double]
+  { explorerMode :: ExplorerMode
+  , explorerOmegas :: [Double]
   , explorerOmegaMin :: Maybe Double
   , explorerOmegaMax :: Maybe Double
   , explorerOmegaCount :: Maybe Int
@@ -46,6 +66,8 @@ data ExplorerOptions = ExplorerOptions
   , explorerOutput :: Maybe FilePath
   , explorerOutputFormat :: OutputFormat
   , explorerCertificateOutput :: Maybe FilePath
+  , explorerCellMin :: Maybe Int
+  , explorerCellMax :: Maybe Int
   } deriving (Eq, Show)
 
 data PrimeMetadata = PrimeMetadata
@@ -67,6 +89,8 @@ data CellMinimum = CellMinimum
   , cellCandidateT :: Double
   , cellCandidateValue :: Double
   , cellDerivative :: Double
+  , cellSecondDerivative :: Double
+  , cellDistanceAboveBest :: Double
   , cellPsiOverT :: Double
   , cellPsiOverTSq :: Double
   , cellExpNegHalfPsi :: Double
@@ -75,12 +99,57 @@ data CellMinimum = CellMinimum
   , cellMetadata :: PrimeMetadata
   } deriving (Eq, Show)
 
+data CriticalClassification
+  = LocalMinimum
+  | LocalMaximum
+  | CriticalUncertain
+  deriving (Eq, Ord, Show, Read)
+
+data CriticalPoint = CriticalPoint
+  { criticalOmega :: Double
+  , criticalCell :: Int
+  , criticalT :: Double
+  , criticalValue :: Double
+  , criticalDerivative :: Double
+  , criticalSecondDerivative :: Double
+  , criticalMixedDerivative :: Double
+  , criticalClassification :: CriticalClassification
+  } deriving (Eq, Show)
+
+data BranchPoint = BranchPoint
+  { branchId :: String
+  , branchCell :: Int
+  , branchOmega :: Double
+  , branchT :: Double
+  , branchMinimum :: Double
+  , branchCurvature :: Double
+  , branchDtDomega :: Double
+  } deriving (Eq, Show)
+
+data EnvelopeCrossing = EnvelopeCrossing
+  { crossingOmega :: Double
+  , crossingCellA :: Int
+  , crossingCellB :: Int
+  , crossingTA :: Double
+  , crossingTB :: Double
+  , crossingCommonMinimum :: Double
+  } deriving (Eq, Show)
+
+data BifurcationEvent = BifurcationEvent
+  { bifurcationOmega :: Double
+  , bifurcationCell :: Int
+  , bifurcationT :: Double
+  , bifurcationKind :: String
+  , bifurcationCurvature :: Double
+  } deriving (Eq, Show)
+
 data OmegaSummary = OmegaSummary
   { summaryOmega :: Double
   , summaryMinimum :: Double
   , summaryArgmin :: Double
   , summaryCell :: Int
   , summaryCrossCheckError :: Double
+  , summaryDerivativeCheckError :: Double
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -100,6 +169,10 @@ data ExplorerReport = ExplorerReport
   , reportSummaries :: [OmegaSummary]
   , reportCellMinima :: [CellMinimum]
   , reportCertificates :: [CandidateCertificate]
+  , reportCriticalPoints :: [CriticalPoint]
+  , reportBranches :: [BranchPoint]
+  , reportCrossings :: [EnvelopeCrossing]
+  , reportBifurcations :: [BifurcationEvent]
   } deriving (Eq, Show)
 
 data PrimeEvent = PrimeEvent
@@ -115,18 +188,22 @@ data BasePoint = BasePoint
   , basePrime :: Double
   , basePsi :: Double
   , basePsiDerivative :: Double
+  , basePsiSecondDerivative :: Double
   } deriving (Eq, Show)
 
 data ShiftPoint = ShiftPoint
   { shiftT :: Double
   , shiftValue :: Double
   , shiftDerivative :: Double
+  , shiftSecondDerivative :: Double
+  , shiftMixedDerivative :: Double
   , shiftCrossValue :: Double
   } deriving (Eq, Show)
 
 defaultExplorerOptions :: ExplorerOptions
 defaultExplorerOptions = ExplorerOptions
-  { explorerOmegas = []
+  { explorerMode = ScanMode
+  , explorerOmegas = []
   , explorerOmegaMin = Nothing
   , explorerOmegaMax = Nothing
   , explorerOmegaCount = Nothing
@@ -137,12 +214,24 @@ defaultExplorerOptions = ExplorerOptions
   , explorerOutput = Nothing
   , explorerOutputFormat = OutputAscii
   , explorerCertificateOutput = Nothing
+  , explorerCellMin = Nothing
+  , explorerCellMax = Nothing
   }
 
 parseExplorerOptions :: [String] -> Either String ExplorerOptions
 parseExplorerOptions = go defaultExplorerOptions
   where
     go options [] = validateOptions options
+    go options ("branches" : rest) =
+      go options { explorerMode = BranchesMode } rest
+    go options ("crossings" : rest) =
+      go options { explorerMode = CrossingsMode } rest
+    go options ("cell" : rest) =
+      go options { explorerMode = CellMode, explorerPrimeCells = True } rest
+    go options ("cluster" : rest) =
+      go options { explorerMode = ClusterMode, explorerPrimeCells = True } rest
+    go options ("certificate-status" : rest) =
+      go options { explorerMode = CertificateStatusMode } rest
     go options ("--omega" : value : rest) =
       parseDouble "--omega" value >>= \x ->
         go options { explorerOmegas = explorerOmegas options ++ [x] } rest
@@ -174,6 +263,12 @@ parseExplorerOptions = go defaultExplorerOptions
         go options { explorerOutputFormat = format } rest
     go options ("--certificate-output" : path : rest) =
       go options { explorerCertificateOutput = Just path } rest
+    go options ("--cell-min" : value : rest) =
+      parseInt "--cell-min" value >>= \x ->
+        go options { explorerCellMin = Just x } rest
+    go options ("--cell-max" : value : rest) =
+      parseInt "--cell-max" value >>= \x ->
+        go options { explorerCellMax = Just x } rest
     go _ (flag : _) = Left ("unknown or incomplete Suzuki Explorer option: " ++ flag)
 
     parseDouble flag text = maybe
@@ -203,6 +298,11 @@ validateOptions options
   | explorerTMax options <= explorerTMin options = Left "--t-max must exceed --t-min"
   | explorerSamples options < 3 = Left "--samples must be at least 3"
   | explorerSamples options > 200000 = Left "--samples is capped at 200000"
+  | maybe False (< 1) (explorerCellMin options) = Left "--cell-min must be positive"
+  | maybe False (< 1) (explorerCellMax options) = Left "--cell-max must be positive"
+  | case (explorerCellMin options, explorerCellMax options) of
+      (Just lo, Just hi) -> hi < lo
+      _ -> False = Left "--cell-max must not be below --cell-min"
   | otherwise = case
       (explorerOmegaMin options, explorerOmegaMax options,
         explorerOmegaCount options) of
@@ -234,14 +334,27 @@ exploreSuzuki options = do
       nodes = explorationNodes checked nMax
       base = buildBasePoints events nodes
       omegaResults = map (exploreOmega checked primes events base) (resolvedOmegas checked)
-      summaries = [summary | (summary, _, _) <- omegaResults]
-      cells = concat [minima | (_, minima, _) <- omegaResults]
-      certificates = concat [certs | (_, _, certs) <- omegaResults]
+      summaries = [summary | (summary, _, _, _) <- omegaResults]
+      rawCells = concat [minima | (_, minima, _, _) <- omegaResults]
+      cells = map attachDistance rawCells
+      certificates = concat [certs | (_, _, certs, _) <- omegaResults]
+      criticals = concat [roots | (_, _, _, roots) <- omegaResults]
+      branches = trackMinimumBranches criticals
+      crossings = refineEnvelopeCrossings checked primes events base summaries
+      bifurcations = detectBifurcations criticals
+      attachDistance cell = cell
+        { cellDistanceAboveBest = cellCandidateValue cell -
+            minimum [summaryMinimum summary | summary <- summaries,
+              abs (summaryOmega summary - cellOmega cell) < 1e-12] }
   pure ExplorerReport
     { reportOptions = checked
     , reportSummaries = summaries
     , reportCellMinima = cells
     , reportCertificates = certificates
+    , reportCriticalPoints = criticals
+    , reportBranches = branches
+    , reportCrossings = crossings
+    , reportBifurcations = bifurcations
     }
 
 runSuzukiExplorer :: ExplorerOptions -> IO ()
@@ -338,6 +451,18 @@ archimedeanDerivative t =
   2 * (exp (t / 2) - exp (-t / 2)) + suzukiDerivativeConstant -
     atan (exp (t / 2)) + artanhExpNegHalf t
 
+-- | Exact second derivative of the closed archimedean expression for t>0.
+-- The finite Mangoldt ramp is affine on every open prime cell, so this is
+-- also the cell-interior second derivative of the unshifted Psi.
+archimedeanSecondDerivative :: Double -> Double
+archimedeanSecondDerivative t
+  | t <= 0 = 0 / 0
+  | otherwise =
+      let ep = exp (t / 2)
+          em = exp (-t / 2)
+      in ep + em - 0.5 * ep / (1 + exp t) -
+          0.5 * em / (1 - exp (-t))
+
 integrateArchDerivative :: Double -> Double -> Double
 integrateArchDerivative a b
   | b <= a = 0
@@ -360,14 +485,16 @@ buildBasePoints events nodes = reverse points
           psi = arch - prime
           derivative = if t <= 0 then 1 / 0
             else archimedeanDerivative t - primeSlope events t
-      in (arch, [BasePoint t arch prime psi derivative])
+          secondDerivative = archimedeanSecondDerivative t
+      in (arch, [BasePoint t arch prime psi derivative secondDerivative])
     step (previousArch, previousPoint : rest) t =
       let arch = previousArch + integrateArchDerivative (baseT previousPoint) t
           prime = primeContribution events t
           psi = arch - prime
           derivative = if t <= 0 then 1 / 0
             else archimedeanDerivative t - primeSlope events t
-      in (arch, BasePoint t arch prime psi derivative : previousPoint : rest)
+          secondDerivative = archimedeanSecondDerivative t
+      in (arch, BasePoint t arch prime psi derivative secondDerivative : previousPoint : rest)
 
 suzukiPsiNumeric :: Double -> Double
 suzukiPsiNumeric t
@@ -379,18 +506,94 @@ suzukiPsiNumeric t
             (primesUpTo (max 2 (floor (exp t))))
       in integrateArchDerivative 0 t - primeContribution events t
 
+eventsForT :: Double -> [PrimeEvent]
+eventsForT t = primeEvents limit (primesUpTo (max 2 limit))
+  where limit = max 1 (floor (exp (max 0 t)))
+
+integrateAcrossPrimeCells :: [PrimeEvent] -> Double
+  -> (Double -> Double) -> Double
+integrateAcrossPrimeCells events t f = sum
+  [ adaptiveSimpson 1e-10 16 f left right
+  | (left, right) <- zip boundaries (drop 1 boundaries)
+  , right > left
+  ]
+  where
+    interiorEvents = [eventLogN event | event <- events,
+      0 < eventLogN event, eventLogN event < t]
+    boundaries = dedupeSorted (0 : sort interiorEvents ++ [t])
+
+-- | Independent point evaluator for the exact Volterra definition.  This
+-- is intentionally separate from the grid recurrence used by the branch
+-- scanner, providing a normalization cross-check.
+psiShiftedNumeric :: Double -> Double -> Double
+psiShiftedNumeric omega t
+  | t < 0 = psiShiftedNumeric omega (-t)
+  | t == 0 = 0
+  | exp t > 2000000 = 0 / 0
+  | otherwise =
+      let events = eventsForT t
+          base u = integrateArchDerivative 0 u - primeContribution events u
+          weighted u = exp (-omega * u) * base u
+          j0 = integrateAcrossPrimeCells events t weighted
+          j1 = integrateAcrossPrimeCells events t (\u -> u * weighted u)
+      in weighted t + 2 * omega * j0 +
+          omega * omega * (t * j0 - j1)
+
+-- | Closed cell-interior first derivative of the shifted function.
+dPsiDt :: Double -> Double -> Double
+dPsiDt omega t
+  | t <= 0 = 0 / 0
+  | exp t > 2000000 = 0 / 0
+  | otherwise =
+      let events = eventsForT t
+          base u = integrateArchDerivative 0 u - primeContribution events u
+          baseDerivative = archimedeanDerivative t - primeSlope events t
+          j0 = integrateAcrossPrimeCells events t
+            (\u -> exp (-omega * u) * base u)
+      in exp (-omega * t) * (baseDerivative + omega * base t) +
+          omega * omega * j0
+
+-- | Closed cell-interior second derivative.  All Volterra terms cancel:
+-- `d²/dt² (T_omega Psi) = exp(-omega*t) * Psi''`.
+d2PsiDt2 :: Double -> Double -> Double
+d2PsiDt2 omega t = exp (-omega * t) * archimedeanSecondDerivative t
+
 exploreOmega :: ExplorerOptions -> [Int] -> [PrimeEvent] -> [BasePoint]
-  -> Double -> (OmegaSummary, [CellMinimum], [CandidateCertificate])
+  -> Double -> (OmegaSummary, [CellMinimum], [CandidateCertificate], [CriticalPoint])
 exploreOmega options primes events base omega =
   let shifted = buildShiftPoints events base omega
       relevant = filter (inRequestedRange options . shiftT) shifted
-      global = minimumBy (comparing shiftValue) relevant
       cells = cellMinima options primes events omega relevant
+      globalCell = minimumBy (comparing cellCandidateValue) cells
       certificates = map (affineCandidateCertificate options relevant) cells
-      summary = OmegaSummary omega (shiftValue global) (shiftT global)
-        (cellForT (shiftT global)) (maximum (0 : map crossError shifted))
-  in (summary, cells, certificates)
+      criticals = enumerateCriticalPoints omega relevant
+      summary = OmegaSummary omega (cellCandidateValue globalCell)
+        (cellCandidateT globalCell) (cellIndex globalCell)
+        (maximum (0 : map crossError shifted))
+        (derivativeCheckError shifted)
+  in (summary, cells, certificates, criticals)
   where crossError point = abs (shiftValue point - shiftCrossValue point)
+
+derivativeCheckError :: [ShiftPoint] -> Double
+derivativeCheckError points = maximum (0 : map check triples)
+  where
+    triples = zip3 points (drop 1 points) (drop 2 points)
+    check (left, middle, right)
+      | not (all isFinite [shiftDerivative middle, shiftValue left,
+          shiftValue right]) = 0
+      | shiftT middle < 0.05 = 0
+      | any (nearPrimeThreshold (2 * abs (shiftT right - shiftT left)))
+          [shiftT left, shiftT middle, shiftT right] = 0
+      | cellForT ((shiftT left + shiftT middle) / 2) /=
+          cellForT ((shiftT middle + shiftT right) / 2) = 0
+      | shiftT right == shiftT left = 0
+      | otherwise = abs (shiftDerivative middle -
+          (shiftValue right - shiftValue left) /
+            (shiftT right - shiftT left))
+    nearPrimeThreshold radius t =
+      let nearest :: Int
+          nearest = max 1 (round (exp t))
+      in abs (t - log (fromIntegral nearest)) <= radius
 
 inRequestedRange :: ExplorerOptions -> Double -> Bool
 inRequestedRange options t =
@@ -406,7 +609,8 @@ buildShiftPoints events base omega = reverse points
           value = basePsi point
           crossValue = baseArchimedean point - basePrime point
       in (0, 0, 0, 0, t, Just point,
-        [ShiftPoint t value (basePsiDerivative point) crossValue])
+        [ShiftPoint t value (basePsiDerivative point)
+          (basePsiSecondDerivative point) (0 / 0) crossValue])
     step (j0, j1, archJ0, archJ1, _, Just previous, acc) point =
       let t0 = baseT previous
           t1 = baseT point
@@ -426,18 +630,25 @@ buildShiftPoints events base omega = reverse points
           derivative = exp (-omega * t1) *
             (basePsiDerivative point + omega * basePsi point) +
               omega * omega * nextJ0
+          secondDerivative = exp (-omega * t1) * basePsiSecondDerivative point
+          mixedDerivative = exp (-omega * t1) *
+            (basePsi point - t1 * basePsiDerivative point -
+              t1 * omega * basePsi point) +
+              2 * omega * nextJ0 - omega * omega * nextJ1
           archValue = archG1 + 2 * omega * nextArchJ0 +
             omega * omega * (t1 * nextArchJ0 - nextArchJ1)
           crossValue = archValue - shiftedPrimeContributionNumeric events omega t1
       in (nextJ0, nextJ1, nextArchJ0, nextArchJ1, t1, Just point,
-        ShiftPoint t1 value derivative crossValue : acc)
+        ShiftPoint t1 value derivative secondDerivative mixedDerivative crossValue : acc)
     step state _ = state
 
 cellMinima :: ExplorerOptions -> [Int] -> [PrimeEvent] -> Double
   -> [ShiftPoint] -> [CellMinimum]
 cellMinima options primes events omega points =
-  let firstCell = max 1 (floor (exp (explorerTMin options)))
-      lastCell = max firstCell (floor (exp (explorerTMax options)))
+  let rangeFirst = max 1 (floor (exp (explorerTMin options)))
+      rangeLast = max rangeFirst (floor (exp (explorerTMax options)))
+      firstCell = max rangeFirst (maybe rangeFirst id (explorerCellMin options))
+      lastCell = min rangeLast (maybe rangeLast id (explorerCellMax options))
       indices = [firstCell .. lastCell]
       cells = mapMaybeCell (minimumOnCell options primes events omega points) indices
   in if explorerPrimeCells options then cells else take 24 (sortOn cellCandidateValue cells)
@@ -452,7 +663,12 @@ minimumOnCell options primes events omega points n =
       right = min (explorerTMax options) (log (fromIntegral (n + 1)))
       inside = filter (\point -> left - 1e-12 <= shiftT point &&
         shiftT point <= right + 1e-12) points
-      candidates = inside ++ derivativeRootCandidates inside
+      endpoints = filter ((> 1e-10) . shiftT)
+        (case inside of
+          [] -> []
+          [_] -> inside
+          firstPoint : rest -> [firstPoint, lastPoint rest])
+      candidates = endpoints ++ derivativeRootCandidates inside
   in if right < left || null candidates then Nothing else
       let best = minimumBy (comparing shiftValue) candidates
           t = shiftT best
@@ -466,6 +682,8 @@ minimumOnCell options primes events omega points n =
         , cellCandidateT = t
         , cellCandidateValue = value
         , cellDerivative = shiftDerivative best
+        , cellSecondDerivative = shiftSecondDerivative best
+        , cellDistanceAboveBest = 0
         , cellPsiOverT = safeDivide value t
         , cellPsiOverTSq = safeDivide value (t * t)
         , cellExpNegHalfPsi = exp (-t / 2) * value
@@ -481,16 +699,235 @@ derivativeRootCandidates points = mapMaybeCell root (zip points (drop 1 points))
       | not (isFinite dl && isFinite dr) = Nothing
       | dl == dr = Nothing
       | dl * dr > 0 = Nothing
-      | otherwise =
-          let ratio = max 0 (min 1 ((-dl) / (dr - dl)))
-              t = shiftT left + ratio * (shiftT right - shiftT left)
-              value = shiftValue left + ratio * (shiftValue right - shiftValue left)
-              crossValue = shiftCrossValue left +
-                ratio * (shiftCrossValue right - shiftCrossValue left)
-          in Just (ShiftPoint t value 0 crossValue)
+      | shiftT right <= shiftT left = Nothing
+      | isLogInteger (shiftT right) = Nothing
+      | otherwise = Just (refineDerivativeRoot left right)
       where
         dl = shiftDerivative left
         dr = shiftDerivative right
+
+refineDerivativeRoot :: ShiftPoint -> ShiftPoint -> ShiftPoint
+refineDerivativeRoot left right =
+  let (lo, hi) = bisect 60 (shiftT left) (shiftT right)
+      t = (lo + hi) / 2
+      ratio = (t - shiftT left) / (shiftT right - shiftT left)
+      value = hermiteValue left right t
+      derivative = hermiteDerivative left right t
+      secondDerivative = lerp ratio
+        (shiftSecondDerivative left) (shiftSecondDerivative right)
+      mixedDerivative = lerp ratio
+        (shiftMixedDerivative left) (shiftMixedDerivative right)
+      crossValue = lerp ratio (shiftCrossValue left) (shiftCrossValue right)
+  in ShiftPoint t value derivative secondDerivative mixedDerivative crossValue
+  where
+    bisect :: Int -> Double -> Double -> (Double, Double)
+    bisect 0 lo hi = (lo, hi)
+    bisect depth lo hi =
+      let mid = (lo + hi) / 2
+          dlo = hermiteDerivative left right lo
+          dm = hermiteDerivative left right mid
+      in if not (isFinite dm) then (lo, hi)
+         else if dlo * dm <= 0
+           then bisect (depth - 1) lo mid
+           else bisect (depth - 1) mid hi
+
+hermiteValue :: ShiftPoint -> ShiftPoint -> Double -> Double
+hermiteValue left right t =
+  let width = shiftT right - shiftT left
+      s = (t - shiftT left) / width
+      s2 = s * s
+      s3 = s2 * s
+      h00 = 2 * s3 - 3 * s2 + 1
+      h10 = s3 - 2 * s2 + s
+      h01 = -2 * s3 + 3 * s2
+      h11 = s3 - s2
+  in h00 * shiftValue left + h10 * width * shiftDerivative left +
+      h01 * shiftValue right + h11 * width * shiftDerivative right
+
+hermiteDerivative :: ShiftPoint -> ShiftPoint -> Double -> Double
+hermiteDerivative left right t =
+  let width = shiftT right - shiftT left
+      s = (t - shiftT left) / width
+      s2 = s * s
+  in ((6 * s2 - 6 * s) * shiftValue left +
+      (3 * s2 - 4 * s + 1) * width * shiftDerivative left +
+      (-6 * s2 + 6 * s) * shiftValue right +
+      (3 * s2 - 2 * s) * width * shiftDerivative right) / width
+
+lerp :: Double -> Double -> Double -> Double
+lerp ratio left right = left + ratio * (right - left)
+
+isLogInteger :: Double -> Bool
+isLogInteger t =
+  let nearest :: Int
+      nearest = max 1 (round (exp t))
+  in abs (t - log (fromIntegral nearest)) < 1e-11
+
+enumerateCriticalPoints :: Double -> [ShiftPoint] -> [CriticalPoint]
+enumerateCriticalPoints omega points =
+  [ CriticalPoint
+      { criticalOmega = omega
+      , criticalCell = cellForT (shiftT root)
+      , criticalT = shiftT root
+      , criticalValue = shiftValue root
+      , criticalDerivative = shiftDerivative root
+      , criticalSecondDerivative = shiftSecondDerivative root
+      , criticalMixedDerivative = shiftMixedDerivative root
+      , criticalClassification = classifyRoot left right root
+      }
+  | (left, right) <- zip points (drop 1 points)
+  , cellForT ((shiftT left + shiftT right) / 2) == cellForT (shiftT left + 1e-10)
+  , root <- derivativeRootCandidates [left, right]
+  ]
+
+classifyRoot :: ShiftPoint -> ShiftPoint -> ShiftPoint -> CriticalClassification
+classifyRoot left right root
+  | shiftDerivative left < 0 && shiftDerivative right > 0 = LocalMinimum
+  | shiftDerivative left > 0 && shiftDerivative right < 0 = LocalMaximum
+  | shiftSecondDerivative root > 1e-7 = LocalMinimum
+  | shiftSecondDerivative root < -1e-7 = LocalMaximum
+  | otherwise = CriticalUncertain
+
+trackMinimumBranches :: [CriticalPoint] -> [BranchPoint]
+trackMinimumBranches criticals = accumulated
+  where
+    minima = filter ((== LocalMinimum) . criticalClassification) criticals
+    omegas = dedupeSorted (sort (map criticalOmega minima))
+    grouped = [(omega, sortOn (\point -> (criticalCell point, criticalT point))
+      [point | point <- minima, abs (criticalOmega point - omega) < 1e-12])
+      | omega <- omegas]
+    (_, _, accumulated) = foldl' continue
+      (([] :: [(Int, Int)]), [], []) grouped
+    continue (counters, previous, completed) (omega, points) =
+      let cells = sort (unique (map criticalCell points))
+          (nextCounters, current) = foldl'
+            (continueCell omega points previous) (counters, []) cells
+      in (nextCounters, current, completed ++ current)
+    continueCell omega points previous (counters, current) cell =
+      let cellPoints = filter ((== cell) . criticalCell) points
+          oldBranches = filter ((== cell) . branchCell) previous
+          (_, matches) = foldl'
+            (matchCritical omega cell) (oldBranches, []) cellPoints
+          (nextCounters, newPoints) = foldl'
+            (materialize cell omega) (counters, []) (reverse matches)
+      in (nextCounters, current ++ newPoints)
+    matchCritical omega cell (available, matches) point =
+      case closestPredicted omega point available of
+        Just old | predictedDistance omega point old <= branchMatchRadius cell ->
+          (filter ((/= branchId old) . branchId) available,
+            (point, Just old) : matches)
+        _ -> (available, (point, Nothing) : matches)
+    materialize cell omega (counters, points) (point, old) =
+      let (identifier, nextCounters) = case old of
+            Just previous -> (branchId previous, counters)
+            Nothing ->
+              let ordinal = maybe 1 id (lookup cell counters)
+              in ("cell-" ++ show cell ++ "-" ++ show ordinal,
+                  setCounter cell (ordinal + 1) counters)
+          branch = BranchPoint
+            { branchId = identifier
+            , branchCell = cell
+            , branchOmega = omega
+            , branchT = criticalT point
+            , branchMinimum = criticalValue point
+            , branchCurvature = criticalSecondDerivative point
+            , branchDtDomega = safeNegRatio
+                (criticalMixedDerivative point) (criticalSecondDerivative point)
+            }
+      in (nextCounters, points ++ [branch])
+    closestPredicted _ _ [] = Nothing
+    closestPredicted omega point branches = Just
+      (minimumBy (comparing (predictedDistance omega point)) branches)
+    predictedDistance omega point previous = abs (criticalT point - predicted)
+      where
+        slope = branchDtDomega previous
+        predicted
+          | isFinite slope = branchT previous +
+              slope * (omega - branchOmega previous)
+          | otherwise = branchT previous
+    branchMatchRadius cell = max 1e-5
+      (0.45 * (log (fromIntegral (cell + 1)) - log (fromIntegral cell)))
+    setCounter cell next counters =
+      (cell, next) : filter ((/= cell) . fst) counters
+
+safeNegRatio :: Double -> Double -> Double
+safeNegRatio numerator denominator
+  | abs denominator < 1e-12 = 0 / 0
+  | otherwise = -numerator / denominator
+
+unique :: Eq a => [a] -> [a]
+unique = nubBy (==)
+
+refineEnvelopeCrossings :: ExplorerOptions -> [Int] -> [PrimeEvent]
+  -> [BasePoint] -> [OmegaSummary] -> [EnvelopeCrossing]
+refineEnvelopeCrossings options primes events base summaries = mapMaybeCell crossing
+  (zip summaries (drop 1 summaries))
+  where
+    crossing (leftSummary, rightSummary)
+      | summaryCell leftSummary == summaryCell rightSummary = Nothing
+      | otherwise = do
+          let cellA = summaryCell leftSummary
+              cellB = summaryCell rightSummary
+          (lo, hi) <- orderBracket (summaryOmega leftSummary)
+            (summaryOmega rightSummary) cellA cellB
+          let omega = bisectCrossing 35 lo hi cellA cellB
+          valueA <- cellAt omega cellA
+          valueB <- cellAt omega cellB
+          pure EnvelopeCrossing
+            { crossingOmega = omega
+            , crossingCellA = cellA
+            , crossingCellB = cellB
+            , crossingTA = cellCandidateT valueA
+            , crossingTB = cellCandidateT valueB
+            , crossingCommonMinimum =
+                (cellCandidateValue valueA + cellCandidateValue valueB) / 2
+            }
+    cellAt omega cell =
+      let shifted = buildShiftPoints events base omega
+          relevant = filter (inRequestedRange options . shiftT) shifted
+      in minimumOnCell options primes events omega relevant cell
+    delta omega cellA cellB = do
+      valueA <- cellAt omega cellA
+      valueB <- cellAt omega cellB
+      pure (cellCandidateValue valueA - cellCandidateValue valueB)
+    orderBracket first second cellA cellB = do
+      let lo = min first second
+          hi = max first second
+      dlo <- delta lo cellA cellB
+      dhi <- delta hi cellA cellB
+      if dlo * dhi <= 0 then pure (lo, hi) else Nothing
+    bisectCrossing :: Int -> Double -> Double -> Int -> Int -> Double
+    bisectCrossing 0 lo hi _ _ = (lo + hi) / 2
+    bisectCrossing depth lo hi cellA cellB =
+      let middle = (lo + hi) / 2
+          dlo = maybe 0 id (delta lo cellA cellB)
+          dmid = maybe 0 id (delta middle cellA cellB)
+      in if dlo * dmid <= 0
+          then bisectCrossing (depth - 1) lo middle cellA cellB
+          else bisectCrossing (depth - 1) middle hi cellA cellB
+
+detectBifurcations :: [CriticalPoint] -> [BifurcationEvent]
+detectBifurcations criticals = concatMap detect criticals
+  where
+    detect point = foldr add []
+      [ (abs (criticalSecondDerivative point) < 1e-4,
+          "candidate_fold")
+      , (distanceToBoundary point < 1e-4,
+          "prime_cell_boundary_collision")
+      ]
+      where
+        add (flag, kind) rest
+          | flag = BifurcationEvent
+              { bifurcationOmega = criticalOmega point
+              , bifurcationCell = criticalCell point
+              , bifurcationT = criticalT point
+              , bifurcationKind = kind
+              , bifurcationCurvature = criticalSecondDerivative point
+              } : rest
+          | otherwise = rest
+    distanceToBoundary point = min
+      (abs (criticalT point - log (fromIntegral (criticalCell point))))
+      (abs (criticalT point - log (fromIntegral (criticalCell point + 1))))
 
 cellForT :: Double -> Int
 cellForT t = max 1 (floor (exp (max 0 t)))
@@ -518,6 +955,11 @@ firstMaybe (x : _) = Just x
 lastMaybe :: [a] -> Maybe a
 lastMaybe [] = Nothing
 lastMaybe xs = Just (last xs)
+
+lastPoint :: [a] -> a
+lastPoint [x] = x
+lastPoint (_ : xs) = lastPoint xs
+lastPoint [] = error "lastPoint: internal nonempty-list invariant violated"
 
 affineCandidateCertificate :: ExplorerOptions -> [ShiftPoint] -> CellMinimum
   -> CandidateCertificate
@@ -578,6 +1020,20 @@ safeDivide numerator denominator
   | denominator == 0 = 0 / 0
   | otherwise = numerator / denominator
 
+linearFit :: [(Double, Double)] -> Maybe (Double, Double, Double)
+linearFit pairs
+  | length pairs < 2 || abs denominator < 1e-15 = Nothing
+  | otherwise = Just (intercept, slope, rmse)
+  where
+    count = fromIntegral (length pairs)
+    meanX = sum (map fst pairs) / count
+    meanY = sum (map snd pairs) / count
+    denominator = sum [(x - meanX) * (x - meanX) | (x, _) <- pairs]
+    slope = sum [(x - meanX) * (y - meanY) | (x, y) <- pairs] / denominator
+    intercept = meanY - slope * meanX
+    rmse = sqrt (sum
+      [(y - (intercept + slope * x)) ^ (2 :: Int) | (x, y) <- pairs] / count)
+
 adaptiveSimpson :: Double -> Int -> (Double -> Double) -> Double -> Double -> Double
 adaptiveSimpson tolerance maxDepth f a b = recurse maxDepth a b fa fm fb whole
   where
@@ -612,16 +1068,18 @@ renderExplorerAscii report = unlines $
   , "----------------------------------------------------"
   , "Finite-range numerical positivity is not sufficient evidence for RH."
   , ""
-  , "omega       min Psi_omega       t*          cell      cross-check"
-  , "------------------------------------------------------------------"
+  , "omega       min Psi_omega       t*          cell      value-xcheck   deriv-xcheck"
+  , "--------------------------------------------------------------------------------"
   ] ++ map renderSummary (reportSummaries report) ++
   [ ""
   , "Most dangerous prime cells (candidate minima):"
   , "omega       cell       left          right         min Psi        t*"
   , "------------------------------------------------------------------------"
   ] ++ map renderCell (take 16 (sortOn cellCandidateValue (reportCellMinima report))) ++
+  modeSpecific ++
   [ ""
   , "Candidate certificate statuses are sampled numerical results only."
+  , "Certified finite range: see Lean certificate declarations; tail status: unknown."
   ]
   where
     renderSummary summary = intercalate "  "
@@ -629,7 +1087,8 @@ renderExplorerAscii report = unlines $
       , pad 19 (fmt 10 (summaryMinimum summary))
       , pad 11 (fmt 6 (summaryArgmin summary))
       , pad 9 (show (summaryCell summary))
-      , fmt 4 (summaryCrossCheckError summary)]
+      , pad 14 (fmt 4 (summaryCrossCheckError summary))
+      , fmt 4 (summaryDerivativeCheckError summary)]
     renderCell cell = intercalate "  "
       [pad 10 (fmt 6 (cellOmega cell))
       , pad 10 (show (cellIndex cell))
@@ -637,10 +1096,115 @@ renderExplorerAscii report = unlines $
       , pad 13 (fmt 7 (cellRight cell))
       , pad 14 (fmt 8 (cellCandidateValue cell))
       , fmt 7 (cellCandidateT cell)]
+    modeSpecific = case explorerMode (reportOptions report) of
+      BranchesMode -> branchSection ++ crossingSection ++ scalingSection ++ bifurcationSection
+      CrossingsMode -> crossingSection
+      CellMode -> criticalSection
+      ClusterMode -> clusterSection ++ criticalSection
+      CertificateStatusMode -> certificateStatusSection
+      ScanMode -> []
+    criticalSection =
+      [ ""
+      , "Detected interior critical points:"
+      , "omega      cell    t*           Psi          dPsi         d2Psi        class"
+      , "----------------------------------------------------------------------------"
+      ] ++ map renderCritical criticalPointsForMode
+    branchSection =
+      [ ""
+      , "Continued local-minimum branches (cell/order IDs):"
+      , "branch          omega      cell    t*          minimum       curvature     dt/domega"
+      , "------------------------------------------------------------------------------------"
+      ] ++ map renderBranch
+        [point | point <- reportBranches report,
+          branchCell point `elem` envelopeCells]
+    crossingSection =
+      [ ""
+      , "Candidate lower-envelope crossings:"
+      , "omega*       cell A -> cell B    t_A         t_B         common minimum"
+      , "------------------------------------------------------------------------"
+      ] ++ map renderCrossing (reportCrossings report)
+    scalingSection =
+      [ ""
+      , "Low-complexity envelope scaling fits (discovery diagnostics):"
+      ] ++ renderFits
+    bifurcationSection =
+      [ ""
+      , "Candidate folds / prime-boundary collisions:"
+      ] ++ map renderBifurcation (reportBifurcations report)
+    clusterSection =
+      [ ""
+      , "Requested cell cluster ranked by candidate minimum:"
+      , "rank   cell    t*           Psi             curvature       above best"
+      , "------------------------------------------------------------------------"
+      ] ++ zipWith renderCluster [1 :: Int ..]
+        (take 20 (sortOn cellCandidateValue (reportCellMinima report)))
+    certificateStatusSection =
+      [ ""
+      , "Certificate coverage:"
+      , "  [0,T]       first existential rational interval LeanChecked"
+      , "  [T,infty)   unknown (SuzukiPsiTailCertificate remains open)"
+      ]
+    envelopeCells = unique
+      (map summaryCell (reportSummaries report) ++
+        concat [[crossingCellA crossing, crossingCellB crossing]
+          | crossing <- reportCrossings report])
+    criticalPointsForMode =
+      [point | point <- reportCriticalPoints report,
+        maybe True (<= criticalCell point) (explorerCellMin (reportOptions report)),
+        maybe True (criticalCell point <=) (explorerCellMax (reportOptions report))]
+    envelopeRows =
+      [(summaryOmega summary, summaryArgmin summary,
+        log (fromIntegral (summaryCell summary)))
+      | summary <- reportSummaries report, summaryOmega summary > 0]
+    renderFits =
+      renderFit "log(cell) ~ a + b/omega"
+        [(1 / omega, logCell) | (omega, _, logCell) <- envelopeRows] ++
+      renderFit "log(cell) ~ a + b*log(1/omega)"
+        [(log (1 / omega), logCell) | (omega, _, logCell) <- envelopeRows] ++
+      renderFit "t* ~ a + b*log(cell)"
+        [(logCell, t) | (_, t, logCell) <- envelopeRows]
+    renderFit label pairs = case linearFit pairs of
+      Nothing -> ["  " ++ label ++ ": insufficient variation"]
+      Just (intercept, slope, residual) ->
+        ["  " ++ label ++ ": a=" ++ fmt 6 intercept ++
+          " b=" ++ fmt 6 slope ++ " rmse=" ++ fmt 6 residual]
+    renderCritical point = intercalate "  "
+      [ pad 10 (fmt 6 (criticalOmega point))
+      , pad 7 (show (criticalCell point))
+      , pad 12 (fmt 8 (criticalT point))
+      , pad 12 (fmt 8 (criticalValue point))
+      , pad 12 (fmt 4 (criticalDerivative point))
+      , pad 12 (fmt 6 (criticalSecondDerivative point))
+      , classificationText (criticalClassification point)]
+    renderBranch point = intercalate "  "
+      [ pad 15 (branchId point)
+      , pad 10 (fmt 6 (branchOmega point))
+      , pad 7 (show (branchCell point))
+      , pad 11 (fmt 7 (branchT point))
+      , pad 13 (fmt 8 (branchMinimum point))
+      , pad 13 (fmt 7 (branchCurvature point))
+      , fmt 7 (branchDtDomega point)]
+    renderCrossing crossing = intercalate "  "
+      [ pad 12 (fmt 8 (crossingOmega crossing))
+      , pad 18 (show (crossingCellA crossing) ++ " -> " ++
+          show (crossingCellB crossing))
+      , pad 11 (fmt 7 (crossingTA crossing))
+      , pad 11 (fmt 7 (crossingTB crossing))
+      , fmt 9 (crossingCommonMinimum crossing)]
+    renderBifurcation event = intercalate "  "
+      [fmt 7 (bifurcationOmega event), show (bifurcationCell event),
+       fmt 8 (bifurcationT event), bifurcationKind event,
+       "curvature=" ++ fmt 7 (bifurcationCurvature event)]
+    renderCluster rank cell = intercalate "  "
+      [pad 6 (show rank), pad 7 (show (cellIndex cell)),
+       pad 12 (fmt 8 (cellCandidateT cell)),
+       pad 15 (fmt 10 (cellCandidateValue cell)),
+       pad 15 (fmt 8 (cellSecondDerivative cell)),
+       fmt 10 (cellDistanceAboveBest cell)]
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report = unlines $
-  ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
+  ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,second_derivative,distance_above_best,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
   map renderCellCsv (reportCellMinima report)
   where
     renderCellCsv cell = intercalate ","
@@ -648,7 +1212,8 @@ renderExplorerCsv report = unlines $
       ,statusText (statusForCell cell)
       ,num (cellOmega cell), show (cellIndex cell), num (cellLeft cell)
       ,num (cellRight cell), num (cellCandidateT cell), num (cellCandidateValue cell)
-      ,num (cellDerivative cell), num (cellPsiOverT cell), num (cellPsiOverTSq cell)
+      ,num (cellDerivative cell), num (cellSecondDerivative cell)
+      ,num (cellDistanceAboveBest cell), num (cellPsiOverT cell), num (cellPsiOverTSq cell)
       ,num (cellExpNegHalfPsi cell), num (cellExpNegOmegaPsi cell)
       ,num (cellOmegaTimesT cell), maybe "" show (metadataPrimeGap metadata)
       ,num (metadataChebyshevTheta metadata), num (metadataChebyshevPsi metadata)
@@ -672,6 +1237,15 @@ renderExplorerJson report = unlines
   ,"  ],"
   ,"  \"cell_minima\": ["
   ,intercalate ",\n" (map (indent 4 . cellJson) (reportCellMinima report))
+  ,"  ],"
+  ,"  \"critical_points\": ["
+  ,intercalate ",\n" (map (indent 4 . criticalJson) (reportCriticalPoints report))
+  ,"  ],"
+  ,"  \"branches\": ["
+  ,intercalate ",\n" (map (indent 4 . branchJson) (reportBranches report))
+  ,"  ],"
+  ,"  \"crossings\": ["
+  ,intercalate ",\n" (map (indent 4 . crossingJson) (reportCrossings report))
   ,"  ]"
   ,"}"
   ]
@@ -693,7 +1267,8 @@ summaryJson summary = "{" ++ intercalate ", "
   ,jsonField "minimum" (num (summaryMinimum summary))
   ,jsonField "minimizing_t" (num (summaryArgmin summary))
   ,jsonField "prime_cell" (show (summaryCell summary))
-  ,jsonField "cross_check_error" (num (summaryCrossCheckError summary))] ++ "}"
+  ,jsonField "cross_check_error" (num (summaryCrossCheckError summary))
+  ,jsonField "derivative_check_error" (num (summaryDerivativeCheckError summary))] ++ "}"
 
 cellJson :: CellMinimum -> String
 cellJson cell = "{" ++ intercalate ", "
@@ -704,6 +1279,8 @@ cellJson cell = "{" ++ intercalate ", "
   ,jsonField "minimizing_t_candidate" (num (cellCandidateT cell))
   ,jsonField "minimum_candidate" (num (cellCandidateValue cell))
   ,jsonField "derivative" (num (cellDerivative cell))
+  ,jsonField "second_derivative" (num (cellSecondDerivative cell))
+  ,jsonField "distance_above_best" (num (cellDistanceAboveBest cell))
   ,jsonField "psi_over_t" (num (cellPsiOverT cell))
   ,jsonField "psi_over_t2" (num (cellPsiOverTSq cell))
   ,jsonField "exp_neg_half_psi" (num (cellExpNegHalfPsi cell))
@@ -716,6 +1293,37 @@ cellJson cell = "{" ++ intercalate ", "
   ,jsonField "left_boundary_prime_power" (jsonBool (metadataLeftPrimePower metadata))
   ,jsonField "right_boundary_prime_power" (jsonBool (metadataRightPrimePower metadata))] ++ "}"
   where metadata = cellMetadata cell
+
+criticalJson :: CriticalPoint -> String
+criticalJson point = "{" ++ intercalate ", "
+  [jsonField "omega" (num (criticalOmega point))
+  ,jsonField "prime_cell" (show (criticalCell point))
+  ,jsonField "t" (num (criticalT point))
+  ,jsonField "psi" (num (criticalValue point))
+  ,jsonField "derivative" (num (criticalDerivative point))
+  ,jsonField "second_derivative" (num (criticalSecondDerivative point))
+  ,jsonField "mixed_derivative" (num (criticalMixedDerivative point))
+  ,jsonStringField "classification"
+      (classificationText (criticalClassification point))] ++ "}"
+
+branchJson :: BranchPoint -> String
+branchJson point = "{" ++ intercalate ", "
+  [jsonStringField "branch_id" (branchId point)
+  ,jsonField "omega" (num (branchOmega point))
+  ,jsonField "prime_cell" (show (branchCell point))
+  ,jsonField "t" (num (branchT point))
+  ,jsonField "minimum" (num (branchMinimum point))
+  ,jsonField "curvature" (num (branchCurvature point))
+  ,jsonField "dt_domega" (num (branchDtDomega point))] ++ "}"
+
+crossingJson :: EnvelopeCrossing -> String
+crossingJson crossing = "{" ++ intercalate ", "
+  [jsonField "omega_cross" (num (crossingOmega crossing))
+  ,jsonField "cell_a" (show (crossingCellA crossing))
+  ,jsonField "cell_b" (show (crossingCellB crossing))
+  ,jsonField "t_a" (num (crossingTA crossing))
+  ,jsonField "t_b" (num (crossingTB crossing))
+  ,jsonField "common_minimum" (num (crossingCommonMinimum crossing))] ++ "}"
 
 certificateJson :: CandidateCertificate -> String
 certificateJson certificate = "{" ++ intercalate ", "
@@ -757,6 +1365,11 @@ statusText :: CandidateStatus -> String
 statusText Candidate = "candidate"
 statusText NumericallyPassed = "numerically_passed"
 statusText NumericallyFailed = "numerically_failed"
+
+classificationText :: CriticalClassification -> String
+classificationText LocalMinimum = "local_min"
+classificationText LocalMaximum = "local_max"
+classificationText CriticalUncertain = "uncertain"
 
 indent :: Int -> String -> String
 indent count text = replicate count ' ' ++ text
