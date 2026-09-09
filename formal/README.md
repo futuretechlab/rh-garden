@@ -272,6 +272,17 @@ derives rational bounds from pinned Taylor/series theorems, and checks
 one, `suzukiPsi_pos_cell_two` proves `Psi(t)>0` throughout the closed interval
 `[log 2, log 3]`.  This is finite cell coverage only; no tail theorem follows.
 
+`RHGarden/SuzukiMangoldtState.lean` gives the authoritative general cell
+representation. It defines the cumulative slope `S_n` and intercept `C_n`,
+proves the exact closed-cell identity `Psi=A-S_n*t+C_n` and sparse successor
+updates, then defines the attained restricted archimedean dual `D_n`. The
+dual objective is strictly concave with a unique maximizer, and
+`suzukiCellMargin_nonneg_iff` reduces complete-cell nonnegativity to the one
+scalar inequality `0<=C_n-D_n(S_n)`. Lean also checks the global equivalence
+between `SuzukiPsiNonnegative` and the compact initial interval plus all
+cell margins, and hence the corresponding RH equivalence. These theorems
+re-express the open problem; they do not establish the margin family.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.

@@ -414,6 +414,36 @@ margin `31/20000` yields `suzukiPsi_pos_cell_two` on the entire closed cell.
 The shifted candidate cells 2 at omega `1/10` and 5 at omega `1/20` remain
 numerically positive but uncertified. The infinite tail remains wholly open.
 
+`RHGarden.SuzukiMangoldtState` now compresses every unshifted prime cell to
+two cumulative arithmetic numbers:
+
+```text
+X_n=(S_n,C_n),
+X_(n+1)-X_n = Lambda(n+1)/sqrt(n+1) * (1,log(n+1)).
+```
+
+On the complete closed cell `[log n,log(n+1)]`, Lean checks the exact formula
+`Psi(t)=A(t)-S_n*t+C_n`; the entering ramp cancels at the right endpoint.
+The restricted dual `D_n(s)=max(s*t-A(t))` is compactly attained and has a
+unique maximizer. Consequently cell safety is the single scalar inequality
+`C_n>=D_n(S_n)`, and `suzukiCellMargin n := C_n-D_n(S_n)` satisfies a checked
+cell-positivity equivalence. The existing cell-two certificate now implies
+`suzukiCellMargin_two_pos` without repeating its analytic bounds.
+
+The global checked representation is
+
+```text
+RH <-> SuzukiInitialNonnegative
+       and forall n>=2, 0 <= suzukiCellMargin n.
+```
+
+This is only an equivalent open formulation. A proved dual perturbation
+bound shows that the sparse Mangoldt jump itself cannot decrease the
+same-cell margin. If `Lambda(n+1)=0`, the state is unchanged and the complete
+margin change is replacement of `D_n` by `D_(n+1)`. The moving-cell dual is
+therefore the exact next research frontier; no monotonicity across adjacent
+cells has been claimed.
+
 The next finite-cell experiment is to reuse the exact point-evaluation bound
 library on unshifted cell 3 (or cell 5 if its arithmetic expression proves
 simpler), then test shifted cell 2 at omega `1/10`. In parallel, the branch

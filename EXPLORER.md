@@ -282,3 +282,46 @@ Finite cell certificates cannot prove a statement on an infinite tail.
 `SuzukiPsiTailCertificate` names that separate open requirement; the
 Explorer's normalized envelopes are intended to help discover its eventual
 shape.
+
+## Mangoldt-state margin mode
+
+The exact formal cell identity is now
+
+```text
+S_n = sum_{k<=n} Lambda(k)/sqrt(k),
+C_n = sum_{k<=n} Lambda(k) log(k)/sqrt(k),
+Psi(t) = A(t) - S_n t + C_n
+        for log n <= t <= log(n+1).
+```
+
+The compact restricted dual
+
+```text
+D_n(s) = max_{log n <= t <= log(n+1)} (s t - A(t))
+```
+
+is attained at a unique point for every `n>=2`. Lean proves that the entire
+cell is nonnegative exactly when the scalar margin
+`C_n-D_n(S_n)` is nonnegative. It also proves that a Mangoldt update is
+non-destructive before accounting for movement to the next cell; if there is
+no update, all margin change comes from that interval motion.
+
+Run the arithmetic-state view with, for example:
+
+```text
+cabal run rh-garden -- explore-suzuki margins \
+  --t-max 5.71 --samples 30001 --cell-min 2 --cell-max 300
+```
+
+Rows include `S_n`, `C_n`, the candidate restricted dual and margin, the
+candidate maximizer type, Mangoldt masses at both boundaries, and distances
+to neighboring Mangoldt events. These values are `NumericalEvidence`; only
+the defining identities and equivalences are LeanChecked.
+
+A scan through cell 300 again places cell 208 first, at candidate margin
+`0.0280226237`, followed extremely closely by cell 207. The state is constant
+from the event at 199 through cell 210; cell 208 is nine integers after that
+event and three before the next one at 211. The next nearby basin, cell 213,
+uses the state updated at 211. This is consistent with interval motion being
+responsible for deterioration between sparse events, but it is not a proved
+tail law or a causal statistical conclusion.

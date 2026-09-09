@@ -159,6 +159,22 @@ main = do
         in abs (d2PsiDt2 omega t - finiteDifference) < 3e-5
       | (omega, t) <- [(0.025, 1.31), (0.05, 1.78), (0.1, 0.9)]
       ]
+  check "Suzuki margin mode exposes the two-number arithmetic state" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = MarginsMode
+        , explorerOmegas = [0]
+        , explorerTMax = 1.4
+        , explorerSamples = 1001
+        , explorerPrimeCells = True
+        , explorerCellMin = Just 2
+        , explorerCellMax = Just 3
+        } of
+      Right report ->
+        map marginCell (reportMargins report) == [2, 3] &&
+        all (\row -> abs (marginValue row -
+          (marginIntercept row - marginDual row)) < 1e-12)
+          (reportMargins report)
+      Left _ -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

@@ -10,6 +10,7 @@ module RHGarden.Explorer.Suzuki
   , BranchPoint(..)
   , EnvelopeCrossing(..)
   , BifurcationEvent(..)
+  , CellMargin(..)
   , CandidateCertificate(..)
   , defaultExplorerOptions
   , parseExplorerOptions
@@ -51,6 +52,7 @@ data ExplorerMode
   | CellMode
   | ClusterMode
   | CertificateStatusMode
+  | MarginsMode
   deriving (Eq, Ord, Show, Read)
 
 data ExplorerOptions = ExplorerOptions
@@ -152,6 +154,23 @@ data OmegaSummary = OmegaSummary
   , summaryDerivativeCheckError :: Double
   } deriving (Eq, Show)
 
+-- | Numerical evaluation of the exact two-number state
+-- `(S_n,C_n)` and its restricted-dual margin.  These rows remain
+-- NumericalEvidence until their inequalities are separately checked by Lean.
+data CellMargin = CellMargin
+  { marginCell :: Int
+  , marginSlope :: Double
+  , marginIntercept :: Double
+  , marginDual :: Double
+  , marginValue :: Double
+  , marginCandidateT :: Double
+  , marginMinimizerType :: String
+  , marginMangoldtLeft :: Double
+  , marginMangoldtRight :: Double
+  , marginSinceLastEvent :: Maybe Int
+  , marginToNextEvent :: Maybe Int
+  } deriving (Eq, Show)
+
 data CandidateCertificate = CandidateCertificate
   { certificateOmega :: Double
   , certificateLeft :: Double
@@ -178,6 +197,7 @@ data ExplorerReport = ExplorerReport
   , reportBranches :: [BranchPoint]
   , reportCrossings :: [EnvelopeCrossing]
   , reportBifurcations :: [BifurcationEvent]
+  , reportMargins :: [CellMargin]
   } deriving (Eq, Show)
 
 data PrimeEvent = PrimeEvent
@@ -237,6 +257,9 @@ parseExplorerOptions = go defaultExplorerOptions
       go options { explorerMode = ClusterMode, explorerPrimeCells = True } rest
     go options ("certificate-status" : rest) =
       go options { explorerMode = CertificateStatusMode } rest
+    go options ("margins" : rest) =
+      go options { explorerMode = MarginsMode, explorerPrimeCells = True,
+        explorerOmegas = [0] } rest
     go options ("--omega" : value : rest) =
       parseDouble "--omega" value >>= \x ->
         go options { explorerOmegas = explorerOmegas options ++ [x] } rest
@@ -323,7 +346,8 @@ resolvedOmegas options = case
     (explorerOmegaMin options, explorerOmegaMax options,
       explorerOmegaCount options) of
   (Just lo, Just hi, Just count) -> linearGrid count lo hi
-  _ | not (null (explorerOmegas options)) -> explorerOmegas options
+  _ | explorerMode options == MarginsMode -> [0]
+    | not (null (explorerOmegas options)) -> explorerOmegas options
     | otherwise -> [0.5, 0.25, 0.125, 0]
 
 exploreSuzuki :: ExplorerOptions -> Either String ExplorerReport
@@ -347,6 +371,8 @@ exploreSuzuki options = do
       branches = trackMinimumBranches criticals
       crossings = refineEnvelopeCrossings checked primes events base summaries
       bifurcations = detectBifurcations criticals
+      margins = buildCellMargins events
+        [cell | cell <- cells, abs (cellOmega cell) < 1e-12]
       attachDistance cell = cell
         { cellDistanceAboveBest = cellCandidateValue cell -
             minimum [summaryMinimum summary | summary <- summaries,
@@ -360,7 +386,44 @@ exploreSuzuki options = do
     , reportBranches = branches
     , reportCrossings = crossings
     , reportBifurcations = bifurcations
+    , reportMargins = margins
     }
+
+buildCellMargins :: [PrimeEvent] -> [CellMinimum] -> [CellMargin]
+buildCellMargins events = map build
+  where
+    build cell =
+      let n = cellIndex cell
+          active = takeWhile ((<= n) . eventN) events
+          slope = sum (map eventWeight active)
+          intercept = sum [eventWeight event * eventLogN event | event <- active]
+          t = cellCandidateT cell
+          arch = if t <= 0 then 0 else integrateArchDerivative 0 t
+          dual = slope * t - arch
+          at k = sum [eventMangoldt event | event <- events, eventN event == k]
+          previous = [eventN event | event <- events, eventN event <= n]
+          following = [eventN event | event <- events, eventN event > n]
+          kind
+            | abs (t - cellLeft cell) < 1e-7 = "left"
+            | abs (t - cellRight cell) < 1e-7 = "right"
+            | otherwise = "interior"
+      in CellMargin
+        { marginCell = n
+        , marginSlope = slope
+        , marginIntercept = intercept
+        , marginDual = dual
+        , marginValue = intercept - dual
+        , marginCandidateT = t
+        , marginMinimizerType = kind
+        , marginMangoldtLeft = at n
+        , marginMangoldtRight = at (n + 1)
+        , marginSinceLastEvent = case reverse previous of
+            event : _ -> Just (n - event)
+            [] -> Nothing
+        , marginToNextEvent = case following of
+            event : _ -> Just (event - n)
+            [] -> Nothing
+        }
 
 runSuzukiExplorer :: ExplorerOptions -> IO ()
 runSuzukiExplorer options = case exploreSuzuki options of
@@ -1180,7 +1243,15 @@ renderExplorerAscii report = unlines $
       CellMode -> criticalSection
       ClusterMode -> clusterSection ++ criticalSection
       CertificateStatusMode -> certificateStatusSection
+      MarginsMode -> marginSection
       ScanMode -> []
+    marginSection =
+      [ ""
+      , "Mangoldt-state cell margins (NumericalEvidence):"
+      , "cell   S_n          C_n          D_n(S_n)     margin       t*          type      since  next   Lambda(n)  Lambda(n+1)"
+      , "--------------------------------------------------------------------------------------------------------------------"
+      ] ++ map renderMargin
+        (take 20 (sortOn marginValue (reportMargins report)))
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1281,12 +1352,36 @@ renderExplorerAscii report = unlines $
        pad 15 (fmt 10 (cellCandidateValue cell)),
        pad 15 (fmt 8 (cellSecondDerivative cell)),
        fmt 10 (cellDistanceAboveBest cell)]
+    renderMargin row = intercalate "  "
+      [ pad 6 (show (marginCell row))
+      , pad 12 (fmt 7 (marginSlope row))
+      , pad 12 (fmt 7 (marginIntercept row))
+      , pad 12 (fmt 7 (marginDual row))
+      , pad 12 (fmt 8 (marginValue row))
+      , pad 11 (fmt 7 (marginCandidateT row))
+      , pad 9 (marginMinimizerType row)
+      , pad 6 (maybe "-" show (marginSinceLastEvent row))
+      , pad 6 (maybe "-" show (marginToNextEvent row))
+      , pad 10 (fmt 5 (marginMangoldtLeft row))
+      , fmt 5 (marginMangoldtRight row)]
 
 renderExplorerCsv :: ExplorerReport -> String
-renderExplorerCsv report = unlines $
+renderExplorerCsv report
+  | explorerMode (reportOptions report) == MarginsMode = unlines $
+      ["trust,status,cell,S_n,C_n,dual,margin,t_candidate,minimizer_type,distance_since_event,distance_to_event,mangoldt_n,mangoldt_n_plus_1"] ++
+      map renderMarginCsv (reportMargins report)
+  | otherwise = unlines $
   ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,second_derivative,distance_above_best,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
   map renderCellCsv (reportCellMinima report)
   where
+    renderMarginCsv row = intercalate ","
+      ["NumericalEvidence", "candidate", show (marginCell row)
+      ,num (marginSlope row), num (marginIntercept row), num (marginDual row)
+      ,num (marginValue row), num (marginCandidateT row)
+      ,marginMinimizerType row
+      ,maybe "" show (marginSinceLastEvent row)
+      ,maybe "" show (marginToNextEvent row)
+      ,num (marginMangoldtLeft row), num (marginMangoldtRight row)]
     renderCellCsv cell = intercalate ","
       ["NumericalEvidence"
       ,statusText (statusForCell cell)
@@ -1326,6 +1421,9 @@ renderExplorerJson report = unlines
   ,"  ],"
   ,"  \"crossings\": ["
   ,intercalate ",\n" (map (indent 4 . crossingJson) (reportCrossings report))
+  ,"  ],"
+  ,"  \"margins\": ["
+  ,intercalate ",\n" (map (indent 4 . marginJson) (reportMargins report))
   ,"  ]"
   ,"}"
   ]
@@ -1373,6 +1471,22 @@ cellJson cell = "{" ++ intercalate ", "
   ,jsonField "left_boundary_prime_power" (jsonBool (metadataLeftPrimePower metadata))
   ,jsonField "right_boundary_prime_power" (jsonBool (metadataRightPrimePower metadata))] ++ "}"
   where metadata = cellMetadata cell
+
+marginJson :: CellMargin -> String
+marginJson row = "{" ++ intercalate ", "
+  [jsonField "cell" (show (marginCell row))
+  ,jsonField "slope_S_n" (num (marginSlope row))
+  ,jsonField "intercept_C_n" (num (marginIntercept row))
+  ,jsonField "dual_D_n" (num (marginDual row))
+  ,jsonField "margin" (num (marginValue row))
+  ,jsonField "minimizing_t_candidate" (num (marginCandidateT row))
+  ,jsonField "minimizer_type" (jsonString (marginMinimizerType row))
+  ,jsonField "distance_since_mangoldt_event"
+      (maybe "null" show (marginSinceLastEvent row))
+  ,jsonField "distance_to_mangoldt_event"
+      (maybe "null" show (marginToNextEvent row))
+  ,jsonField "mangoldt_n" (num (marginMangoldtLeft row))
+  ,jsonField "mangoldt_n_plus_1" (num (marginMangoldtRight row))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

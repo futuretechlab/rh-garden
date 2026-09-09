@@ -68,6 +68,9 @@ data Representation
   | SuzukiPrimeCellStrictConvexity
   | SuzukiStrongConvexCellCertificate
   | SuzukiCertifiedPrimeCells
+  | SuzukiMangoldtState
+  | SuzukiArchimedeanCellDual
+  | SuzukiCellMargins
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -139,6 +142,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiPrimeCellStrictConvexity :: SRepresentation 'SuzukiPrimeCellStrictConvexity
   SSuzukiStrongConvexCellCertificate :: SRepresentation 'SuzukiStrongConvexCellCertificate
   SSuzukiCertifiedPrimeCells :: SRepresentation 'SuzukiCertifiedPrimeCells
+  SSuzukiMangoldtState :: SRepresentation 'SuzukiMangoldtState
+  SSuzukiArchimedeanCellDual :: SRepresentation 'SuzukiArchimedeanCellDual
+  SSuzukiCellMargins :: SRepresentation 'SuzukiCellMargins
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -211,6 +217,9 @@ representationValue SSuzukiPositivityExplorer = SuzukiPositivityExplorer
 representationValue SSuzukiPrimeCellStrictConvexity = SuzukiPrimeCellStrictConvexity
 representationValue SSuzukiStrongConvexCellCertificate = SuzukiStrongConvexCellCertificate
 representationValue SSuzukiCertifiedPrimeCells = SuzukiCertifiedPrimeCells
+representationValue SSuzukiMangoldtState = SuzukiMangoldtState
+representationValue SSuzukiArchimedeanCellDual = SuzukiArchimedeanCellDual
+representationValue SSuzukiCellMargins = SuzukiCellMargins
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -281,6 +290,9 @@ representationLabel SuzukiPositivityExplorer = "floating-point Suzuki (omega,t) 
 representationLabel SuzukiPrimeCellStrictConvexity = "universal strict convexity of shifted Suzuki Psi on prime cells n>=2"
 representationLabel SuzukiStrongConvexCellCertificate = "kernel-checked strong-convexity lower-bound certificate mechanism"
 representationLabel SuzukiCertifiedPrimeCells = "individually Lean-certified unshifted Suzuki prime cells (currently cell 2)"
+representationLabel SuzukiMangoldtState = "two-number cumulative Mangoldt state (S_n,C_n) on each Suzuki prime cell"
+representationLabel SuzukiArchimedeanCellDual = "restricted convex dual D_n(s)=max_{cell}(s*t-A(t))"
+representationLabel SuzukiCellMargins = "scalar cell safety margins C_n-D_n(S_n)"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

@@ -150,6 +150,17 @@ suzukiCellTwoRef = Reference
       "closed unshifted cell [log 2, log 3]."
   }
 
+suzukiMangoldtStateRef :: Reference
+suzukiMangoldtStateRef = Reference
+  { refShort = "RHGarden.suzukiPsiNonnegative_iff_initial_and_cellMargins"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiMangoldtState.lean: each prime " ++
+      "cell is controlled exactly by the cumulative two-number state (S_n,C_n), " ++
+      "its compact archimedean dual is attained with a unique maximizer, cell " ++
+      "positivity is equivalent to one scalar margin inequality, and RH is " ++
+      "equivalent to the compact initial interval plus all margins."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -822,6 +833,33 @@ strongCertificateToCertifiedCells = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "One certified finite cell neither supplies certificates for other cells nor controls the infinite tail.")
   Nothing
 
+suzukiPrimeToMangoldtState :: RuntimeRepresentationEdge
+suzukiPrimeToMangoldtState = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiPrimeSide SSuzukiMangoldtState
+  "collect every active Mangoldt ramp into its slope and intercept"
+  ExactRepresentation leanCheckedTrust 1 suzukiMangoldtStateRef
+  "RHGarden.suzukiPsi_eq_arch_sub_slope_mul_add_intercept_on_closed_cell proves Psi(t)=A(t)-S_n*t+C_n on every complete cell."
+  (ExactInverse "The state together with the fixed archimedean function reconstructs the exact prime-side expression on its cell.")
+  Nothing
+
+suzukiMangoldtStateToDual :: RuntimeRepresentationEdge
+suzukiMangoldtStateToDual = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiArchimedeanCellDual
+  "take the attained restricted dual of the archimedean function"
+  SufficientReduction leanCheckedTrust 1 suzukiMangoldtStateRef
+  "RHGarden.exists_suzukiArchCellDual_eq and RHGarden.unique_suzukiArchCellDual_maximizer prove compact attainment and uniqueness."
+  (NoReconstruction "The scalar restricted maximum does not reconstruct the archimedean function away from its maximizing point.")
+  Nothing
+
+suzukiDualToCellMargins :: RuntimeRepresentationEdge
+suzukiDualToCellMargins = eraseRepresentationEdge $ representationEdge
+  SSuzukiArchimedeanCellDual SSuzukiCellMargins
+  "subtract the dual cost from the Mangoldt intercept"
+  ExactRepresentation leanCheckedTrust 1 suzukiMangoldtStateRef
+  "RHGarden.suzukiCellMargin_nonneg_iff identifies each margin inequality exactly with nonnegativity on its closed prime cell; RHGarden.riemannHypothesis_iff_initial_and_all_cellMargins gives the global discrete equivalence."
+  (ExactInverse "A margin plus the stored intercept recovers the dual value at the stored slope.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1152,6 +1190,7 @@ representationGraph =
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
   , suzukiPrimeToCellStrictConvexity, cellStrictConvexityToStrongCertificate
   , strongCertificateToCertifiedCells
+  , suzukiPrimeToMangoldtState, suzukiMangoldtStateToDual, suzukiDualToCellMargins
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

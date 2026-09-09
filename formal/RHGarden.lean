@@ -39,3 +39,4 @@ import RHGarden.SuzukiShiftedHerglotz
 import RHGarden.SuzukiExplorer
 import RHGarden.SuzukiConvexity
 import RHGarden.SuzukiCellTwo
+import RHGarden.SuzukiMangoldtState
