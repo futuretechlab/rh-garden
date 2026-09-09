@@ -159,6 +159,11 @@ data CandidateCertificate = CandidateCertificate
   , certificatePrimeCell :: Int
   , certificateBasis :: [String]
   , certificateCoefficients :: [(Integer, Integer)]
+  , certificateStrongSample :: (Integer, Integer)
+  , certificateStrongValueLower :: (Integer, Integer)
+  , certificateStrongDerivAbsUpper :: (Integer, Integer)
+  , certificateStrongCurvatureLower :: (Integer, Integer)
+  , certificateStrongMargin :: Double
   , certificateClaimedMinimum :: Double
   , certificateDiscoveryPrecision :: Double
   , certificateStatus :: CandidateStatus
@@ -1032,6 +1037,19 @@ affineCandidateCertificate options points minimumValue =
       lineMinimum = min
         (intercept + slope * cellLeft minimumValue)
         (intercept + slope * cellRight minimumValue)
+      strongSample = rationalNearest (cellCandidateT minimumValue)
+      strongValueLower = rationalDown (cellCandidateValue minimumValue - safety)
+      strongDerivAbsUpper = rationalUp
+        (abs (cellDerivative minimumValue) + safety)
+      strongCurvatureLower = rationalDown
+        (max 0 (cellSecondDerivative minimumValue - safety))
+      strongValue = rationalValue strongValueLower
+      strongDeriv = rationalValue strongDerivAbsUpper
+      strongCurvature = rationalValue strongCurvatureLower
+      strongMargin
+        | strongCurvature > 0 =
+            strongValue - strongDeriv * strongDeriv / (2 * strongCurvature)
+        | otherwise = -1e300
       status
         | lineMinimum >= 0 && residual >= negate safety = NumericallyPassed
         | cellCandidateValue minimumValue < -10 * precision = NumericallyFailed
@@ -1044,6 +1062,11 @@ affineCandidateCertificate options points minimumValue =
     , certificateBasis = ["1", "t"]
     , certificateCoefficients =
         [(interceptNumerator, denominator), (slopeNumerator, denominator)]
+    , certificateStrongSample = strongSample
+    , certificateStrongValueLower = strongValueLower
+    , certificateStrongDerivAbsUpper = strongDerivAbsUpper
+    , certificateStrongCurvatureLower = strongCurvatureLower
+    , certificateStrongMargin = strongMargin
     , certificateClaimedMinimum = lineMinimum
     , certificateDiscoveryPrecision = precision
     , certificateStatus = status
@@ -1055,6 +1078,18 @@ first3 (x, _, _) = x
 rationalDown :: Double -> (Integer, Integer)
 rationalDown value = (floor (value * fromIntegral denominator), denominator)
   where denominator = 1000000
+
+rationalUp :: Double -> (Integer, Integer)
+rationalUp value = (ceiling (value * fromIntegral denominator), denominator)
+  where denominator = 1000000
+
+rationalNearest :: Double -> (Integer, Integer)
+rationalNearest value = (round (value * fromIntegral denominator), denominator)
+  where denominator = 1000000
+
+rationalValue :: (Integer, Integer) -> Double
+rationalValue (numerator, denominator) =
+  fromIntegral numerator / fromIntegral denominator
 
 safeDivide :: Double -> Double -> Double
 safeDivide numerator denominator
@@ -1120,7 +1155,9 @@ renderExplorerAscii report = unlines $
   modeSpecific ++
   [ ""
   , "Candidate certificate statuses are sampled numerical results only."
-  , "Certified finite range: see Lean certificate declarations; tail status: unknown."
+  , "Lean-certified cells: unshifted cell 2, [log 2, log 3]."
+  , "Separate local coverage: [0,q] for some certified rational q>0; the gap to log 2 is open."
+  , "Tail status: unknown."
   ]
   where
     renderSummary summary = intercalate "  "
@@ -1182,8 +1219,10 @@ renderExplorerAscii report = unlines $
     certificateStatusSection =
       [ ""
       , "Certificate coverage:"
-      , "  [0,T]       first existential rational interval LeanChecked"
-      , "  [T,infty)   unknown (SuzukiPsiTailCertificate remains open)"
+      , "  [0,q]            LeanChecked for some explicit existential rational q>0"
+      , "  [q,log 2]        unknown"
+      , "  [log 2,log 3]    LeanChecked (unshifted prime cell 2)"
+      , "  [log 3,infty)    unknown (SuzukiPsiTailCertificate remains open)"
       ]
     envelopeCells = unique
       (map summaryCell (reportSummaries report) ++
@@ -1378,6 +1417,16 @@ certificateJson certificate = "{" ++ intercalate ", "
       (map jsonString (certificateBasis certificate)) ++ "]")
   ,jsonField "coefficients" ("[" ++ intercalate ", "
       (map rationalJson (certificateCoefficients certificate)) ++ "]")
+  ,jsonField "strong_convex_sample" (rationalJson
+      (certificateStrongSample certificate))
+  ,jsonField "strong_convex_value_lower" (rationalJson
+      (certificateStrongValueLower certificate))
+  ,jsonField "strong_convex_deriv_abs_upper" (rationalJson
+      (certificateStrongDerivAbsUpper certificate))
+  ,jsonField "strong_convex_curvature_lower" (rationalJson
+      (certificateStrongCurvatureLower certificate))
+  ,jsonField "strong_convex_candidate_margin" (num
+      (certificateStrongMargin certificate))
   ,jsonField "claimed_lower_bound" (num (certificateClaimedMinimum certificate))
   ,jsonField "discovery_precision" (num (certificateDiscoveryPrecision certificate))] ++ "}"
 

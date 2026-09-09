@@ -231,6 +231,29 @@ The generic theorem `lower_bound_of_secondDeriv_ge` and the certificate's
 `positive_on_cell` verifier are LeanChecked. Numerical values still provide
 no proof fields.
 
+Candidate JSON now also emits rationalized `strong_convex_sample`,
+`strong_convex_value_lower`, `strong_convex_deriv_abs_upper`, and
+`strong_convex_curvature_lower` fields together with their numerical
+candidate margin.  These are proof-search hints only: rounding does not
+establish any of the corresponding inequalities, so Lean must verify every
+field independently.
+
+The first nontrivial instance of this pipeline is now LeanChecked for the
+actual unshifted function.  On cell 2, `[log 2, log 3]`, Lean evaluates the
+finite Mangoldt term to the single ramp at 2 and uses the rational sample
+`x=9/10`.  Exact Taylor/series bounds prove
+
+```text
+Psi(9/10) > 1/100,
+|Psi'(9/10)| <= 13/100,
+Psi'' >= 1 throughout the cell.
+```
+
+Thus the verified strong-convexity margin is
+`1/100-(13/100)^2/2=31/20000>0`, and
+`suzukiPsi_pos_cell_two` proves strict positivity on the complete closed
+cell.  This certificate imports no Explorer floating-point value.
+
 The numerical candidates currently found for the requested certification
 tests are:
 
@@ -239,11 +262,11 @@ omega=1/10, cell 2: t*=0.89237347, Psi=0.04090532, curvature=1.310889
 omega=1/20, cell 5: t*=1.7799955,  Psi=0.03788844, curvature=2.2167661
 ```
 
-Neither cell is Lean-certified yet. Universal curvature is no longer the
-obstruction. The first exact missing ingredient is now narrower: rigorous
-pointwise lower/upper bounds for `Psi_omega(x)` and
-`|Psi_omega'(x)|` at a simple rational sample (starting with `x=9/10` for
-cell 2). No decimal approximation is admitted as a certificate.
+Neither of these *shifted* candidate cells is Lean-certified yet. Universal
+curvature is no longer the obstruction. The successful unshifted cell-2
+proof demonstrates the exact sample-bound pipeline; extending it to shifted
+values still requires rigorous pointwise bounds for `Psi_omega(x)` and
+`|Psi_omega'(x)|`. No decimal approximation is admitted as a certificate.
 
 The full workflow is:
 

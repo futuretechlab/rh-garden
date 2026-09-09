@@ -307,6 +307,19 @@ identity `riemannScrewKernel t t = 2*Psi(t)` gives local diagonal positivity.
 This does not establish sampled kernel PSD, global pointwise positivity, or
 RH. Positivity through `log 2` remains unproved.
 
+Separately, `RHGarden.SuzukiCellTwo` now gives the first full certified prime
+cell of the unshifted function:
+
+```text
+forall t in [log 2, log 3], 0 < suzukiPsi t.
+```
+
+The proof evaluates the sole Mangoldt ramp, checks exact rational value and
+derivative bounds at `t=9/10`, and applies the universal curvature bound
+`Psi''>=1`.  This cell is not contiguous with the existential neighborhood
+of zero because positivity on the remaining part up to `log 2` is still
+open, and it supplies no information about the infinite tail.
+
 The discovery layer in `EXPLORER.md` now searches shifted prime cells and
 emits only `NumericalEvidence`. Candidate coefficients do not enter Lean;
 they must be rationalized and proved through the formal cell-certificate

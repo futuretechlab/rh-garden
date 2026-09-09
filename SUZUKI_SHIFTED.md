@@ -268,6 +268,9 @@ Psi''(t) = y + 1/y - y^3/(y^4-1) >= 1
 for every cell `n>=2`. Thus every `Psi_omega` is strictly convex on every
 such cell for every real omega; an interior critical point is unique and an
 interior fold cannot occur. The checked `SuzukiStrongConvexCellCertificate`
-turns this structure into a one-sample whole-cell verifier. Cells 2 at
-`omega=1/10` and 5 at `omega=1/20` remain uncertified because exact sample
-value and first-derivative bounds have not yet been supplied.
+turns this structure into a one-sample whole-cell verifier. The unshifted
+cell 2 is now certified on the complete closed interval `[log 2,log 3]`:
+exact bounds at `x=9/10` give `Psi>1/100`, `|Psi'|<=13/100`, and certificate
+margin `31/20000`. The shifted cells 2 at `omega=1/10` and 5 at
+`omega=1/20` remain uncertified; their numerical minima continue to have
+`NumericalEvidence` status only.

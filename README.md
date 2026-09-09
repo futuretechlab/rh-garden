@@ -111,8 +111,12 @@ Gram/norm-square factorization of Li/Weil values is explicitly `Conjectural`.
 The Suzuki district now kernel-checks the occurrence-indexed zero-side series,
 the screw-kernel identity, the critical-line Gram factorization, the exact xi
 Nevanlinna criterion, screw continuity, and the high-strip Fourier--Laplace
-transform. The remaining Krein--Langer screw-to-Nevanlinna bridge is isolated
-and literature-certified, not checked. An Euler--Maclaurin remainder estimate proves
+transform.  Its specialized xi screw/Nevanlinna and shifted zero-free
+criteria are checked without claiming the general Krein--Langer theorem.
+The prime-side representation and universal strict convexity on prime cells
+are also checked; `suzukiPsi_pos_cell_two` is the first exact certificate for
+the actual unshifted function on a complete cell `[log 2,log 3]`.  This finite
+result does not prove global positivity or RH. An Euler--Maclaurin remainder estimate proves
 `riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula
 is unconditionally nonzero; see `SUZUKI_SCREW.md`.
 

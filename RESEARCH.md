@@ -406,15 +406,17 @@ Mangoldt cell sum, and the closed lower bound `Psi''>=1` on every cell
 `n>=2`. Hence every shifted cell is strictly convex for every real omega,
 has at most one interior critical point, and admits no interior fold.
 `SuzukiStrongConvexCellCertificate` verifies a whole-cell lower bound from a
-single exact sample value/derivative bound and a curvature bound. Candidate
-cells 2 at omega `1/10` and 5 at omega `1/20` remain numerically positive but
-not certified: exact pointwise transcendental bounds at simple rational
-samples are the first missing proof component. The infinite tail remains
-wholly open.
+single exact sample value/derivative bound and a curvature bound. The first
+complete unshifted instance is now checked: on `[log 2,log 3]`, Lean evaluates
+the Mangoldt sum to its one ramp and proves at `x=9/10` that
+`Psi(x)>1/100` and `|Psi'(x)|<=13/100`. Together with `Psi''>=1`, the exact
+margin `31/20000` yields `suzukiPsi_pos_cell_two` on the entire closed cell.
+The shifted candidate cells 2 at omega `1/10` and 5 at omega `1/20` remain
+numerically positive but uncertified. The infinite tail remains wholly open.
 
-The next research problem is to build the small exact point-evaluation bound
-library needed to certify cell 2 at omega `1/10`, then test whether the same
-strong-convexity certificate scales to cell 5. In parallel, the branch cascade suggests
-studying why its winning cells are attached to particular Mangoldt boundary
-events. A genuine infinite-tail certificate remains a separate RH-sized
-requirement; a finite numerical scan cannot supply it.
+The next finite-cell experiment is to reuse the exact point-evaluation bound
+library on unshifted cell 3 (or cell 5 if its arithmetic expression proves
+simpler), then test shifted cell 2 at omega `1/10`. In parallel, the branch
+cascade suggests studying why its winning cells are attached to particular
+Mangoldt boundary events. A genuine infinite-tail certificate remains a
+separate RH-sized requirement; a finite numerical scan cannot supply it.

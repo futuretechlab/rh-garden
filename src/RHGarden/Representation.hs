@@ -67,6 +67,7 @@ data Representation
   | SuzukiPositivityExplorer
   | SuzukiPrimeCellStrictConvexity
   | SuzukiStrongConvexCellCertificate
+  | SuzukiCertifiedPrimeCells
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -137,6 +138,7 @@ data SRepresentation (r :: Representation) where
   SSuzukiPositivityExplorer :: SRepresentation 'SuzukiPositivityExplorer
   SSuzukiPrimeCellStrictConvexity :: SRepresentation 'SuzukiPrimeCellStrictConvexity
   SSuzukiStrongConvexCellCertificate :: SRepresentation 'SuzukiStrongConvexCellCertificate
+  SSuzukiCertifiedPrimeCells :: SRepresentation 'SuzukiCertifiedPrimeCells
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -208,6 +210,7 @@ representationValue SSuzukiShiftedEventualPositivitySet = SuzukiShiftedEventualP
 representationValue SSuzukiPositivityExplorer = SuzukiPositivityExplorer
 representationValue SSuzukiPrimeCellStrictConvexity = SuzukiPrimeCellStrictConvexity
 representationValue SSuzukiStrongConvexCellCertificate = SuzukiStrongConvexCellCertificate
+representationValue SSuzukiCertifiedPrimeCells = SuzukiCertifiedPrimeCells
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -277,6 +280,7 @@ representationLabel SuzukiShiftedEventualPositivitySet = "parameters where shift
 representationLabel SuzukiPositivityExplorer = "floating-point Suzuki (omega,t) configuration-space explorer"
 representationLabel SuzukiPrimeCellStrictConvexity = "universal strict convexity of shifted Suzuki Psi on prime cells n>=2"
 representationLabel SuzukiStrongConvexCellCertificate = "kernel-checked strong-convexity lower-bound certificate mechanism"
+representationLabel SuzukiCertifiedPrimeCells = "individually Lean-certified unshifted Suzuki prime cells (currently cell 2)"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

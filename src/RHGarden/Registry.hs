@@ -139,6 +139,17 @@ suzukiConvexityRef = Reference
       "contains the exact strong-convexity certificate verifier."
   }
 
+suzukiCellTwoRef :: Reference
+suzukiCellTwoRef = Reference
+  { refShort = "RHGarden.suzukiPsi_pos_cell_two"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiCellTwo.lean: the cell-two " ++
+      "Mangoldt sum and derivative are evaluated exactly, rational Taylor and " ++
+      "positive-series bounds certify Psi(9/10)>1/100 and |Psi'(9/10)|<=13/100, " ++
+      "and the curvature-one certificate proves strict positivity on the complete " ++
+      "closed unshifted cell [log 2, log 3]."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -802,6 +813,15 @@ cellStrictConvexityToStrongCertificate = eraseRepresentationEdge $ representatio
   (NoReconstruction "The verifier checks supplied exact bounds but does not synthesize a certificate or assert one exists for every cell.")
   Nothing
 
+strongCertificateToCertifiedCells :: RuntimeRepresentationEdge
+strongCertificateToCertifiedCells = eraseRepresentationEdge $ representationEdge
+  SSuzukiStrongConvexCellCertificate SSuzukiCertifiedPrimeCells
+  "instantiate an exact sample-value/derivative certificate"
+  SufficientReduction leanCheckedTrust 1 suzukiCellTwoRef
+  "RHGarden.suzukiCellTwoStrongConvexCertificate and RHGarden.suzukiPsi_pos_cell_two certify strict positivity of the actual unshifted Psi on [log 2, log 3]."
+  (NoReconstruction "One certified finite cell neither supplies certificates for other cells nor controls the infinite tail.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1131,6 +1151,7 @@ representationGraph =
   , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
   , suzukiPrimeToCellStrictConvexity, cellStrictConvexityToStrongCertificate
+  , strongCertificateToCertifiedCells
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

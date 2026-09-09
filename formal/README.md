@@ -265,6 +265,13 @@ point, and have no interior fold. Its generic
 proof to exact value and derivative bounds at one rational sample plus a
 curvature bound.
 
+`RHGarden/SuzukiCellTwo.lean` supplies the first complete certificate for an
+actual unshifted prime cell.  It proves the exact cell formula and derivative,
+derives rational bounds from pinned Taylor/series theorems, and checks
+`Psi(9/10)>1/100` and `|Psi'(9/10)|<=13/100`.  With the curvature lower bound
+one, `suzukiPsi_pos_cell_two` proves `Psi(t)>0` throughout the closed interval
+`[log 2, log 3]`.  This is finite cell coverage only; no tail theorem follows.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
@@ -281,8 +288,9 @@ curvature bound.
 - Use the Suzuki Explorer only to discover candidate cell inequalities, then
   certify them independently through `SuzukiCellLowerBoundCertificate`,
   `SuzukiCellConvexCertificate`, or `SuzukiStrongConvexCellCertificate`.
-  Universal curvature is checked; the immediate finite-cell obstruction is
-  exact pointwise value/first-derivative bounding at rational samples.
+  Universal curvature and unshifted cell 2 are checked; the immediate
+  finite-cell task is to scale the exact pointwise value/first-derivative
+  bounds to further cells (cell 3 is the next proof-simplicity candidate).
   A separate `SuzukiPsiTailCertificate` remains open and cannot be supplied
   by a finite scan.
 - `RHGarden/XiZeroCutoff.lean` defines the global nonnegative xi divisor,

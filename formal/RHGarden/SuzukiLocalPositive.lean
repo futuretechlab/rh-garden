@@ -290,6 +290,36 @@ theorem hasDerivAt_suzukiPsiArchimedean_of_pos {t : ℝ} (ht : 0 < t) :
     HasDerivAt suzukiPsiArchimedean (suzukiPsiPrimeFreeDerivative t) t :=
   hasDerivAt_suzukiPsiArchimedean ht
 
+/-- The prime-free derivative before evaluating the positive quarter-lattice
+series.  This form is useful for rigorous finite-sum bounds. -/
+theorem suzukiPsiPrimeFreeDerivative_eq_quarter_tsum {t : ℝ} (ht : 0 < t) :
+    suzukiPsiPrimeFreeDerivative t =
+      2 * (Real.exp (t / 2) - Real.exp (-t / 2)) +
+        1 / 2 * ((Complex.digamma (1 / 4 : ℂ)).re - Real.log Real.pi) +
+        1 / 4 * (∑' n : ℕ,
+          (2 / ((n : ℝ) + 1 / 4)) *
+            Real.exp (-2 * ((n : ℝ) + 1 / 4) * t)) := by
+  rw [show (∑' n : ℕ,
+      (2 / ((n : ℝ) + 1 / 4)) *
+        Real.exp (-2 * ((n : ℝ) + 1 / 4) * t)) =
+      ∑' n : ℕ, suzukiQuarterDerivative n t by
+    apply tsum_congr
+    intro n
+    rfl]
+  rw [tsum_suzukiQuarterDerivative_eq ht]
+  have hatan : Real.arctan (Real.exp (-t / 2)) =
+      Real.pi / 2 - Real.arctan (Real.exp (t / 2)) := by
+    have hpos : 0 < Real.exp (-t / 2) := Real.exp_pos _
+    have h := Real.arctan_inv_of_pos hpos
+    rw [show (Real.exp (-t / 2))⁻¹ = Real.exp (t / 2) by
+      rw [← Real.exp_neg]
+      congr 1
+      ring] at h
+    linarith
+  rw [hatan]
+  unfold suzukiPsiPrimeFreeDerivative suzukiPsiDerivativeConstant
+  ring
+
 /-- The archimedean side is differentiable at every positive argument.
 This public wrapper deliberately hides the special-function derivative
 normalization; prime-cell arguments only need differentiability. -/
