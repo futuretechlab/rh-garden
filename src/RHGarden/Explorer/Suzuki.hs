@@ -213,6 +213,17 @@ data DualDynamics = DualDynamics
   , dualBlockMargin :: Double
   , dualBlockEqualsGlobal :: Bool
   , dualEventAreaUpdate :: Double
+  , dualEventValue :: Double
+  , dualSafetyEnergy :: Double
+  , dualSafetySlack :: Double
+  , dualLogGap :: Double
+  , dualConvexRemainder :: Double
+  , dualOptimizerDisplacement :: Double
+  , dualKickDisplacement :: Double
+  , dualKickArea :: Double
+  , dualImpulseOverDrift :: Double
+  , dualImpulseOverLogGap :: Double
+  , dualDriftOverLogGap :: Double
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -414,7 +425,9 @@ exploreSuzuki options = do
       events = primeEvents nMax primes
       nodes = explorationNodes checked nMax
       base = buildBasePoints events nodes
-      omegaResults = map (exploreOmega checked primes events base) (resolvedOmegas checked)
+      omegaResults
+        | explorerMode checked == DualMode = []
+        | otherwise = map (exploreOmega checked primes events base) (resolvedOmegas checked)
       summaries = [summary | (summary, _, _, _) <- omegaResults]
       rawCells = concat [minima | (_, minima, _, _) <- omegaResults]
       cells = map attachDistance rawCells
@@ -446,12 +459,24 @@ exploreSuzuki options = do
     }
 
 buildDualDynamics :: ExplorerOptions -> [PrimeEvent] -> [DualDynamics]
-buildDualDynamics options events = mapMaybeCell build (zip events (drop 1 events))
+buildDualDynamics options events = case events of
+    [] -> []
+    firstEvent : _ -> go 0 0
+      (integrateArchDerivative 0 (eventLogN firstEvent)) events
   where
-    build (event, nextEvent)
-      | eventLogN nextEvent < explorerTMin options - 1e-12 = Nothing
-      | eventLogN event > explorerTMax options + 1e-12 = Nothing
-      | otherwise = Just DualDynamics
+    go _ _ _ [] = []
+    go _ _ _ [_] = []
+    go preSlope preIntercept archLeft (event : nextEvent : rest) =
+      let slope = preSlope + eventWeight event
+          intercept = preIntercept + eventWeight event * eventLogN event
+          archRight = archLeft + integrateArchDerivative
+            (eventLogN event) (eventLogN nextEvent)
+          remaining = go slope intercept archRight (nextEvent : rest)
+      in if eventLogN nextEvent < explorerTMin options - 1e-12 ||
+            eventLogN event > explorerTMax options + 1e-12
+          then remaining
+          else build slope intercept archLeft archRight event nextEvent : remaining
+    build slope intercept archLeft archRight event nextEvent = DualDynamics
           { dualEvent = eventN event
           , dualNextEvent = eventN nextEvent
           , dualLambda = eventWeight event
@@ -468,36 +493,59 @@ buildDualDynamics options events = mapMaybeCell build (zip events (drop 1 events
           , dualBlockMargin = blockMargin
           , dualBlockEqualsGlobal = activeBlock && abs (blockMargin - globalMargin) < 2e-8
           , dualEventAreaUpdate = eventAreaUpdate
+          , dualEventValue = eventValue
+          , dualSafetyEnergy = safetyEnergy
+          , dualSafetySlack = blockMargin - safetyEnergy
+          , dualLogGap = logGap
+          , dualConvexRemainder = convexRemainder
+          , dualOptimizerDisplacement = displacement
+          , dualKickDisplacement = kickDisplacement
+          , dualKickArea = kickArea
+          , dualImpulseOverDrift = safeRatio (eventWeight nextEvent) drift
+          , dualImpulseOverLogGap = safeRatio (eventWeight nextEvent) logGap
+          , dualDriftOverLogGap = safeRatio drift logGap
           }
       where
-        q = eventN event
-        prior = takeWhile ((< q) . eventN) events
-        through = takeWhile ((<= q) . eventN) events
-        preSlope = sum (map eventWeight prior)
-        slope = sum (map eventWeight through)
-        intercept = sum [eventWeight e * eventLogN e | e <- through]
         optimizerFor s
           | s <= archimedeanDerivative (log 2) = log 2
           | otherwise =
               let hi = findArchSlopeUpper s (max (log 2 + 1) (eventLogN nextEvent))
               in bisectArchSlope 80 s (log 2) hi
-        dualFor s = let t = optimizerFor s
-          in s * t - integrateArchDerivative 0 t
+        archAt t
+          | t >= left = archLeft + integrateArchDerivative left t
+          | otherwise = archLeft - integrateArchDerivative t left
+        dualFor s = let t = optimizerFor s in s * t - archAt t
         optimizer = optimizerFor slope
         archDual = dualFor slope
         globalMargin = intercept - archDual
         left = eventLogN event
         right = eventLogN nextEvent
+        logGap = right - left
         deficit = archimedeanDerivative left - slope
         drift = archimedeanDerivative right - archimedeanDerivative left
+        convexRemainder = archRight - archLeft - archimedeanDerivative left * logGap
+        eventValue = archLeft - slope * left + intercept
+        descending = max (-deficit) 0
+        safetyEnergy = eventValue - descending * descending / 2
+        displacement = left - optimizer
         activeBlock = left < optimizer && optimizer < right
         blockOptimizer
           | optimizer < left = left
           | optimizer > right = right
           | otherwise = optimizer
-        blockMargin = integrateArchDerivative 0 blockOptimizer -
+        blockMargin = archAt blockOptimizer -
           slope * blockOptimizer + intercept
-        eventAreaUpdate = eventWeight event * left - (dualFor slope - dualFor preSlope)
+        nextSlope = slope + eventWeight nextEvent
+        nextOptimizer = optimizerFor nextSlope
+        kickDisplacement = nextOptimizer - optimizer
+        nextIntercept = intercept + eventWeight nextEvent * right
+        nextGlobalMargin = nextIntercept - dualFor nextSlope
+        eventAreaUpdate = nextGlobalMargin - globalMargin
+        kickArea = eventWeight nextEvent * (right - optimizer) -
+          (nextGlobalMargin - globalMargin)
+        safeRatio numerator denominator
+          | abs denominator < 1e-15 = 0 / 0
+          | otherwise = numerator / denominator
 
 findArchSlopeUpper :: Double -> Double -> Double
 findArchSlopeUpper slope candidate
@@ -1425,10 +1473,11 @@ renderExplorerAscii report = unlines $
         (take 30 (sortOn blockMarginValue (reportBlockMargins report)))
     dualSection =
       [ ""
-      , "Archimedean dual event dynamics (NumericalEvidence):"
-      , "q      r      lambda       S_q          tStar        global M     deficit      drift        next lambda  next deficit active  block M      event area"
-      , "------------------------------------------------------------------------------------------------------------------------------------------------------"
-      ] ++ map renderDual (reportDualDynamics report)
+      , "Kicked convex-flow event dynamics (NumericalEvidence):"
+      , "Rows are ranked by safety energy; finite scans do not establish a global invariant."
+      , "q      r      B_q          d_q          E_q          block M      slack        x_q          h            G            lambda_r/G active"
+      , "------------------------------------------------------------------------------------------------------------------------------------------"
+      ] ++ map renderDual dualRowsForDisplay ++ lyapunovSection
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1557,22 +1606,47 @@ renderExplorerAscii report = unlines $
     renderDual row = intercalate "  "
       [ pad 6 (show (dualEvent row))
       , pad 6 (show (dualNextEvent row))
-      , pad 12 (fmt 7 (dualLambda row))
-      , pad 12 (fmt 7 (dualSlope row))
-      , pad 12 (fmt 7 (dualOptimizer row))
-      , pad 12 (fmt 8 (dualGlobalMargin row))
-      , pad 12 (fmt 7 (dualDeficit row))
-      , pad 12 (fmt 7 (dualArchDrift row))
-      , pad 12 (fmt 7 (dualNextImpulse row))
-      , pad 12 (fmt 7 (dualPredictedNextDeficit row))
-      , pad 7 (boolText (dualActive row))
+      , pad 12 (fmt 8 (dualEventValue row))
+      , pad 12 (fmt 8 (dualDeficit row))
+      , pad 12 (fmt 8 (dualSafetyEnergy row))
       , pad 12 (fmt 8 (dualBlockMargin row))
-      , fmt 8 (dualEventAreaUpdate row)]
+      , pad 12 (fmt 8 (dualSafetySlack row))
+      , pad 12 (fmt 8 (dualOptimizerDisplacement row))
+      , pad 12 (fmt 8 (dualLogGap row))
+      , pad 12 (fmt 8 (dualArchDrift row))
+      , pad 12 (fmt 7 (dualImpulseOverDrift row))
+      , boolText (dualActive row)]
+    dualRowsForDisplay = take 30 (sortOn dualSafetyEnergy
+      (reportDualDynamics report))
+    lyapunovSection =
+      [ ""
+      , "Simple Lyapunov-potential scan (NumericalEvidence):"
+      , "potential                       global min     min event change   decreasing events"
+      , "--------------------------------------------------------------------------------"
+      ] ++ map renderPotential potentialSpecs
+    potentialSpecs =
+      [("M + 1/4*x^2", \row -> dualGlobalMargin row + 0.25 * dualOptimizerDisplacement row ^ (2 :: Int))
+      ,("M + 1/2*x^2", \row -> dualGlobalMargin row + 0.5 * dualOptimizerDisplacement row ^ (2 :: Int))
+      ,("M + x^2", \row -> dualGlobalMargin row + dualOptimizerDisplacement row ^ (2 :: Int))
+      ,("M + 1/4*neg(x)^2", \row -> dualGlobalMargin row + 0.25 * (max (-dualOptimizerDisplacement row) 0) ^ (2 :: Int))
+      ,("M + 1/2*neg(x)^2", \row -> dualGlobalMargin row + 0.5 * (max (-dualOptimizerDisplacement row) 0) ^ (2 :: Int))
+      ,("M + neg(x)^2", \row -> dualGlobalMargin row + (max (-dualOptimizerDisplacement row) 0) ^ (2 :: Int))
+      ,("M + 1/4*d^2", \row -> dualGlobalMargin row + 0.25 * dualDeficit row ^ (2 :: Int))
+      ,("M + 1/2*d^2", \row -> dualGlobalMargin row + 0.5 * dualDeficit row ^ (2 :: Int))
+      ,("M + d^2", \row -> dualGlobalMargin row + dualDeficit row ^ (2 :: Int))]
+    renderPotential (label, potential) =
+      let values = map potential (reportDualDynamics report)
+          changes = zipWith (-) (drop 1 values) values
+          minValue = if null values then 0 / 0 else minimum values
+          minChange = if null changes then 0 / 0 else minimum changes
+          decreases = length (filter (< (-1e-12)) changes)
+      in intercalate "  " [pad 31 label, pad 14 (fmt 9 minValue),
+          pad 18 (fmt 9 minChange), show decreases]
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
   | explorerMode (reportOptions report) == DualMode = unlines $
-      ["trust,status,event_q,next_event_r,lambda_q,S_q,C_q,t_star,A_star,global_margin,deficit_q,arch_drift,next_lambda,predicted_next_deficit,active,block_margin,block_equals_global,event_area_update"] ++
+      ["trust,status,event_q,next_event_r,lambda_q,S_q,C_q,t_star,A_star,global_margin,deficit_q,arch_drift,next_lambda,predicted_next_deficit,active,block_margin,block_equals_global,event_area_update,event_value,safety_energy,safety_slack,log_gap,convex_remainder,optimizer_displacement,kick_displacement,kick_area,next_lambda_over_drift,next_lambda_over_log_gap,drift_over_log_gap"] ++
       map renderDualCsv (reportDualDynamics report)
   | explorerMode (reportOptions report) == BlocksMode = unlines $
       ["trust,status,event_q,next_event_r,gap,S_q,C_q,slope_deficit_left,slope_deficit_right,margin,t_candidate,exp_t_candidate,minimizer_type,winning_cell"] ++
@@ -1591,7 +1665,13 @@ renderExplorerCsv report
       ,num (dualGlobalMargin row), num (dualDeficit row), num (dualArchDrift row)
       ,num (dualNextImpulse row), num (dualPredictedNextDeficit row)
       ,boolText (dualActive row), num (dualBlockMargin row)
-      ,boolText (dualBlockEqualsGlobal row), num (dualEventAreaUpdate row)]
+      ,boolText (dualBlockEqualsGlobal row), num (dualEventAreaUpdate row)
+      ,num (dualEventValue row), num (dualSafetyEnergy row)
+      ,num (dualSafetySlack row), num (dualLogGap row)
+      ,num (dualConvexRemainder row), num (dualOptimizerDisplacement row)
+      ,num (dualKickDisplacement row), num (dualKickArea row)
+      ,num (dualImpulseOverDrift row), num (dualImpulseOverLogGap row)
+      ,num (dualDriftOverLogGap row)]
     renderBlockCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (blockLeftEvent row)
       ,show (blockRightEvent row), show (blockGap row), num (blockSlope row)
@@ -1751,7 +1831,18 @@ dualJson row = "{" ++ intercalate ", "
   ,jsonField "active_block" (jsonBool (dualActive row))
   ,jsonField "block_margin" (num (dualBlockMargin row))
   ,jsonField "block_equals_global" (jsonBool (dualBlockEqualsGlobal row))
-  ,jsonField "event_area_update" (num (dualEventAreaUpdate row))] ++ "}"
+  ,jsonField "event_area_update" (num (dualEventAreaUpdate row))
+  ,jsonField "event_value" (num (dualEventValue row))
+  ,jsonField "safety_energy" (num (dualSafetyEnergy row))
+  ,jsonField "safety_slack" (num (dualSafetySlack row))
+  ,jsonField "log_gap" (num (dualLogGap row))
+  ,jsonField "convex_remainder" (num (dualConvexRemainder row))
+  ,jsonField "optimizer_displacement" (num (dualOptimizerDisplacement row))
+  ,jsonField "kick_displacement" (num (dualKickDisplacement row))
+  ,jsonField "kick_area" (num (dualKickArea row))
+  ,jsonField "next_lambda_over_drift" (num (dualImpulseOverDrift row))
+  ,jsonField "next_lambda_over_log_gap" (num (dualImpulseOverLogGap row))
+  ,jsonField "drift_over_log_gap" (num (dualDriftOverLogGap row))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

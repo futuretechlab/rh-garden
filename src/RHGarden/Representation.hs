@@ -76,6 +76,9 @@ data Representation
   | SuzukiArchDualOptimizer
   | SuzukiEventSlopeDeficit
   | SuzukiDualAreaDynamics
+  | SuzukiEventBoundaryState
+  | SuzukiEventSafetyEnergy
+  | SuzukiKickFlowDynamics
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -155,6 +158,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiArchDualOptimizer :: SRepresentation 'SuzukiArchDualOptimizer
   SSuzukiEventSlopeDeficit :: SRepresentation 'SuzukiEventSlopeDeficit
   SSuzukiDualAreaDynamics :: SRepresentation 'SuzukiDualAreaDynamics
+  SSuzukiEventBoundaryState :: SRepresentation 'SuzukiEventBoundaryState
+  SSuzukiEventSafetyEnergy :: SRepresentation 'SuzukiEventSafetyEnergy
+  SSuzukiKickFlowDynamics :: SRepresentation 'SuzukiKickFlowDynamics
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -235,6 +241,9 @@ representationValue SSuzukiMangoldtBlockMargins = SuzukiMangoldtBlockMargins
 representationValue SSuzukiArchDualOptimizer = SuzukiArchDualOptimizer
 representationValue SSuzukiEventSlopeDeficit = SuzukiEventSlopeDeficit
 representationValue SSuzukiDualAreaDynamics = SuzukiDualAreaDynamics
+representationValue SSuzukiEventBoundaryState = SuzukiEventBoundaryState
+representationValue SSuzukiEventSafetyEnergy = SuzukiEventSafetyEnergy
+representationValue SSuzukiKickFlowDynamics = SuzukiKickFlowDynamics
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -313,6 +322,9 @@ representationLabel SuzukiMangoldtBlockMargins = "one scalar safety margin per M
 representationLabel SuzukiArchDualOptimizer = "unique half-line archimedean dual optimizer tStar(S)"
 representationLabel SuzukiEventSlopeDeficit = "archimedean slope surplus at a Mangoldt event"
 representationLabel SuzukiDualAreaDynamics = "signed-area evolution of the global Suzuki dual margin"
+representationLabel SuzukiEventBoundaryState = "event-boundary Suzuki state (B_q,d_q)"
+representationLabel SuzukiEventSafetyEnergy = "strong-convexity event safety energy E_q"
+representationLabel SuzukiKickFlowDynamics = "two-dimensional kicked convex flow between Mangoldt events"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

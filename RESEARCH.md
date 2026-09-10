@@ -487,6 +487,32 @@ block margin equals the global dual margin. Inactive blocks attain their
 minimum at the appropriate endpoint. These are structural equivalences and
 updates only; no claim that all margins are nonnegative is made.
 
+`RHGarden.SuzukiKickedFlow` now gives the exact event-boundary state
+`(B_q,d_q)`, where `B_q=Psi(log q)` and `d_q=A'(log q)-S_q`. Across a
+complete block `q->r`, Lean checks
+
+```text
+B_r = B_q + d_q*h + R
+d_r = d_q + G - lambda_r,
+```
+
+with `h=log(r/q)`, archimedean slope recovery `G>=h`, convex remainder
+`R>=h^2/2`, and `lambda_r=Lambda(r)/sqrt(r)`. It also checks the optimizer
+sawtooth `x_r=x_q+h-DeltaT_r`, `0<=DeltaT_r<=lambda_r`, the kick-area bound
+`0<=area<=lambda_r^2/2`, and the resulting two-sided event-margin bounds.
+
+The boundary safety energy `E_q=B_q-max(-d_q,0)^2/2` is a certified lower
+bound for the entire next block, so its universal nonnegativity plus the
+initial interval would suffice for RH. A 78,733-block numerical scan below
+one million events refutes this as a plausible invariant: `E_q` first turns
+negative on `5->7` and reaches about `-0.21434087` on `59797->59809`, whose
+candidate exact margin remains about `0.04362295`. Simple quadratic
+potentials in the dual margin with displacement or slope coordinates also
+decrease at tens of thousands of events. These failures are useful
+`NumericalEvidence`: the next invariant must retain more of the exact convex
+response than the unit-curvature quadratic envelope, and no tail positivity
+claim follows.
+
 The numerical `explore-suzuki dual` regression through event integers below
 5000 contains 710 complete blocks. Its candidate global dual margins stayed
 positive, with the smallest about `0.02752057` on `3089->3109`, but event

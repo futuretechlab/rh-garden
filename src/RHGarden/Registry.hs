@@ -183,6 +183,17 @@ suzukiDualDynamicsRef = Reference
       "and active blocks identify their restricted and global margins."
   }
 
+suzukiKickedFlowRef :: Reference
+suzukiKickedFlowRef = Reference
+  { refShort = "RHGarden.suzukiEventValue_next"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiKickedFlow.lean: event values " ++
+      "and post-kick slopes obey an exact two-dimensional recurrence, unit " ++
+      "archimedean curvature bounds both flow terms, event safety energy is " ++
+      "a certified lower bound for the following block, and optimizer " ++
+      "displacement obeys an exact gap-minus-kick sawtooth update."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -927,6 +938,42 @@ suzukiMangoldtStateToDualAreaDynamics = eraseRepresentationEdge $ representation
   (ExactInverse "Together with the previous global margin, the signed area recovers the next global margin exactly.")
   Nothing
 
+suzukiMangoldtStateToEventBoundary :: RuntimeRepresentationEdge
+suzukiMangoldtStateToEventBoundary = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiEventBoundaryState
+  "evaluate Psi and its post-event right slope at every Mangoldt boundary"
+  ExactRepresentation leanCheckedTrust 1 suzukiKickedFlowRef
+  "RHGarden.suzukiEventValue_next and RHGarden.deriv_suzukiPsi_right_at_event identify the boundary state (B_q,d_q) exactly."
+  (ExactInverse "Together with the event index and archimedean data, (B_q,d_q) recovers the two-number arithmetic state.")
+  Nothing
+
+suzukiEventBoundaryToKickFlow :: RuntimeRepresentationEdge
+suzukiEventBoundaryToKickFlow = eraseRepresentationEdge $ representationEdge
+  SSuzukiEventBoundaryState SSuzukiKickFlowDynamics
+  "advance by smooth strongly-convex flow and apply the next Mangoldt kick"
+  ExactRepresentation leanCheckedTrust 1 suzukiKickedFlowRef
+  "The checked transition is (B,d) -> (B+d*h+R,d+G-lambda), with G>=h and R>=h^2/2."
+  (ExactInverse "The exact flow data and impulse reverse the boundary-state recurrence algebraically.")
+  Nothing
+
+suzukiEventBoundaryToSafetyEnergy :: RuntimeRepresentationEdge
+suzukiEventBoundaryToSafetyEnergy = eraseRepresentationEdge $ representationEdge
+  SSuzukiEventBoundaryState SSuzukiEventSafetyEnergy
+  "reserve the worst unit-curvature quadratic drawdown"
+  InformationLoss leanCheckedTrust 1 suzukiKickedFlowRef
+  "RHGarden.suzukiEventSafetyEnergy is B_q-negPart(d_q)^2/2."
+  (NoReconstruction "One scalar energy does not reconstruct both boundary coordinates.")
+  Nothing
+
+suzukiEventSafetyToBlockMargins :: RuntimeRepresentationEdge
+suzukiEventSafetyToBlockMargins = eraseRepresentationEdge $ representationEdge
+  SSuzukiEventSafetyEnergy SSuzukiMangoldtBlockMargins
+  "use unit strong convexity to bound every following block value"
+  SufficientReduction leanCheckedTrust 1 suzukiKickedFlowRef
+  "RHGarden.eventSafetyEnergy_le_blockMargin and RHGarden.mangoldtBlock_nonnegative_of_eventSafetyEnergy are LeanChecked."
+  (NoReconstruction "Exact block margins may remain positive when the conservative safety energy is negative.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1261,6 +1308,8 @@ representationGraph =
   , suzukiMangoldtStateToBlocks, suzukiMangoldtBlocksToMargins
   , suzukiArchDualToOptimizer, suzukiMangoldtStateToSlopeDeficit
   , suzukiMangoldtStateToDualAreaDynamics
+  , suzukiMangoldtStateToEventBoundary, suzukiEventBoundaryToKickFlow
+  , suzukiEventBoundaryToSafetyEnergy, suzukiEventSafetyToBlockMargins
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

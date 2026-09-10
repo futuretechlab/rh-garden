@@ -394,3 +394,79 @@ The robust low-complexity invariant is instead the active-block sign
 crossing: the post-event deficit is negative and becomes positive under
 archimedean drift before the next impulse. This condition is exact in Lean,
 but it does not itself lower-bound the margin or certify a tail.
+
+## Kicked convex-flow boundary state
+
+`RHGarden.SuzukiKickedFlow` reduces each complete event block `q -> r` to
+the two boundary coordinates
+
+```text
+B_q = Psi(log q)
+d_q = A'(log q) - S_q.
+```
+
+Writing `h=log r-log q`, `G=A'(log r)-A'(log q)`,
+`R=A(log r)-A(log q)-A'(log q)h`, and
+`lambda_r=Lambda(r)/sqrt(r)`, Lean checks the exact state transition
+
+```text
+EVENT q:        (B_q, d_q)
+                   |
+                   | smooth convex flow over h
+                   v
+                (B_q + d_q*h + R, d_q + G)
+                   |
+                   | Mangoldt kick lambda_r
+                   v
+EVENT r:        (B_r, d_r = d_q + G - lambda_r).
+```
+
+Unit archimedean curvature gives the certified coarse bounds
+`G >= h` and `R >= h^2/2`. The optimizer displacement
+`x_q=log q-tStar(S_q)` has the even simpler checked sawtooth recurrence
+
+```text
+x_q -> x_q+h -> x_r=x_q+h-DeltaT_r,
+0 <= DeltaT_r <= lambda_r.
+```
+
+The associated kick area lies between zero and `lambda_r^2/2`, giving
+exact two-sided bounds for each global-dual-margin update.
+
+The deliberately conservative safety quantity
+
+```text
+E_q = B_q - max(-d_q,0)^2/2
+```
+
+is a LeanChecked lower bound for `Psi` throughout the following block.
+Thus `E_q >= 0` certifies that block, and initial positivity together with
+nonnegative safety energy at every complete block is a sufficient (not
+proved) criterion for RH. It is not an invariant numerically: in the scan
+of 78,733 complete blocks with event integers below one million, it is
+already negative on `5 -> 7`, and its smallest sampled value is about
+`-0.21434087` on `59797 -> 59809`, while that block's candidate exact margin
+is about `0.04362295`.
+
+The same scan tested the low-complexity potentials
+`M+c*x^2`, `M+c*max(-x,0)^2`, and `M+c*d^2` for
+`c in {1/4,1/2,1}`. Every candidate decreases at tens of thousands of
+events. `M+(1/2)x^2` had the least-negative worst single update among the
+tested displacement potentials, but still decreased 42,031 times; it is
+therefore a failed ansatz, not a candidate invariant.
+
+For the four previously dangerous blocks, the safety data are:
+
+```text
+block       B_q          d_q          E_q          exact margin   slack
+5 -> 7      0.06716321  -0.39738606  -0.01179463   0.03261803     0.04441266
+13 -> 16    0.05813822  -0.44621494  -0.04141566   0.03106868     0.07248434
+32 -> 37    0.04606458  -0.43183818  -0.04717752   0.02978690     0.07696442
+199 -> 211  0.04238375  -0.63892444  -0.16172846   0.02802262     0.18975109
+```
+
+The impulse-to-drift ratios `lambda_r/G` for these blocks are approximately
+`0.90`, `0.22`, `0.70`, and `0.44`; no common near-critical ratio emerges.
+The heuristic comparison of Mangoldt impulses with prime-power gaps remains
+only a guide for choosing arithmetic statistics. All displayed scans are
+`NumericalEvidence`, never a finite-range or tail certificate.

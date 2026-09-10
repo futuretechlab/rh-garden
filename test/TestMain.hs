@@ -209,6 +209,23 @@ main = do
         all (\row -> abs (dualPredictedNextDeficit row -
           (dualDeficit row + dualArchDrift row - dualNextImpulse row)) < 1e-12)
           (reportDualDynamics report) &&
+        all (\row -> dualLogGap row > 0 &&
+          dualArchDrift row + 1e-10 >= dualLogGap row &&
+          dualConvexRemainder row + 1e-10 >= dualLogGap row ^ (2 :: Int) / 2 &&
+          dualSafetyEnergy row <= dualBlockMargin row + 1e-9 &&
+          dualKickDisplacement row >= -1e-10 &&
+          dualKickDisplacement row <= dualNextImpulse row + 1e-9 &&
+          dualKickArea row >= -1e-9 &&
+          dualKickArea row <= dualNextImpulse row ^ (2 :: Int) / 2 + 1e-8)
+          (reportDualDynamics report) &&
+        all (\(row, next) -> dualNextEvent row == dualEvent next &&
+          abs (dualEventValue next -
+            (dualEventValue row + dualDeficit row * dualLogGap row +
+              dualConvexRemainder row)) < 1e-8 &&
+          abs (dualOptimizerDisplacement next -
+            (dualOptimizerDisplacement row + dualLogGap row -
+              dualKickDisplacement row)) < 1e-8)
+          (zip (reportDualDynamics report) (drop 1 (reportDualDynamics report))) &&
         any (\row -> dualEvent row == 199 && dualNextEvent row == 211 &&
           dualActive row && dualBlockEqualsGlobal row &&
           exp (dualOptimizer row) > 208 && exp (dualOptimizer row) < 209)

@@ -298,6 +298,16 @@ unique half-line dual attainment, a monotone 1-Lipschitz optimizer,
 and the active/inactive block geometry. These results expose a discrete
 dynamical system but do not prove any open margin inequality.
 
+`RHGarden/SuzukiKickedFlow.lean` gives the same dynamics in event-boundary
+coordinates `B_q=Psi(log q)` and `d_q=A'(log q)-S_q`. It proves the exact
+two-dimensional flow/kick recurrence, the bounds `G>=h` and `R>=h^2/2`, and
+integral forms for the archimedean drift and remainder. The safety energy
+`B_q-max(-d_q,0)^2/2` is checked as a conservative lower bound for the whole
+following Mangoldt block and yields a conditional sufficient RH criterion;
+no premise of that criterion is asserted. The module also formalizes the
+Fenchel-gap explanation, optimizer-displacement sawtooth, active-block
+crossing criterion, kick-area bound, and exact global-dual-margin update.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
