@@ -205,6 +205,20 @@ suzukiTrueCurvatureRef = Reference
       "true-curvature optimizer-displacement bound are kernel checked."
   }
 
+suzukiRootDynamicsRef :: Reference
+suzukiRootDynamicsRef = Reference
+  { refShort = "RHGarden.globalMargin_event_update_root_integral"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiRootDynamics.lean: the natural " ++
+      "optimizer coordinate uStar=exp(tStar/2) has derivative " ++
+      "1/(2*F(uStar)) in the interior regime, hence response bounds between " ++
+      "1/2 and 3/5; event roots obey an exact square-root-gap-minus-kick " ++
+      "recurrence, and the dual-margin update is an exact weighted log-area " ++
+      "integral after changing variables from slope to root. The checked " ++
+      "cell-two base bound and Mangoldt-slope monotonicity discharge the " ++
+      "interior hypothesis for every actual event state."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -1021,6 +1035,42 @@ suzukiKickFlowToBacklog = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "The positive part loses the signed optimizer displacement.")
   Nothing
 
+suzukiOptimizerToRoot :: RuntimeRepresentationEdge
+suzukiOptimizerToRoot = eraseRepresentationEdge $ representationEdge
+  SSuzukiArchDualOptimizer SSuzukiArchDualRoot
+  "exponentiate half the optimizer location"
+  ExactRepresentation leanCheckedTrust 1 suzukiRootDynamicsRef
+  "RHGarden.suzukiArchDualOptimizer_eq_two_mul_log_root identifies tStar and uStar exactly; positivity and the sqrt(2) lower bound are checked."
+  (ExactInverse "The positive root recovers tStar as twice its logarithm.")
+  Nothing
+
+suzukiMangoldtStateToRootDisplacement :: RuntimeRepresentationEdge
+suzukiMangoldtStateToRootDisplacement = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiRootDisplacement
+  "compare uStar(S_q) with the event scale sqrt(q)"
+  InformationLoss leanCheckedTrust 1 suzukiRootDynamicsRef
+  "RHGarden.suzukiRootDisplacement records sqrt(q)-uStar(S_q), and active blocks are exactly root crossings of their endpoint scales."
+  (NoReconstruction "The displacement alone does not reconstruct q and the two-number arithmetic state.")
+  Nothing
+
+suzukiRootDisplacementToKickDynamics :: RuntimeRepresentationEdge
+suzukiRootDisplacementToKickDynamics = eraseRepresentationEdge $ representationEdge
+  SSuzukiRootDisplacement SSuzukiRootKickDynamics
+  "advance by the square-root event gap and subtract the optimizer root kick"
+  ExactRepresentation leanCheckedTrust 1 suzukiRootDynamicsRef
+  "RHGarden.suzukiRootDisplacement_next is exact; RHGarden.suzukiRootKick_bounds_of_block gives lambda/2 <= Delta u <= 3*lambda/5 on every complete event block."
+  (ExactInverse "The prior displacement, root gap, and root kick recover the next displacement.")
+  Nothing
+
+suzukiDualAreaToRootMarginIntegral :: RuntimeRepresentationEdge
+suzukiDualAreaToRootMarginIntegral = eraseRepresentationEdge $ representationEdge
+  SSuzukiDualAreaDynamics SRootMarginIntegral
+  "change variables from the slope impulse to the optimizer root"
+  ExactRepresentation leanCheckedTrust 1 suzukiRootDynamicsRef
+  "RHGarden.globalMargin_event_update_root_integral_of_block proves DeltaM=4 integral F(u) log(sqrt(r)/u) du on every complete event block."
+  (ExactInverse "The root-coordinate integral has exactly the same value as the signed slope-coordinate event update.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1359,6 +1409,8 @@ representationGraph =
   , suzukiEventBoundaryToSafetyEnergy, suzukiEventSafetyToBlockMargins
   , suzukiPrimeConvexityToCurvatureSafety, suzukiCurvatureSafetyToBlockMargins
   , suzukiKickFlowToSharpArea, suzukiKickFlowToBacklog
+  , suzukiOptimizerToRoot, suzukiMangoldtStateToRootDisplacement
+  , suzukiRootDisplacementToKickDynamics, suzukiDualAreaToRootMarginIntegral
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

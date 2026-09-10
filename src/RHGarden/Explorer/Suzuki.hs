@@ -57,6 +57,7 @@ data ExplorerMode
   | MarginsMode
   | BlocksMode
   | DualMode
+  | RootsMode
   deriving (Eq, Ord, Show, Read)
 
 data ExplorerOptions = ExplorerOptions
@@ -237,6 +238,19 @@ data DualDynamics = DualDynamics
   , dualImpulseOverDrift :: Double
   , dualImpulseOverLogGap :: Double
   , dualDriftOverLogGap :: Double
+  , dualRootOptimizer :: Double
+  , dualNextRootOptimizer :: Double
+  , dualSqrtEvent :: Double
+  , dualSqrtNextEvent :: Double
+  , dualRootDisplacement :: Double
+  , dualRootRatio :: Double
+  , dualRootKick :: Double
+  , dualRootKickLower :: Double
+  , dualRootKickUpper :: Double
+  , dualSqrtGap :: Double
+  , dualRootKickOverGap :: Double
+  , dualNormalizedRootImpulse :: Double
+  , dualCrudeGapCondition :: Bool
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -336,6 +350,9 @@ parseExplorerOptions = go defaultExplorerOptions
     go options ("dual" : rest) =
       go options { explorerMode = DualMode, explorerPrimeCells = True,
         explorerOmegas = [0] } rest
+    go options ("roots" : rest) =
+      go options { explorerMode = RootsMode, explorerPrimeCells = True,
+        explorerOmegas = [0] } rest
     go options ("--omega" : value : rest) =
       parseDouble "--omega" value >>= \x ->
         go options { explorerOmegas = explorerOmegas options ++ [x] } rest
@@ -422,7 +439,7 @@ resolvedOmegas options = case
     (explorerOmegaMin options, explorerOmegaMax options,
       explorerOmegaCount options) of
   (Just lo, Just hi, Just count) -> linearGrid count lo hi
-  _ | explorerMode options `elem` [MarginsMode, BlocksMode, DualMode] -> [0]
+  _ | explorerMode options `elem` [MarginsMode, BlocksMode, DualMode, RootsMode] -> [0]
     | not (null (explorerOmegas options)) -> explorerOmegas options
     | otherwise -> [0.5, 0.25, 0.125, 0]
 
@@ -439,7 +456,7 @@ exploreSuzuki options = do
       nodes = explorationNodes checked nMax
       base = buildBasePoints events nodes
       omegaResults
-        | explorerMode checked == DualMode = []
+        | explorerMode checked `elem` [DualMode, RootsMode] = []
         | otherwise = map (exploreOmega checked primes events base) (resolvedOmegas checked)
       summaries = [summary | (summary, _, _, _) <- omegaResults]
       rawCells = concat [minima | (_, minima, _, _) <- omegaResults]
@@ -530,6 +547,20 @@ buildDualDynamics options events = case events of
           , dualImpulseOverDrift = safeRatio (eventWeight nextEvent) drift
           , dualImpulseOverLogGap = safeRatio (eventWeight nextEvent) logGap
           , dualDriftOverLogGap = safeRatio drift logGap
+          , dualRootOptimizer = rootOptimizer
+          , dualNextRootOptimizer = nextRootOptimizer
+          , dualSqrtEvent = sqrtEvent
+          , dualSqrtNextEvent = sqrtNextEvent
+          , dualRootDisplacement = rootDisplacement
+          , dualRootRatio = safeRatio rootOptimizer sqrtEvent
+          , dualRootKick = rootKick
+          , dualRootKickLower = eventWeight nextEvent / 2
+          , dualRootKickUpper = 3 * eventWeight nextEvent / 5
+          , dualSqrtGap = sqrtGap
+          , dualRootKickOverGap = safeRatio rootKick sqrtGap
+          , dualNormalizedRootImpulse = safeRatio rootKick sqrtNextEvent
+          , dualCrudeGapCondition = fromIntegral (eventN nextEvent - eventN event) >=
+              (6 / 5) * eventMangoldt nextEvent
           }
       where
         optimizerFor s
@@ -579,6 +610,13 @@ buildDualDynamics options events = case events of
         postKickDisplacement = right - nextOptimizer
         primeScaleKickBound = (6 / 5) * eventWeight nextEvent *
           exp (preKickDisplacement / 2) / sqrt (fromIntegral (eventN nextEvent))
+        rootOptimizer = exp (optimizer / 2)
+        nextRootOptimizer = exp (nextOptimizer / 2)
+        sqrtEvent = sqrt (fromIntegral (eventN event))
+        sqrtNextEvent = sqrt (fromIntegral (eventN nextEvent))
+        rootDisplacement = sqrtEvent - rootOptimizer
+        rootKick = nextRootOptimizer - rootOptimizer
+        sqrtGap = sqrtNextEvent - sqrtEvent
         safeRatio numerator denominator
           | abs denominator < 1e-15 = 0 / 0
           | otherwise = numerator / denominator
@@ -1492,6 +1530,7 @@ renderExplorerAscii report = unlines $
       MarginsMode -> marginSection
       BlocksMode -> blockSection
       DualMode -> dualSection
+      RootsMode -> rootSection
       ScanMode -> []
     marginSection =
       [ ""
@@ -1514,6 +1553,14 @@ renderExplorerAscii report = unlines $
       , "q      r      B_q          d_q          Esharp       block M      slack        m_q          x_q          h            dT/h        active"
       , "--------------------------------------------------------------------------------------------------------------------------------------------"
       ] ++ map renderDual dualRowsForDisplay ++ lyapunovSection
+    rootSection =
+      [ ""
+      , "Square-root optimizer dynamics (NumericalEvidence):"
+      , "Rows are ranked by root kick / square-root gap; finite scans do not establish an invariant."
+      , "q       r       u*          sqrt(q)     sqrt(r)     rho         x_root      du          [lambda/2,3lambda/5]      sqrt-gap    du/gap     active"
+      , "----------------------------------------------------------------------------------------------------------------------------------------------------------"
+      ] ++ map renderRoot rootRowsForDisplay ++ rootSummarySection ++
+        rootPotentialSection
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1652,8 +1699,67 @@ renderExplorerAscii report = unlines $
       , pad 12 (fmt 8 (dualLogGap row))
       , pad 12 (fmt 7 (dualKickOverLogGap row))
       , boolText (dualActive row)]
+    renderRoot row = intercalate "  "
+      [ pad 7 (show (dualEvent row))
+      , pad 7 (show (dualNextEvent row))
+      , pad 11 (fmt 6 (dualRootOptimizer row))
+      , pad 11 (fmt 6 (dualSqrtEvent row))
+      , pad 11 (fmt 6 (dualSqrtNextEvent row))
+      , pad 11 (fmt 8 (dualRootRatio row))
+      , pad 12 (fmt 7 (dualRootDisplacement row))
+      , pad 11 (fmt 8 (dualRootKick row))
+      , pad 24 ("[" ++ fmt 7 (dualRootKickLower row) ++ "," ++
+          fmt 7 (dualRootKickUpper row) ++ "]")
+      , pad 11 (fmt 8 (dualSqrtGap row))
+      , pad 11 (fmt 7 (dualRootKickOverGap row))
+      , boolText (dualActive row)]
     dualRowsForDisplay = take 30 (sortOn dualCurvatureSafetyEnergy
       (reportDualDynamics report))
+    rootRowsForDisplay = take 40 (reverse (sortOn dualRootKickOverGap
+      (reportDualDynamics report)))
+    rootSummarySection =
+      let rows = reportDualDynamics report
+          maxRho = if null rows then Nothing else Just (maximumBy
+            (comparing dualRootRatio) rows)
+          maxOvershoot = if null rows then Nothing else Just (minimumBy
+            (comparing dualRootDisplacement) rows)
+          maxKickGap = if null rows then Nothing else Just (maximumBy
+            (comparing dualRootKickOverGap) rows)
+          crudeFailures = length (filter (not . dualCrudeGapCondition) rows)
+          showAt field row = fmt 10 (field row) ++ " at q=" ++ show (dualEvent row)
+      in [ ""
+         , "Root-coordinate scan summary:"
+         , "  maximum rho: " ++ maybe "n/a" (showAt dualRootRatio) maxRho
+         , "  largest optimizer overshoot: " ++ maybe "n/a"
+             (\row -> fmt 10 (max (-dualRootDisplacement row) 0) ++
+               " at q=" ++ show (dualEvent row)) maxOvershoot
+         , "  maximum rootKick/sqrtGap: " ++ maybe "n/a"
+             (showAt dualRootKickOverGap) maxKickGap
+         , "  failures of gap >= (6/5)*Lambda(next): " ++ show crudeFailures ++
+             " / " ++ show (length rows)
+         ]
+    rootPotentialSection =
+      [ ""
+      , "Root-barrier candidates (NumericalEvidence):"
+      , "potential                              global min     min event change   decreasing events"
+      , "-----------------------------------------------------------------------------------"
+      ] ++ map renderRootPotential rootPotentialSpecs
+    rootPotentialSpecs =
+      [("M + (5/3)*overshoot^2/sqrt(q)", rootBarrier (5 / 3))
+      ,("M + 2*overshoot^2/sqrt(q)", rootBarrier 2)
+      ,("curvature safety energy", dualCurvatureSafetyEnergy)]
+    rootBarrier coefficient row =
+      let overshoot = max (-dualRootDisplacement row) 0
+      in dualGlobalMargin row + coefficient * overshoot ^ (2 :: Int) /
+        dualSqrtEvent row
+    renderRootPotential (label, potential) =
+      let values = map potential (reportDualDynamics report)
+          changes = zipWith (-) (drop 1 values) values
+          minValue = if null values then 0 / 0 else minimum values
+          minChange = if null changes then 0 / 0 else minimum changes
+          decreases = length (filter (< (-1e-12)) changes)
+      in intercalate "  " [pad 38 label, pad 14 (fmt 9 minValue),
+          pad 18 (fmt 9 minChange), show decreases]
     lyapunovSection =
       [ ""
       , "Simple Lyapunov-potential scan (NumericalEvidence):"
@@ -1681,6 +1787,9 @@ renderExplorerAscii report = unlines $
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
+  | explorerMode (reportOptions report) == RootsMode = unlines $
+      ["trust,status,event_q,next_event_r,u_star_before,u_star_after,sqrt_q,sqrt_r,root_displacement,rho,root_kick,kick_lower,kick_upper,sqrt_gap,kick_over_gap,normalized_root_impulse,active,global_margin,block_margin,margin_update,curvature_safety_energy,root_barrier_five_thirds,root_barrier_two,crude_gap_condition"] ++
+      map renderRootCsv (reportDualDynamics report)
   | explorerMode (reportOptions report) == DualMode = unlines $
       ["trust,status,event_q,next_event_r,lambda_q,S_q,C_q,t_star,A_star,global_margin,deficit_q,arch_drift,next_lambda,predicted_next_deficit,active,block_margin,block_equals_global,event_area_update,event_value,safety_energy,safety_slack,curvature_lower,exact_curvature,curvature_safety_energy,exact_curvature_safety_energy,curvature_safety_slack,log_gap,convex_remainder,optimizer_displacement,kick_displacement,kick_area,pre_kick_displacement,post_kick_displacement,backlog_before,backlog_after,kick_over_lambda,kick_over_log_gap,prime_scale_kick_bound,curvature_scaled_deficit,next_lambda_over_drift,next_lambda_over_log_gap,drift_over_log_gap"] ++
       map renderDualCsv (reportDualDynamics report)
@@ -1694,6 +1803,23 @@ renderExplorerCsv report
   ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,second_derivative,distance_above_best,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
   map renderCellCsv (reportCellMinima report)
   where
+    renderRootCsv row = intercalate ","
+      ["NumericalEvidence", "candidate", show (dualEvent row)
+      ,show (dualNextEvent row), num (dualRootOptimizer row)
+      ,num (dualNextRootOptimizer row), num (dualSqrtEvent row)
+      ,num (dualSqrtNextEvent row), num (dualRootDisplacement row)
+      ,num (dualRootRatio row), num (dualRootKick row)
+      ,num (dualRootKickLower row), num (dualRootKickUpper row)
+      ,num (dualSqrtGap row), num (dualRootKickOverGap row)
+      ,num (dualNormalizedRootImpulse row), boolText (dualActive row)
+      ,num (dualGlobalMargin row), num (dualBlockMargin row)
+      ,num (dualEventAreaUpdate row), num (dualCurvatureSafetyEnergy row)
+      ,num (rootBarrierCsv (5 / 3) row), num (rootBarrierCsv 2 row)
+      ,boolText (dualCrudeGapCondition row)]
+    rootBarrierCsv coefficient row =
+      let overshoot = max (-dualRootDisplacement row) 0
+      in dualGlobalMargin row + coefficient * overshoot ^ (2 :: Int) /
+        dualSqrtEvent row
     renderDualCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (dualEvent row)
       ,show (dualNextEvent row), num (dualLambda row), num (dualSlope row)
@@ -1898,7 +2024,20 @@ dualJson row = "{" ++ intercalate ", "
   ,jsonField "curvature_scaled_deficit" (num (dualCurvatureScaledDeficit row))
   ,jsonField "next_lambda_over_drift" (num (dualImpulseOverDrift row))
   ,jsonField "next_lambda_over_log_gap" (num (dualImpulseOverLogGap row))
-  ,jsonField "drift_over_log_gap" (num (dualDriftOverLogGap row))] ++ "}"
+  ,jsonField "drift_over_log_gap" (num (dualDriftOverLogGap row))
+  ,jsonField "root_optimizer_before" (num (dualRootOptimizer row))
+  ,jsonField "root_optimizer_after" (num (dualNextRootOptimizer row))
+  ,jsonField "sqrt_event" (num (dualSqrtEvent row))
+  ,jsonField "sqrt_next_event" (num (dualSqrtNextEvent row))
+  ,jsonField "root_displacement" (num (dualRootDisplacement row))
+  ,jsonField "root_ratio" (num (dualRootRatio row))
+  ,jsonField "root_kick" (num (dualRootKick row))
+  ,jsonField "root_kick_lower" (num (dualRootKickLower row))
+  ,jsonField "root_kick_upper" (num (dualRootKickUpper row))
+  ,jsonField "sqrt_gap" (num (dualSqrtGap row))
+  ,jsonField "root_kick_over_gap" (num (dualRootKickOverGap row))
+  ,jsonField "normalized_root_impulse" (num (dualNormalizedRootImpulse row))
+  ,jsonField "crude_gap_condition" (jsonBool (dualCrudeGapCondition row))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

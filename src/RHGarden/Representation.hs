@@ -82,6 +82,10 @@ data Representation
   | SuzukiCurvatureSafetyEnergy
   | SuzukiOptimizerBacklog
   | SuzukiSharpKickArea
+  | SuzukiArchDualRoot
+  | SuzukiRootDisplacement
+  | SuzukiRootKickDynamics
+  | RootMarginIntegral
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -167,6 +171,10 @@ data SRepresentation (r :: Representation) where
   SSuzukiCurvatureSafetyEnergy :: SRepresentation 'SuzukiCurvatureSafetyEnergy
   SSuzukiOptimizerBacklog :: SRepresentation 'SuzukiOptimizerBacklog
   SSuzukiSharpKickArea :: SRepresentation 'SuzukiSharpKickArea
+  SSuzukiArchDualRoot :: SRepresentation 'SuzukiArchDualRoot
+  SSuzukiRootDisplacement :: SRepresentation 'SuzukiRootDisplacement
+  SSuzukiRootKickDynamics :: SRepresentation 'SuzukiRootKickDynamics
+  SRootMarginIntegral :: SRepresentation 'RootMarginIntegral
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -253,6 +261,10 @@ representationValue SSuzukiKickFlowDynamics = SuzukiKickFlowDynamics
 representationValue SSuzukiCurvatureSafetyEnergy = SuzukiCurvatureSafetyEnergy
 representationValue SSuzukiOptimizerBacklog = SuzukiOptimizerBacklog
 representationValue SSuzukiSharpKickArea = SuzukiSharpKickArea
+representationValue SSuzukiArchDualRoot = SuzukiArchDualRoot
+representationValue SSuzukiRootDisplacement = SuzukiRootDisplacement
+representationValue SSuzukiRootKickDynamics = SuzukiRootKickDynamics
+representationValue SRootMarginIntegral = RootMarginIntegral
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -337,6 +349,10 @@ representationLabel SuzukiKickFlowDynamics = "two-dimensional kicked convex flow
 representationLabel SuzukiCurvatureSafetyEnergy = "exponentially weighted Suzuki event safety energy"
 representationLabel SuzukiOptimizerBacklog = "positive-part backlog of the archimedean optimizer beyond an event"
 representationLabel SuzukiSharpKickArea = "sharp endpoint-sensitive bounds for optimizer kick area"
+representationLabel SuzukiArchDualRoot = "square-root coordinate uStar(S)=exp(tStar(S)/2) of the archimedean dual optimizer"
+representationLabel SuzukiRootDisplacement = "event scale sqrt(q) minus the optimizer root uStar(S_q)"
+representationLabel SuzukiRootKickDynamics = "square-root-gap minus bounded root-kick Mangoldt dynamics"
+representationLabel RootMarginIntegral = "exact signed Suzuki margin area in optimizer-root coordinates"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

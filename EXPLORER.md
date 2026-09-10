@@ -523,3 +523,60 @@ Numerically, `DeltaT<h` held for 29,865 of the 78,733 scanned transitions,
 so eventwise queue clearing is not a viable universal invariant. The largest
 post-event backlog in this range was about `0.18165663`, at `q=2`. These
 queue statistics remain discovery data only.
+
+## Square-root optimizer coordinates
+
+The `roots` mode uses the natural coordinate
+`uStar(S)=exp(tStar(S)/2)`, with normalized state
+`rho_q=uStar(S_q)/sqrt(q)` and displacement
+`x_q=sqrt(q)-uStar(S_q)`. Run it with, for example:
+
+```text
+cabal run rh-garden -- explore-suzuki roots --t-min 0.69314718056 --t-max 14.503644
+```
+
+`RHGarden.SuzukiRootDynamics` proves that every actual Mangoldt event state
+is in the interior optimizer regime and checks
+
+```text
+duStar/dS = 1/(2*F(uStar)),       5/6 <= F(uStar) < 1,
+lambda/2 <= DeltaU <= 3*lambda/5,
+x_r = x_q + sqrt(r)-sqrt(q)-DeltaU,
+rho_r = sqrt(q/r)*rho_q + DeltaU/sqrt(r).
+```
+
+It also proves the exact root-area formula
+
+```text
+DeltaM = 4 * integral_{uBefore}^{uAfter}
+  F(u) * log(sqrt(r)/u) du.
+```
+
+Thus only optimizer overshoot beyond `sqrt(r)` can contribute negative area.
+This localizes margin loss but does not prove that accumulated margins stay
+positive.
+
+The scan of 148,520 complete blocks below approximately 1.99 million found:
+
+```text
+maximum rho                    1.1062927046 at q=2
+maximum rho for q >= 1,000     1.0074140035 at q=1129
+maximum rho for q >= 100,000   1.0007777556 at q=102679
+maximum rho for q >= 1,000,000 1.0002801714 at q=1195247
+largest absolute overshoot     0.3609905053 at q=24137
+largest DeltaU/sqrt-gap       11.0903278418 at q=65536
+blocks with rho>1              75,925 / 148,520
+blocks with DeltaU>sqrt-gap    93,422 / 148,520
+crude gap-condition failures  103,049 / 148,520
+```
+
+The high kick/gap ratio at `65536=2^16` comes from a tiny square-root gap
+followed by a nonzero prime-power impulse. The crude condition
+`r-q >= (6/5)*Lambda(r)` therefore fails too often to be a plausible eventual
+reduction in its present form.
+
+The root-area bound suggests overshoot reserves. The candidates
+`M+(5/3)overshoot^2/sqrt(q)` and `M+2 overshoot^2/sqrt(q)` stayed positive in
+this scan, but decreased at 73,603 and 73,417 events, with worst changes about
+`-0.01666` and `-0.02055`. They are not Lyapunov invariants. The useful result
+is the exact coordinate and signed-area localization, not a scanned invariant.

@@ -239,6 +239,31 @@ main = do
           exp (dualOptimizer row) > 208 && exp (dualOptimizer row) < 209)
           (reportDualDynamics report)
       Left _ -> False
+  check "Suzuki roots mode tracks square-root gaps and bounded kicks" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = RootsMode
+        , explorerOmegas = [0]
+        , explorerTMin = 1.5
+        , explorerTMax = 5.71
+        , explorerSamples = 401
+        , explorerPrimeCells = True
+        } of
+      Right report ->
+        not (null (reportDualDynamics report)) &&
+        all (\row -> dualRootKick row + 1e-10 >= dualRootKickLower row &&
+          dualRootKick row <= dualRootKickUpper row + 1e-10 &&
+          dualSqrtGap row > 0 &&
+          abs (dualRootRatio row * dualSqrtEvent row -
+            dualRootOptimizer row) < 1e-10)
+          (reportDualDynamics report) &&
+        all (\(row, next) -> dualNextEvent row == dualEvent next &&
+          abs (dualRootDisplacement next -
+            (dualRootDisplacement row + dualSqrtGap row - dualRootKick row)) < 1e-8 &&
+          abs (dualRootRatio next -
+            (dualSqrtEvent row / dualSqrtNextEvent row * dualRootRatio row +
+              dualRootKick row / dualSqrtNextEvent row)) < 1e-8)
+          (zip (reportDualDynamics report) (drop 1 (reportDualDynamics report)))
+      Left _ -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

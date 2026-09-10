@@ -350,3 +350,23 @@ recurrence, and the true-curvature response estimate
 `DeltaT <= 6*lambda/(5*exp(tStar/2))`.
 
 No proof of RH is claimed.
+
+`RHGarden/SuzukiRootDynamics.lean` introduces
+`uStar(S)=exp(tStar(S)/2)` and the elementary curvature factor
+`F(u)=1-1/(u^2*(u^4-1))`. It proves `5/6<=F<1`, the interior derivative
+`uStar'=1/(2F(uStar))`, and the finite root-response bounds
+`lambda/2<=DeltaU<=3lambda/5`. The exact cell-two derivative certificate plus
+Mangoldt-slope monotonicity shows that every actual event state is in this
+interior regime, so block-level kick bounds need no extra assumption. Event
+displacement and normalized ratio obey exact square-root recurrences. Finally,
+the module kernel-checks the full change of variables
+
+```text
+DeltaM = 4 * integral_{uBefore}^{uAfter}
+  F(u) * log(sqrt(r)/u) du.
+```
+
+This is a representation of the open margin dynamics, not a proof that the
+margins are nonnegative.
+
+No proof of RH is claimed.

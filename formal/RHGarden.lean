@@ -44,3 +44,4 @@ import RHGarden.SuzukiMangoldtBlocks
 import RHGarden.SuzukiDualDynamics
 import RHGarden.SuzukiKickedFlow
 import RHGarden.SuzukiTrueCurvature
+import RHGarden.SuzukiRootDynamics

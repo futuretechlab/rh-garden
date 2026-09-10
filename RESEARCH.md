@@ -540,3 +540,28 @@ updates split almost evenly in sign (357 negative, 353 positive). This is
 monotonicity is not the right invariant. The exact active-block criterion—a
 negative post-event slope surplus followed by a positive pre-impulse surplus
 at the next event—is the clearest structural state variable exposed so far.
+
+`RHGarden.SuzukiRootDynamics` moves the attained optimizer to
+`uStar(S)=exp(tStar(S)/2)`. The curvature factor
+`F(u)=1-1/(u^2*(u^4-1))` lies in `[5/6,1)` on the arithmetic range, and Lean
+checks `uStar'(S)=1/(2F(uStar(S)))`. An exact cell-two bound proves the
+interior regime at `q=2`; monotonicity of the cumulative Mangoldt slope then
+extends it to every actual Mangoldt event. Consequently every complete block
+has checked root-kick bounds `lambda/2 <= DeltaU <= 3lambda/5`, the exact
+recurrence `x_r=x_q+sqrt(r)-sqrt(q)-DeltaU`, and the normalized recurrence
+`rho_r=sqrt(q/r)rho_q+DeltaU/sqrt(r)`.
+
+The dual-margin update has also been changed exactly from slope to root:
+
+```text
+DeltaM = 4 * integral F(u) log(sqrt(r)/u) du.
+```
+
+A 148,520-block numerical scan below about 1.99 million finds `rho` narrowing
+toward one, with maximum `rho=1.00028018` after one million, but raw root
+kicks exceed square-root gaps in 93,422 blocks. The crude gap condition fails
+103,049 times. Natural quadratic overshoot potentials stay positive over the
+scan but decrease at roughly half the events, so none is a Lyapunov invariant.
+These are `NumericalEvidence` only. The exact next frontier is to exploit the
+signed root-area over multiple events or find arithmetic control on cumulative
+normalized overshoot; no RH positivity premise has been proved.
