@@ -71,6 +71,8 @@ data Representation
   | SuzukiMangoldtState
   | SuzukiArchimedeanCellDual
   | SuzukiCellMargins
+  | SuzukiMangoldtBlocks
+  | SuzukiMangoldtBlockMargins
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -145,6 +147,8 @@ data SRepresentation (r :: Representation) where
   SSuzukiMangoldtState :: SRepresentation 'SuzukiMangoldtState
   SSuzukiArchimedeanCellDual :: SRepresentation 'SuzukiArchimedeanCellDual
   SSuzukiCellMargins :: SRepresentation 'SuzukiCellMargins
+  SSuzukiMangoldtBlocks :: SRepresentation 'SuzukiMangoldtBlocks
+  SSuzukiMangoldtBlockMargins :: SRepresentation 'SuzukiMangoldtBlockMargins
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -220,6 +224,8 @@ representationValue SSuzukiCertifiedPrimeCells = SuzukiCertifiedPrimeCells
 representationValue SSuzukiMangoldtState = SuzukiMangoldtState
 representationValue SSuzukiArchimedeanCellDual = SuzukiArchimedeanCellDual
 representationValue SSuzukiCellMargins = SuzukiCellMargins
+representationValue SSuzukiMangoldtBlocks = SuzukiMangoldtBlocks
+representationValue SSuzukiMangoldtBlockMargins = SuzukiMangoldtBlockMargins
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -293,6 +299,8 @@ representationLabel SuzukiCertifiedPrimeCells = "individually Lean-certified uns
 representationLabel SuzukiMangoldtState = "two-number cumulative Mangoldt state (S_n,C_n) on each Suzuki prime cell"
 representationLabel SuzukiArchimedeanCellDual = "restricted convex dual D_n(s)=max_{cell}(s*t-A(t))"
 representationLabel SuzukiCellMargins = "scalar cell safety margins C_n-D_n(S_n)"
+representationLabel SuzukiMangoldtBlocks = "constant-state intervals between consecutive Mangoldt events"
+representationLabel SuzukiMangoldtBlockMargins = "one scalar safety margin per Mangoldt event block"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

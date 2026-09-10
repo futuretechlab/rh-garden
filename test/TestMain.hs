@@ -175,6 +175,26 @@ main = do
           (marginIntercept row - marginDual row)) < 1e-12)
           (reportMargins report)
       Left _ -> False
+  check "Suzuki block mode collapses constant Mangoldt states" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = BlocksMode
+        , explorerOmegas = [0]
+        , explorerTMax = 5.71
+        , explorerSamples = 1201
+        , explorerPrimeCells = True
+        } of
+      Right report ->
+        any (\row -> blockLeftEvent row == 199 &&
+          blockRightEvent row == 211 && blockWinningCell row == 208 &&
+          blockMinimizerType row == "interior" &&
+          blockSlopeDeficitLeft row > 0 &&
+          blockSlopeDeficitRight row < 0)
+          (reportBlockMargins report) &&
+        any (\row -> blockLeftEvent row == 13 && blockRightEvent row == 16)
+          (reportBlockMargins report) &&
+        any (\row -> blockLeftEvent row == 32 && blockRightEvent row == 37)
+          (reportBlockMargins report)
+      Left _ -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

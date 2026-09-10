@@ -11,6 +11,7 @@ module RHGarden.Explorer.Suzuki
   , EnvelopeCrossing(..)
   , BifurcationEvent(..)
   , CellMargin(..)
+  , BlockMargin(..)
   , CandidateCertificate(..)
   , defaultExplorerOptions
   , parseExplorerOptions
@@ -53,6 +54,7 @@ data ExplorerMode
   | ClusterMode
   | CertificateStatusMode
   | MarginsMode
+  | BlocksMode
   deriving (Eq, Ord, Show, Read)
 
 data ExplorerOptions = ExplorerOptions
@@ -171,6 +173,24 @@ data CellMargin = CellMargin
   , marginToNextEvent :: Maybe Int
   } deriving (Eq, Show)
 
+-- | Numerical evaluation of one complete constant Mangoldt-state block.
+-- The event endpoints, state, slope deficits, and unique optimizer are all
+-- discovery data; the corresponding abstract structure is checked in Lean.
+data BlockMargin = BlockMargin
+  { blockLeftEvent :: Int
+  , blockRightEvent :: Int
+  , blockGap :: Int
+  , blockSlope :: Double
+  , blockIntercept :: Double
+  , blockSlopeDeficitLeft :: Double
+  , blockSlopeDeficitRight :: Double
+  , blockCandidateT :: Double
+  , blockCandidateExpT :: Double
+  , blockMarginValue :: Double
+  , blockMinimizerType :: String
+  , blockWinningCell :: Int
+  } deriving (Eq, Show)
+
 data CandidateCertificate = CandidateCertificate
   { certificateOmega :: Double
   , certificateLeft :: Double
@@ -198,6 +218,7 @@ data ExplorerReport = ExplorerReport
   , reportCrossings :: [EnvelopeCrossing]
   , reportBifurcations :: [BifurcationEvent]
   , reportMargins :: [CellMargin]
+  , reportBlockMargins :: [BlockMargin]
   } deriving (Eq, Show)
 
 data PrimeEvent = PrimeEvent
@@ -259,6 +280,9 @@ parseExplorerOptions = go defaultExplorerOptions
       go options { explorerMode = CertificateStatusMode } rest
     go options ("margins" : rest) =
       go options { explorerMode = MarginsMode, explorerPrimeCells = True,
+        explorerOmegas = [0] } rest
+    go options ("blocks" : rest) =
+      go options { explorerMode = BlocksMode, explorerPrimeCells = True,
         explorerOmegas = [0] } rest
     go options ("--omega" : value : rest) =
       parseDouble "--omega" value >>= \x ->
@@ -346,7 +370,7 @@ resolvedOmegas options = case
     (explorerOmegaMin options, explorerOmegaMax options,
       explorerOmegaCount options) of
   (Just lo, Just hi, Just count) -> linearGrid count lo hi
-  _ | explorerMode options == MarginsMode -> [0]
+  _ | explorerMode options `elem` [MarginsMode, BlocksMode] -> [0]
     | not (null (explorerOmegas options)) -> explorerOmegas options
     | otherwise -> [0.5, 0.25, 0.125, 0]
 
@@ -373,6 +397,7 @@ exploreSuzuki options = do
       bifurcations = detectBifurcations criticals
       margins = buildCellMargins events
         [cell | cell <- cells, abs (cellOmega cell) < 1e-12]
+      blocks = buildBlockMargins checked events
       attachDistance cell = cell
         { cellDistanceAboveBest = cellCandidateValue cell -
             minimum [summaryMinimum summary | summary <- summaries,
@@ -387,6 +412,7 @@ exploreSuzuki options = do
     , reportCrossings = crossings
     , reportBifurcations = bifurcations
     , reportMargins = margins
+    , reportBlockMargins = blocks
     }
 
 buildCellMargins :: [PrimeEvent] -> [CellMinimum] -> [CellMargin]
@@ -424,6 +450,53 @@ buildCellMargins events = map build
             event : _ -> Just (event - n)
             [] -> Nothing
         }
+
+buildBlockMargins :: ExplorerOptions -> [PrimeEvent] -> [BlockMargin]
+buildBlockMargins options events = mapMaybeCell build (zip events (drop 1 events))
+  where
+    build (leftEvent, rightEvent)
+      | right < explorerTMin options - 1e-12 = Nothing
+      | left > explorerTMax options + 1e-12 = Nothing
+      | otherwise = Just BlockMargin
+          { blockLeftEvent = eventN leftEvent
+          , blockRightEvent = eventN rightEvent
+          , blockGap = eventN rightEvent - eventN leftEvent
+          , blockSlope = slope
+          , blockIntercept = intercept
+          , blockSlopeDeficitLeft = slope - archimedeanDerivative left
+          , blockSlopeDeficitRight = slope - archimedeanDerivative right
+          , blockCandidateT = optimizer
+          , blockCandidateExpT = exp optimizer
+          , blockMarginValue = value
+          , blockMinimizerType = kind
+          , blockWinningCell = max (eventN leftEvent) (floor (exp optimizer))
+          }
+      where
+        left = eventLogN leftEvent
+        right = eventLogN rightEvent
+        active = takeWhile ((<= eventN leftEvent) . eventN) events
+        slope = sum (map eventWeight active)
+        intercept = sum [eventWeight event * eventLogN event | event <- active]
+        dleft = archimedeanDerivative left - slope
+        dright = archimedeanDerivative right - slope
+        optimizer
+          | dleft >= 0 = left
+          | dright <= 0 = right
+          | otherwise = bisectArchSlope 70 slope left right
+        kind
+          | optimizer == left = "left"
+          | optimizer == right = "right"
+          | otherwise = "interior"
+        arch = integrateArchDerivative 0 optimizer
+        value = arch - slope * optimizer + intercept
+
+bisectArchSlope :: Int -> Double -> Double -> Double -> Double
+bisectArchSlope 0 _ lo hi = (lo + hi) / 2
+bisectArchSlope depth slope lo hi =
+  let middle = (lo + hi) / 2
+  in if archimedeanDerivative middle >= slope
+      then bisectArchSlope (depth - 1) slope lo middle
+      else bisectArchSlope (depth - 1) slope middle hi
 
 runSuzukiExplorer :: ExplorerOptions -> IO ()
 runSuzukiExplorer options = case exploreSuzuki options of
@@ -1244,6 +1317,7 @@ renderExplorerAscii report = unlines $
       ClusterMode -> clusterSection ++ criticalSection
       CertificateStatusMode -> certificateStatusSection
       MarginsMode -> marginSection
+      BlocksMode -> blockSection
       ScanMode -> []
     marginSection =
       [ ""
@@ -1252,6 +1326,13 @@ renderExplorerAscii report = unlines $
       , "--------------------------------------------------------------------------------------------------------------------"
       ] ++ map renderMargin
         (take 20 (sortOn marginValue (reportMargins report)))
+    blockSection =
+      [ ""
+      , "Mangoldt event blocks (NumericalEvidence):"
+      , "q      r      gap    S_q          C_q          deficit(q)   deficit(r)   margin       t*          exp(t*)     type      cell"
+      , "------------------------------------------------------------------------------------------------------------------------------"
+      ] ++ map renderBlock
+        (take 30 (sortOn blockMarginValue (reportBlockMargins report)))
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1364,9 +1445,25 @@ renderExplorerAscii report = unlines $
       , pad 6 (maybe "-" show (marginToNextEvent row))
       , pad 10 (fmt 5 (marginMangoldtLeft row))
       , fmt 5 (marginMangoldtRight row)]
+    renderBlock row = intercalate "  "
+      [ pad 6 (show (blockLeftEvent row))
+      , pad 6 (show (blockRightEvent row))
+      , pad 6 (show (blockGap row))
+      , pad 12 (fmt 7 (blockSlope row))
+      , pad 12 (fmt 7 (blockIntercept row))
+      , pad 12 (fmt 7 (blockSlopeDeficitLeft row))
+      , pad 12 (fmt 7 (blockSlopeDeficitRight row))
+      , pad 12 (fmt 8 (blockMarginValue row))
+      , pad 11 (fmt 7 (blockCandidateT row))
+      , pad 11 (fmt 4 (blockCandidateExpT row))
+      , pad 9 (blockMinimizerType row)
+      , show (blockWinningCell row)]
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
+  | explorerMode (reportOptions report) == BlocksMode = unlines $
+      ["trust,status,event_q,next_event_r,gap,S_q,C_q,slope_deficit_left,slope_deficit_right,margin,t_candidate,exp_t_candidate,minimizer_type,winning_cell"] ++
+      map renderBlockCsv (reportBlockMargins report)
   | explorerMode (reportOptions report) == MarginsMode = unlines $
       ["trust,status,cell,S_n,C_n,dual,margin,t_candidate,minimizer_type,distance_since_event,distance_to_event,mangoldt_n,mangoldt_n_plus_1"] ++
       map renderMarginCsv (reportMargins report)
@@ -1374,6 +1471,13 @@ renderExplorerCsv report
   ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,second_derivative,distance_above_best,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
   map renderCellCsv (reportCellMinima report)
   where
+    renderBlockCsv row = intercalate ","
+      ["NumericalEvidence", "candidate", show (blockLeftEvent row)
+      ,show (blockRightEvent row), show (blockGap row), num (blockSlope row)
+      ,num (blockIntercept row), num (blockSlopeDeficitLeft row)
+      ,num (blockSlopeDeficitRight row), num (blockMarginValue row)
+      ,num (blockCandidateT row), num (blockCandidateExpT row)
+      ,blockMinimizerType row, show (blockWinningCell row)]
     renderMarginCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (marginCell row)
       ,num (marginSlope row), num (marginIntercept row), num (marginDual row)
@@ -1424,6 +1528,9 @@ renderExplorerJson report = unlines
   ,"  ],"
   ,"  \"margins\": ["
   ,intercalate ",\n" (map (indent 4 . marginJson) (reportMargins report))
+  ,"  ],"
+  ,"  \"mangoldt_blocks\": ["
+  ,intercalate ",\n" (map (indent 4 . blockJson) (reportBlockMargins report))
   ,"  ]"
   ,"}"
   ]
@@ -1487,6 +1594,21 @@ marginJson row = "{" ++ intercalate ", "
       (maybe "null" show (marginToNextEvent row))
   ,jsonField "mangoldt_n" (num (marginMangoldtLeft row))
   ,jsonField "mangoldt_n_plus_1" (num (marginMangoldtRight row))] ++ "}"
+
+blockJson :: BlockMargin -> String
+blockJson row = "{" ++ intercalate ", "
+  [jsonField "event_q" (show (blockLeftEvent row))
+  ,jsonField "next_event_r" (show (blockRightEvent row))
+  ,jsonField "gap" (show (blockGap row))
+  ,jsonField "slope_S_q" (num (blockSlope row))
+  ,jsonField "intercept_C_q" (num (blockIntercept row))
+  ,jsonField "slope_deficit_left" (num (blockSlopeDeficitLeft row))
+  ,jsonField "slope_deficit_right" (num (blockSlopeDeficitRight row))
+  ,jsonField "block_margin" (num (blockMarginValue row))
+  ,jsonField "minimizing_t_candidate" (num (blockCandidateT row))
+  ,jsonField "exp_minimizing_t_candidate" (num (blockCandidateExpT row))
+  ,jsonField "minimizer_type" (jsonString (blockMinimizerType row))
+  ,jsonField "winning_integer_cell" (show (blockWinningCell row))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

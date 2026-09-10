@@ -161,6 +161,17 @@ suzukiMangoldtStateRef = Reference
       "equivalent to the compact initial interval plus all margins."
   }
 
+suzukiMangoldtBlocksRef :: Reference
+suzukiMangoldtBlocksRef = Reference
+  { refShort = "RHGarden.riemannHypothesis_iff_initial_and_all_mangoldtBlockMargins"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiMangoldtBlocks.lean: consecutive " ++
+      "nonzero von-Mangoldt events delimit one constant two-number state, Psi " ++
+      "has one closed strictly-convex formula across the whole block, its block " ++
+      "margin is the finite minimum of constituent cell margins, and RH is " ++
+      "equivalent to initial positivity plus all block margins."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -860,6 +871,24 @@ suzukiDualToCellMargins = eraseRepresentationEdge $ representationEdge
   (ExactInverse "A margin plus the stored intercept recovers the dual value at the stored slope.")
   Nothing
 
+suzukiMangoldtStateToBlocks :: RuntimeRepresentationEdge
+suzukiMangoldtStateToBlocks = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiMangoldtBlocks
+  "collapse unchanged successor states between consecutive Mangoldt events"
+  ExactRepresentation leanCheckedTrust 1 suzukiMangoldtBlocksRef
+  "RHGarden.suzukiArithmeticState_eq_on_mangoldtBlock and RHGarden.suzukiPsi_eq_mangoldtBlock prove exact state constancy and one formula on every closed block."
+  (ExactInverse "The event endpoints and block state recover every constituent integer-cell state.")
+  Nothing
+
+suzukiMangoldtBlocksToMargins :: RuntimeRepresentationEdge
+suzukiMangoldtBlocksToMargins = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtBlocks SSuzukiMangoldtBlockMargins
+  "take the attained restricted dual over the whole event block"
+  ExactRepresentation leanCheckedTrust 1 suzukiMangoldtBlocksRef
+  "RHGarden.mangoldtBlockMargin_nonneg_iff and RHGarden.mangoldtBlockMargin_eq_finset_min_cellMargins identify one block inequality with all point and cell inequalities in that block."
+  (ExactInverse "The block margin plus its stored intercept recovers the block dual at the stored slope.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1191,6 +1220,7 @@ representationGraph =
   , suzukiPrimeToCellStrictConvexity, cellStrictConvexityToStrongCertificate
   , strongCertificateToCertifiedCells
   , suzukiPrimeToMangoldtState, suzukiMangoldtStateToDual, suzukiDualToCellMargins
+  , suzukiMangoldtStateToBlocks, suzukiMangoldtBlocksToMargins
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

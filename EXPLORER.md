@@ -60,9 +60,12 @@ cabal run rh-garden -- explore-suzuki cluster \
   --t-max 5.5 --samples 30001
 
 cabal run rh-garden -- explore-suzuki certificate-status
+
+cabal run rh-garden -- explore-suzuki blocks \
+  --t-max 5.71 --samples 3001
 ```
 
-Other modes are `scan` and `cell`. The cell bounds restrict the reported
+Other modes are `scan`, `cell`, and `margins`. The cell bounds restrict the reported
 critical points and cluster ranking. Every mode supports CSV/JSON output.
 
 The evaluator uses `Double` for discovery. It computes the base
@@ -325,3 +328,29 @@ event and three before the next one at 211. The next nearby basin, cell 213,
 uses the state updated at 211. This is consistent with interval motion being
 responsible for deterioration between sparse events, but it is not a proved
 tail law or a causal statistical conclusion.
+
+## Mangoldt event-block mode
+
+The preferred discrete configuration is now a whole interval between
+consecutive prime-power events, not an individual integer cell. The `blocks`
+mode reports the event endpoints, gap, constant `(S_q,C_q)` state, slope
+deficits at both ends, unique candidate optimizer, `exp(t*)`, block margin,
+and the integer cell containing the optimizer. All values remain
+`NumericalEvidence`; the corresponding state constancy, convexity, and
+block-margin equivalences are LeanChecked separately.
+
+The old winner labels translate exactly as follows:
+
+```text
+cell 5   : event block 5 -> 7
+cell 14  : event block 13 -> 16
+cell 34  : event block 32 -> 37
+cell 208 : event block 199 -> 211.
+```
+
+The endpoints 16 and 32 are powers of two, hence genuine Mangoldt events.
+At omega zero, the `199 -> 211` block has an interior candidate optimizer
+near `exp(t*)=208.115`, candidate margin `0.02802262`, and the deficit
+`S_q-A'(t)` changes from approximately `+0.639` to `-0.199`. This sign
+change is the structural invariant locating the dangerous point; the label
+208 merely identifies which integer subcell contains it.

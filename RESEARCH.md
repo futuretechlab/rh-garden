@@ -450,3 +450,19 @@ simpler), then test shifted cell 2 at omega `1/10`. In parallel, the branch
 cascade suggests studying why its winning cells are attached to particular
 Mangoldt boundary events. A genuine infinite-tail certificate remains a
 separate RH-sized requirement; a finite numerical scan cannot supply it.
+
+The integer-cell indexing has now been collapsed further in
+`RHGarden.SuzukiMangoldtBlocks`. A Mangoldt event is exactly a prime power,
+and consecutive events `q<r` delimit a single constant state throughout
+`[log q,log r]`. Lean checks the endpoint-inclusive formula
+`Psi(t)=A(t)-S_q*t+C_q`, strict convexity, and a unique attained minimum on
+the whole block. Its margin is both the minimum value of `Psi` on the block
+and the finite minimum of the constituent integer-cell margins. Consequently
+the sparse checked representation is `RH <-> SuzukiInitialNonnegative and
+every consecutive Mangoldt-block margin is nonnegative`. This remains an
+equivalent open formulation.
+
+The half-line dual `AStar` and global state margin are now defined, and their
+exact finite-difference update at each event is checked. Finiteness and
+attainment of that unrestricted dual are the next analytic step; no
+signed-area formula has been claimed.

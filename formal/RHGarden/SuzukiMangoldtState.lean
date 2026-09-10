@@ -182,7 +182,7 @@ noncomputable def suzukiArchCellDual (n : ℕ) (s : ℝ) : ℝ :=
   sSup (suzukiArchCellObjective s ''
     Icc (Real.log n) (Real.log (n + 1)))
 
-private theorem continuousOn_suzukiArchCellObjective
+theorem continuousOn_suzukiArchCellObjective
     {n : ℕ} (hn : 2 ≤ n) (s : ℝ) :
     ContinuousOn (suzukiArchCellObjective s)
       (Icc (Real.log n) (Real.log (n + 1))) := by
@@ -403,7 +403,7 @@ theorem mangoldt_event_intercept_gain_ge_same_cell_dual_cost
 
 /-! ## Strict concavity and transition bookkeeping -/
 
-private theorem hasDerivAt_suzukiArchCellObjective
+theorem hasDerivAt_suzukiArchCellObjective
     (s : ℝ) {t : ℝ} (ht : 0 < t) :
     HasDerivAt (suzukiArchCellObjective s)
       (s - deriv suzukiPsiArchimedean t) t := by
@@ -416,7 +416,7 @@ private theorem hasDerivAt_suzukiArchCellObjective
   have h' := h.congr_of_eventuallyEq heq
   simpa only [mul_one] using h'
 
-private theorem secondDeriv_suzukiArchCellObjective
+theorem secondDeriv_suzukiArchCellObjective
     (s : ℝ) {t : ℝ} (ht : 0 < t) :
     deriv (deriv (suzukiArchCellObjective s)) t =
       -deriv (deriv suzukiPsiArchimedean) t := by

@@ -404,6 +404,17 @@ private theorem sqrt_two_le_exp_half_of_log_two_le {t : ℝ}
     rw [hy2]
     exact hexp
 
+/-- The archimedean term itself has curvature at least one everywhere at
+or to the right of the first Mangoldt event.  Unlike the prime-cell theorem
+below, this statement also applies at integer logarithmic boundaries. -/
+theorem one_le_secondDeriv_suzukiPsiArchimedean_of_log_two_le
+    {t : ℝ} (ht : Real.log 2 ≤ t) :
+    1 ≤ deriv (deriv suzukiPsiArchimedean) t := by
+  have htpos : 0 < t := (Real.log_pos (by norm_num : (1 : ℝ) < 2)).trans_le ht
+  rw [secondDeriv_suzukiPsiArchimedean htpos]
+  exact exp_formula_ge_one_of_sqrt_two_le
+    (sqrt_two_le_exp_half_of_log_two_le ht)
+
 /-- On every open prime cell at or beyond the first prime, the unshifted
 Suzuki function has curvature at least one. -/
 theorem one_le_secondDeriv_suzukiPsi_on_primeCell

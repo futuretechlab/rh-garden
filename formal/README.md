@@ -283,6 +283,16 @@ between `SuzukiPsiNonnegative` and the compact initial interval plus all
 cell margins, and hence the corresponding RH equivalence. These theorems
 re-express the open problem; they do not establish the margin family.
 
+`RHGarden/SuzukiMangoldtBlocks.lean` replaces the unnecessarily fine integer
+index by consecutive nonzero-von-Mangoldt events (equivalently prime powers).
+It proves state constancy, one endpoint-inclusive formula and strict
+convexity on each whole event block, unique attainment of the block minimum,
+and identifies the block margin with the finite minimum of its cell margins.
+Every natural `n>=2` lies in such a block, yielding the LeanChecked sparse
+equivalence `RH <-> initial positivity and all block margins >= 0`. The file
+also records the exact global-dual event update; boundedness and attainment
+of the unrestricted half-line dual remain open analytic infrastructure.
+
 ## Open targets
 
 - Prove one of the equivalent RH formulations. No endpoint is discharged.
