@@ -291,7 +291,12 @@ and identifies the block margin with the finite minimum of its cell margins.
 Every natural `n>=2` lies in such a block, yielding the LeanChecked sparse
 equivalence `RH <-> initial positivity and all block margins >= 0`. The file
 also records the exact global-dual event update; boundedness and attainment
-of the unrestricted half-line dual remain open analytic infrastructure.
+of the unrestricted half-line dual are supplied by
+`RHGarden/SuzukiDualDynamics.lean`. That module proves quadratic coercivity,
+unique half-line dual attainment, a monotone 1-Lipschitz optimizer,
+`AStar'=tStar`, the exact signed-area event update and deficit recurrence,
+and the active/inactive block geometry. These results expose a discrete
+dynamical system but do not prove any open margin inequality.
 
 ## Open targets
 

@@ -466,3 +466,32 @@ The half-line dual `AStar` and global state margin are now defined, and their
 exact finite-difference update at each event is checked. Finiteness and
 attainment of that unrestricted dual are the next analytic step; no
 signed-area formula has been claimed.
+
+`RHGarden.SuzukiDualDynamics` closes that analytic step without special-
+function asymptotics. The unit curvature bound gives a quadratic lower bound
+for `A`, hence boundedness and coercivity of `S*t-A(t)`. The unrestricted
+dual is attained at a unique optimizer `tStar(S)`; `tStar` is monotone and
+1-Lipschitz, and the elementary envelope inequalities prove
+`AStar'(S)=tStar(S)`. Consequently every arithmetic update has the exact
+signed-area form
+
+```text
+M_(n+1)-M_n = integral_{S_n}^{S_n+lambda}
+  (log(n+1)-tStar(s)) ds.
+```
+
+At consecutive Mangoldt events the checked slope-surplus recurrence is
+`delta_r=delta_q+(A'(log r)-A'(log q))-lambda_r`. Active blocks are exactly
+those containing `tStar(S_q)` in their interior; on them the restricted
+block margin equals the global dual margin. Inactive blocks attain their
+minimum at the appropriate endpoint. These are structural equivalences and
+updates only; no claim that all margins are nonnegative is made.
+
+The numerical `explore-suzuki dual` regression through event integers below
+5000 contains 710 complete blocks. Its candidate global dual margins stayed
+positive, with the smallest about `0.02752057` on `3089->3109`, but event
+updates split almost evenly in sign (357 negative, 353 positive). This is
+`NumericalEvidence`, not a tail certificate. It shows that eventwise margin
+monotonicity is not the right invariant. The exact active-block criterion—a
+negative post-event slope surplus followed by a positive pre-impulse surplus
+at the next event—is the clearest structural state variable exposed so far.

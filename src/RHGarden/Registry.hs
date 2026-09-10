@@ -172,6 +172,17 @@ suzukiMangoldtBlocksRef = Reference
       "equivalent to initial positivity plus all block margins."
   }
 
+suzukiDualDynamicsRef :: Reference
+suzukiDualDynamicsRef = Reference
+  { refShort = "RHGarden.hasDerivAt_suzukiArchDual"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiDualDynamics.lean: unit " ++
+      "archimedean curvature gives quadratic coercivity, half-line dual " ++
+      "attainment and a unique 1-Lipschitz optimizer; the dual derivative is " ++
+      "that optimizer, Mangoldt events obey an exact signed-area margin update, " ++
+      "and active blocks identify their restricted and global margins."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -889,6 +900,33 @@ suzukiMangoldtBlocksToMargins = eraseRepresentationEdge $ representationEdge
   (ExactInverse "The block margin plus its stored intercept recovers the block dual at the stored slope.")
   Nothing
 
+suzukiArchDualToOptimizer :: RuntimeRepresentationEdge
+suzukiArchDualToOptimizer = eraseRepresentationEdge $ representationEdge
+  SSuzukiArchimedeanCellDual SSuzukiArchDualOptimizer
+  "extend the archimedean dual to the half-line and attain its maximum"
+  SufficientReduction leanCheckedTrust 1 suzukiDualDynamicsRef
+  "RHGarden.suzukiArchDual_eq_optimizer and RHGarden.suzukiArchDualOptimizer_unique identify the attained half-line dual optimizer."
+  (NoReconstruction "The optimizer alone does not reconstruct the complete archimedean objective.")
+  Nothing
+
+suzukiMangoldtStateToSlopeDeficit :: RuntimeRepresentationEdge
+suzukiMangoldtStateToSlopeDeficit = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiEventSlopeDeficit
+  "compare each post-event state slope with the archimedean slope"
+  ExactRepresentation leanCheckedTrust 1 suzukiDualDynamicsRef
+  "RHGarden.suzukiEventSlopeDeficit_next is the exact recurrence: old deficit plus smooth drift minus the next Mangoldt impulse."
+  (NoReconstruction "One scalar deficit does not reconstruct the slope and intercept state.")
+  Nothing
+
+suzukiMangoldtStateToDualAreaDynamics :: RuntimeRepresentationEdge
+suzukiMangoldtStateToDualAreaDynamics = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiDualAreaDynamics
+  "integrate the optimizer curve across each Mangoldt slope impulse"
+  ExactRepresentation leanCheckedTrust 1 suzukiDualDynamicsRef
+  "RHGarden.globalDualMargin_event_update_integral expresses every exact event-margin update as signed area between log(q) and tStar(s)."
+  (ExactInverse "Together with the previous global margin, the signed area recovers the next global margin exactly.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1221,6 +1259,8 @@ representationGraph =
   , strongCertificateToCertifiedCells
   , suzukiPrimeToMangoldtState, suzukiMangoldtStateToDual, suzukiDualToCellMargins
   , suzukiMangoldtStateToBlocks, suzukiMangoldtBlocksToMargins
+  , suzukiArchDualToOptimizer, suzukiMangoldtStateToSlopeDeficit
+  , suzukiMangoldtStateToDualAreaDynamics
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

@@ -14,7 +14,7 @@ def IsMangoldtEvent (n : ℕ) : Prop :=
   ArithmeticFunction.vonMangoldt n ≠ 0
 
 theorem isMangoldtEvent_iff_primePower {n : ℕ} :
-    IsMangoldtEvent n ↔ Nat.IsPrimePow n := by
+    IsMangoldtEvent n ↔ IsPrimePow n := by
   exact ArithmeticFunction.vonMangoldt_ne_zero_iff
 
 theorem isMangoldtEvent_iff_pos {n : ℕ} :
@@ -40,6 +40,12 @@ theorem IsMangoldtBlock.eq_zero_between {q r k : ℕ} (h : IsMangoldtBlock q r)
     (hqk : q < k) (hkr : k < r) :
     ArithmeticFunction.vonMangoldt k = 0 := h.2.2.2 k hqk hkr
 
+theorem IsMangoldtBlock.left_pos {q r : ℕ} (h : IsMangoldtBlock q r) : 0 < q :=
+  lt_of_lt_of_le (by norm_num) h.left_event.two_le
+
+theorem IsMangoldtBlock.right_pos {q r : ℕ} (h : IsMangoldtBlock q r) : 0 < r :=
+  lt_of_lt_of_le (by norm_num) h.right_event.two_le
+
 /-- The complete two-number state is constant between consecutive Mangoldt
 events. -/
 theorem suzukiArithmeticState_eq_on_mangoldtBlock
@@ -48,9 +54,9 @@ theorem suzukiArithmeticState_eq_on_mangoldtBlock
   induction n, hqn using Nat.le_induction with
   | base => rfl
   | succ n hqn ih =>
-      have hnr' : n < r := lt_of_succ_lt hnr
+      have hnr' : n < r := Nat.lt_of_succ_lt hnr
       rw [suzukiArithmeticState_succ_eq_of_vonMangoldt_eq_zero
-        (h.eq_zero_between (lt_succ_iff.mpr hqn) hnr)]
+        (h.eq_zero_between (Nat.lt_succ_iff.mpr hqn) hnr)]
       exact ih hnr'
 
 theorem mangoldtSlope_eq_on_block
@@ -75,10 +81,15 @@ private theorem exists_primeCell_in_mangoldtBlock
   by_cases hte : t = Real.log r
   · subst t
     refine ⟨r - 1, ?_, Nat.sub_lt (Nat.zero_lt_of_lt h.left_lt) (by omega), ?_, ?_⟩
-    · omega
-    · exact Real.log_le_log (by exact_mod_cast h.left_event.two_le)
+    · exact Nat.le_sub_one_of_lt h.left_lt
+    · exact Real.log_le_log (by
+          exact_mod_cast (Nat.sub_pos_iff_lt.mpr
+            (lt_of_lt_of_le (by norm_num : 1 < 2) h.right_event.two_le)))
         (by exact_mod_cast (Nat.sub_le r 1))
-    · convert le_rfl using 2 <;> omega
+    · have hr1 : 1 ≤ r := le_trans (by norm_num) h.right_event.two_le
+      have heq : (((r - 1 : ℕ) : ℝ) + 1) = (r : ℝ) := by
+        exact_mod_cast Nat.sub_add_cancel hr1
+      rw [heq]
   · have htr' : t < Real.log r := lt_of_le_of_ne htr hte
     let n : ℕ := ⌊Real.exp t⌋₊
     have hqpos : (0 : ℝ) < q := by exact_mod_cast (lt_of_lt_of_le (by norm_num) h.left_event.two_le)
@@ -97,7 +108,9 @@ private theorem exists_primeCell_in_mangoldtBlock
       have hcast : (r : ℝ) ≤ n := by exact_mod_cast (le_of_not_gt hn)
       have hnexp : (n : ℝ) ≤ Real.exp t := Nat.floor_le (Real.exp_pos t).le
       linarith
-    have hnpos : (0 : ℝ) < n := by exact_mod_cast (lt_of_lt_of_le (by norm_num) hnq)
+    have hqnat : 0 < q := h.left_pos
+    have hnpos : (0 : ℝ) < n := by
+      exact_mod_cast (lt_of_lt_of_le hqnat hnq)
     have hleft : Real.log n ≤ t := by
       rw [Real.log_le_iff_le_exp hnpos]
       exact Nat.floor_le (Real.exp_pos t).le
@@ -115,8 +128,10 @@ theorem suzukiPsi_eq_mangoldtBlock
     suzukiPsi t = suzukiPsiArchimedean t -
       suzukiMangoldtSlope q * t + suzukiMangoldtIntercept q := by
   obtain ⟨n, hqn, hnr, ht⟩ := exists_primeCell_in_mangoldtBlock h htq htr
+  have hq1 : 1 ≤ q := Nat.one_le_iff_ne_zero.mpr (Nat.ne_of_gt h.left_pos)
+  have hn1 : 1 ≤ n := hq1.trans hqn
   rw [suzukiPsi_eq_arch_sub_slope_mul_add_intercept_on_closed_cell
-    (le_trans h.left_event.two_le hqn) ht.1 ht.2,
+    hn1 ht.1 ht.2,
     mangoldtSlope_eq_on_block h hqn hnr,
     mangoldtIntercept_eq_on_block h hqn hnr]
 
@@ -178,7 +193,8 @@ theorem mangoldtBlockMargin_nonneg_iff
   have hqlog : 0 < Real.log q := Real.log_pos (by
     exact_mod_cast h.left_event.two_le)
   have hlog : Real.log q ≤ Real.log r :=
-    Real.log_le_log (by positivity) (by exact_mod_cast h.left_lt.le)
+    Real.log_le_log (by exact_mod_cast h.left_pos)
+      (by exact_mod_cast h.left_lt.le)
   constructor
   · intro hm t htq htr
     have hobj := le_suzukiArchIntervalDual hqlog hlog
@@ -205,7 +221,8 @@ theorem mangoldtBlockMargin_eq_minimum
   have hqlog : 0 < Real.log q := Real.log_pos (by
     exact_mod_cast h.left_event.two_le)
   have hlog : Real.log q ≤ Real.log r :=
-    Real.log_le_log (by positivity) (by exact_mod_cast h.left_lt.le)
+    Real.log_le_log (by exact_mod_cast h.left_pos)
+      (by exact_mod_cast h.left_lt.le)
   obtain ⟨t, ht, hdual, hmax⟩ := exists_suzukiArchIntervalDual_eq
     (s := suzukiMangoldtSlope q) hqlog hlog
   refine ⟨t, ht, ?_, ?_⟩
@@ -216,6 +233,9 @@ theorem mangoldtBlockMargin_eq_minimum
     ring
   · intro u hu
     have hm := hmax hu
+    change suzukiArchCellObjective (suzukiMangoldtSlope q) u ≤
+      suzukiArchCellObjective (suzukiMangoldtSlope q) t at hm
+    change suzukiPsi t ≤ suzukiPsi u
     rw [suzukiPsi_eq_mangoldtBlock h ht.1 ht.2,
       suzukiPsi_eq_mangoldtBlock h hu.1 hu.2]
     unfold suzukiArchCellObjective at hm
@@ -240,14 +260,17 @@ theorem strictConcaveOn_suzukiArchCellObjective_Icc
 theorem strictConvexOn_suzukiPsi_mangoldtBlock
     {q r : ℕ} (h : IsMangoldtBlock q r) :
     StrictConvexOn ℝ (Icc (Real.log q) (Real.log r)) suzukiPsi := by
+  have hlog2q : Real.log 2 ≤ Real.log q :=
+    Real.log_le_log (by norm_num) (by exact_mod_cast h.left_event.two_le)
+  have hlogqr : Real.log q ≤ Real.log r :=
+    Real.log_le_log (by exact_mod_cast h.left_pos)
+      (by exact_mod_cast h.left_lt.le)
   have hconc := strictConcaveOn_suzukiArchCellObjective_Icc
-    (s := suzukiMangoldtSlope q)
-    (Real.log_le_log (by norm_num) (by exact_mod_cast h.left_event.two_le))
-    (Real.log_le_log (by positivity) (by exact_mod_cast h.left_lt.le))
+    (s := suzukiMangoldtSlope q) hlog2q hlogqr
   have hconv : StrictConvexOn ℝ (Icc (Real.log q) (Real.log r))
       (fun t => -suzukiArchCellObjective (suzukiMangoldtSlope q) t +
         suzukiMangoldtIntercept q) := by
-    exact hconc.neg.add_affine (AffineMap.const ℝ ℝ (suzukiMangoldtIntercept q))
+    exact hconc.neg.add_const (suzukiMangoldtIntercept q)
   apply hconv.congr
   intro t ht
   rw [suzukiPsi_eq_mangoldtBlock h ht.1 ht.2]
@@ -270,10 +293,13 @@ theorem deriv_suzukiPsi_eq_arch_deriv_sub_slope_on_mangoldtBlock
     exact_mod_cast h.left_event.two_le)).trans ht.1
   have hF : HasDerivAt F
       (deriv suzukiPsiArchimedean t - suzukiMangoldtSlope q) t := by
-    dsimp [F]
-    convert ((differentiableAt_suzukiPsiArchimedean_of_pos htpos).hasDerivAt.sub
-      (((hasDerivAt_id t).const_mul (suzukiMangoldtSlope q)).const_add
-        (suzukiMangoldtIntercept q))) using 1 <;> ring
+    have hlin : HasDerivAt
+        (fun x : ℝ => suzukiMangoldtSlope q * x)
+        (suzukiMangoldtSlope q) t := by
+      simpa using (hasDerivAt_id t).const_mul (suzukiMangoldtSlope q)
+    simpa [F] using
+      (((differentiableAt_suzukiPsiArchimedean_of_pos htpos).hasDerivAt.sub hlin).add_const
+        (suzukiMangoldtIntercept q))
   rw [heq.deriv_eq, hF.deriv]
 
 /-- The slope deficit `A'(t)-S_q` is strictly increasing across the entire
@@ -374,19 +400,24 @@ private theorem blockMargin_le_cellMargin
   have hqlog : 0 < Real.log q := Real.log_pos (by
     exact_mod_cast h.left_event.two_le)
   have hlog : Real.log q ≤ Real.log r :=
-    Real.log_le_log (by positivity) (by exact_mod_cast h.left_lt.le)
+    Real.log_le_log (by exact_mod_cast h.left_pos)
+      (by exact_mod_cast h.left_lt.le)
   have hn2 : 2 ≤ n := h.left_event.two_le.trans hqn
   obtain ⟨t, ht, hdual, hmax⟩ :=
     exists_suzukiArchCellDual_eq hn2 (suzukiMangoldtSlope n)
   have htblock : t ∈ Icc (Real.log q) (Real.log r) := by
     constructor
-    · exact (Real.log_le_log (by positivity) (by exact_mod_cast hqn)).trans ht.1
-    · exact ht.2.trans (Real.log_le_log (by positivity) (by exact_mod_cast (show n + 1 ≤ r by omega)))
+    · exact (Real.log_le_log (by exact_mod_cast h.left_pos)
+        (by exact_mod_cast hqn)).trans ht.1
+    · exact ht.2.trans (Real.log_le_log (by exact_mod_cast (Nat.succ_pos n))
+        (by exact_mod_cast (show n + 1 ≤ r by omega)))
   have hobj := le_suzukiArchIntervalDual hqlog hlog
     (s := suzukiMangoldtSlope q) htblock
-  rw [mangoldtSlope_eq_on_block h hqn hnr,
-    mangoldtIntercept_eq_on_block h hqn hnr]
+  have hs := mangoldtSlope_eq_on_block h hqn hnr
+  have hi := mangoldtIntercept_eq_on_block h hqn hnr
+  rw [hs] at hdual
   unfold suzukiMangoldtBlockMargin suzukiMangoldtBlockDual suzukiCellMargin
+  rw [hs, hi]
   rw [hdual]
   exact sub_le_sub_left hobj _
 
@@ -410,11 +441,16 @@ theorem exists_cellMargin_eq_mangoldtBlockMargin
       ring
     have htu : suzukiArchCellObjective (suzukiMangoldtSlope n) t ≤
         suzukiArchCellObjective (suzukiMangoldtSlope n) u := hmax htcell
-    rw [hcellmin, ← hmargin]
-    rw [suzukiPsi_eq_arch_sub_slope_mul_add_intercept_on_closed_cell
-      (le_trans (by norm_num) hn2) htcell.1 htcell.2]
-    unfold suzukiArchCellObjective at htu
-    linarith
+    calc
+      suzukiCellMargin n = suzukiPsi u := hcellmin
+      _ ≤ suzukiPsi t := by
+        rw [suzukiPsi_eq_arch_sub_slope_mul_add_intercept_on_closed_cell
+          (le_trans (by norm_num) hn2) hu.1 hu.2,
+          suzukiPsi_eq_arch_sub_slope_mul_add_intercept_on_closed_cell
+          (le_trans (by norm_num) hn2) htcell.1 htcell.2]
+        unfold suzukiArchCellObjective at htu
+        linarith
+      _ = suzukiMangoldtBlockMargin q r := hmargin.symm
   · exact blockMargin_le_cellMargin h hqn hnr
 
 /-- A block margin is exactly the finite minimum of all integer-cell margins
@@ -446,10 +482,8 @@ theorem suzukiArithmeticState_event_update (n : ℕ) :
       (suzukiMangoldtSlope n + suzukiMangoldtEventWeight (n + 1),
         suzukiMangoldtIntercept n +
           suzukiMangoldtEventWeight (n + 1) * Real.log (n + 1)) := by
-  rw [suzukiArithmeticState_succ]
-  unfold suzukiMangoldtEventWeight
-  congr 1
-  ring
+  simpa [suzukiMangoldtEventWeight, div_eq_mul_inv, Nat.cast_add,
+    mul_assoc, mul_comm, mul_left_comm] using suzukiArithmeticState_succ n
 
 /-! ## Consecutive-event coverage and the sparse global criterion -/
 
@@ -506,8 +540,9 @@ theorem suzukiPsiNonnegative_iff_initial_and_mangoldtBlockMargins :
       (hblocks q r hblock)
     intro t htn htn1
     apply hpos t
-    · exact (Real.log_le_log (by positivity) (by exact_mod_cast hqn)).trans htn
-    · exact htn1.trans (Real.log_le_log (by positivity)
+    · exact (Real.log_le_log (by exact_mod_cast hblock.left_pos)
+        (by exact_mod_cast hqn)).trans htn
+    · exact htn1.trans (Real.log_le_log (by exact_mod_cast (Nat.succ_pos n))
         (by exact_mod_cast (show n + 1 ≤ r by omega)))
 
 /-- RH as the compact initial condition plus one scalar inequality per
@@ -542,7 +577,8 @@ theorem suzukiMangoldtBlockDual_le_archDual
   have hqlog : 0 < Real.log q := Real.log_pos (by
     exact_mod_cast h.left_event.two_le)
   have hlog : Real.log q ≤ Real.log r :=
-    Real.log_le_log (by positivity) (by exact_mod_cast h.left_lt.le)
+    Real.log_le_log (by exact_mod_cast h.left_pos)
+      (by exact_mod_cast h.left_lt.le)
   obtain ⟨t, ht, hdual, hmax⟩ := exists_suzukiArchIntervalDual_eq
     (s := suzukiMangoldtSlope q) hqlog hlog
   unfold suzukiMangoldtBlockDual
@@ -577,6 +613,7 @@ theorem globalDualMargin_event_update (n : ℕ) :
           suzukiArchDual (suzukiMangoldtSlope n)) := by
   unfold suzukiGlobalDualMargin suzukiMangoldtEventWeight
   rw [suzukiMangoldtSlope_succ, suzukiMangoldtIntercept_succ]
-  ring
+  norm_num only [Nat.cast_add, Nat.cast_one]
+  ring_nf
 
 end RHGarden

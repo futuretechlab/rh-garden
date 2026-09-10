@@ -41,3 +41,4 @@ import RHGarden.SuzukiConvexity
 import RHGarden.SuzukiCellTwo
 import RHGarden.SuzukiMangoldtState
 import RHGarden.SuzukiMangoldtBlocks
+import RHGarden.SuzukiDualDynamics

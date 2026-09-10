@@ -354,3 +354,43 @@ near `exp(t*)=208.115`, candidate margin `0.02802262`, and the deficit
 `S_q-A'(t)` changes from approximately `+0.639` to `-0.199`. This sign
 change is the structural invariant locating the dangerous point; the label
 208 merely identifies which integer subcell contains it.
+
+## Archimedean dual dynamics mode
+
+The `dual` command follows the event state against the unrestricted
+half-line Legendre dual:
+
+```text
+cabal run rh-garden -- explore-suzuki dual --t-min 1.5 --t-max 5.71
+```
+
+For each event `q` and next event `r` it reports `lambda_q`, `(S_q,C_q)`,
+the unique optimizer `tStar(S_q)`, `AStar(S_q)`, the global dual margin,
+the post-event deficit `A'(log q)-S_q`, smooth drift to `r`, the next
+Mangoldt impulse, and the exact recurrence's predicted next deficit.  It
+also distinguishes active blocks, where `log q<tStar<log r` and the global
+dual margin equals the block margin, from endpoint-minimized blocks.
+
+The corresponding facts are LeanChecked in `SuzukiDualDynamics.lean`:
+quadratic coercivity and dual attainment, uniqueness and one-Lipschitzness
+of `tStar`, `AStar'=tStar`, the signed-area event update, the deficit
+recurrence, and active-block exactness. The displayed values are still
+`NumericalEvidence`.
+
+The first scan shows that the unrestricted global margin is positive over
+the displayed range but is not identical to an inactive block margin. The
+dangerous active blocks `5->7`, `13->16`, `32->37`, and `199->211` share a
+simple pattern: a negative post-event deficit crosses zero under smooth
+archimedean drift before the next impulse. No monotonic normalized deficit
+or always-positive event increment appears in this range; both signs occur.
+This rules out those naive invariants but does not address the infinite tail.
+
+A regression scan through event integers below 5000 produced 710 complete
+event blocks. The smallest candidate global margin was about `0.02752057`
+at `3089->3109`; none was negative. There were 251 active blocks, while the
+event-area increment was negative 357 times and positive 353 times. Thus
+positivity of this finite sample is not explained by monotone event gains.
+The robust low-complexity invariant is instead the active-block sign
+crossing: the post-event deficit is negative and becomes positive under
+archimedean drift before the next impulse. This condition is exact in Lean,
+but it does not itself lower-bound the margin or certify a tail.

@@ -618,7 +618,7 @@ usage = do
 suzukiExplorerUsage :: IO ()
 suzukiExplorerUsage = do
   putStrLn "Suzuki Explorer options:"
-  putStrLn "  MODE: scan | branches | crossings | cell | cluster | margins | certificate-status"
+  putStrLn "  MODE: scan | branches | crossings | cell | cluster | margins | blocks | dual | certificate-status"
   putStrLn "  --omega VALUE                         (repeatable)"
   putStrLn "  --omega-min VALUE --omega-max VALUE --omega-count N"
   putStrLn "  --t-min VALUE --t-max VALUE --samples N"

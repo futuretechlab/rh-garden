@@ -73,6 +73,9 @@ data Representation
   | SuzukiCellMargins
   | SuzukiMangoldtBlocks
   | SuzukiMangoldtBlockMargins
+  | SuzukiArchDualOptimizer
+  | SuzukiEventSlopeDeficit
+  | SuzukiDualAreaDynamics
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -149,6 +152,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiCellMargins :: SRepresentation 'SuzukiCellMargins
   SSuzukiMangoldtBlocks :: SRepresentation 'SuzukiMangoldtBlocks
   SSuzukiMangoldtBlockMargins :: SRepresentation 'SuzukiMangoldtBlockMargins
+  SSuzukiArchDualOptimizer :: SRepresentation 'SuzukiArchDualOptimizer
+  SSuzukiEventSlopeDeficit :: SRepresentation 'SuzukiEventSlopeDeficit
+  SSuzukiDualAreaDynamics :: SRepresentation 'SuzukiDualAreaDynamics
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -226,6 +232,9 @@ representationValue SSuzukiArchimedeanCellDual = SuzukiArchimedeanCellDual
 representationValue SSuzukiCellMargins = SuzukiCellMargins
 representationValue SSuzukiMangoldtBlocks = SuzukiMangoldtBlocks
 representationValue SSuzukiMangoldtBlockMargins = SuzukiMangoldtBlockMargins
+representationValue SSuzukiArchDualOptimizer = SuzukiArchDualOptimizer
+representationValue SSuzukiEventSlopeDeficit = SuzukiEventSlopeDeficit
+representationValue SSuzukiDualAreaDynamics = SuzukiDualAreaDynamics
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -301,6 +310,9 @@ representationLabel SuzukiArchimedeanCellDual = "restricted convex dual D_n(s)=m
 representationLabel SuzukiCellMargins = "scalar cell safety margins C_n-D_n(S_n)"
 representationLabel SuzukiMangoldtBlocks = "constant-state intervals between consecutive Mangoldt events"
 representationLabel SuzukiMangoldtBlockMargins = "one scalar safety margin per Mangoldt event block"
+representationLabel SuzukiArchDualOptimizer = "unique half-line archimedean dual optimizer tStar(S)"
+representationLabel SuzukiEventSlopeDeficit = "archimedean slope surplus at a Mangoldt event"
+representationLabel SuzukiDualAreaDynamics = "signed-area evolution of the global Suzuki dual margin"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

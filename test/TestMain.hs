@@ -195,6 +195,25 @@ main = do
         any (\row -> blockLeftEvent row == 32 && blockRightEvent row == 37)
           (reportBlockMargins report)
       Left _ -> False
+  check "Suzuki dual mode tracks the Lean-checked event recurrence" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = DualMode
+        , explorerOmegas = [0]
+        , explorerTMin = 1.5
+        , explorerTMax = 5.71
+        , explorerSamples = 401
+        , explorerPrimeCells = True
+        } of
+      Right report ->
+        not (null (reportDualDynamics report)) &&
+        all (\row -> abs (dualPredictedNextDeficit row -
+          (dualDeficit row + dualArchDrift row - dualNextImpulse row)) < 1e-12)
+          (reportDualDynamics report) &&
+        any (\row -> dualEvent row == 199 && dualNextEvent row == 211 &&
+          dualActive row && dualBlockEqualsGlobal row &&
+          exp (dualOptimizer row) > 208 && exp (dualOptimizer row) < 209)
+          (reportDualDynamics report)
+      Left _ -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True
