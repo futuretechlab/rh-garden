@@ -13,6 +13,7 @@ module RHGarden.Explorer.Suzuki
   , CellMargin(..)
   , BlockMargin(..)
   , DualDynamics(..)
+  , BusyPeriod(..)
   , CandidateCertificate(..)
   , defaultExplorerOptions
   , parseExplorerOptions
@@ -58,6 +59,7 @@ data ExplorerMode
   | BlocksMode
   | DualMode
   | RootsMode
+  | BusyMode
   deriving (Eq, Ord, Show, Read)
 
 data ExplorerOptions = ExplorerOptions
@@ -253,6 +255,34 @@ data DualDynamics = DualDynamics
   , dualCrudeGapCondition :: Bool
   } deriving (Eq, Show)
 
+-- | A maximal numerically detected interval on which the right-continuous
+-- root-slope discrepancy is negative.  A period may cross several Mangoldt
+-- impulses before smooth archimedean service returns the discrepancy to zero.
+-- These records are NumericalEvidence only.
+data BusyPeriod = BusyPeriod
+  { busyStartEvent :: Int
+  , busyRecoveryBeforeEvent :: Int
+  , busyEventCount :: Int
+  , busyRootStart :: Double
+  , busyRootEnd :: Double
+  , busyRootWidth :: Double
+  , busyTWidth :: Double
+  , busyStartingDiscrepancy :: Double
+  , busyMostNegativeDiscrepancy :: Double
+  , busyEndingDiscrepancy :: Double
+  , busyWeightedLoss :: Double
+  , busyPsiStart :: Double
+  , busyPsiEnd :: Double
+  , busyMinimumPsi :: Double
+  , busyArrivalMass :: Double
+  , busyServiceDrift :: Double
+  , busyLossOverReserve :: Double
+  , busyLossTimesSqrtStart :: Double
+  , busyLossOverInitialBacklogSq :: Double
+  , busyMaxBacklogOverSqrtStart :: Double
+  , busyArrivalOverService :: Double
+  } deriving (Eq, Show)
+
 data CandidateCertificate = CandidateCertificate
   { certificateOmega :: Double
   , certificateLeft :: Double
@@ -282,6 +312,7 @@ data ExplorerReport = ExplorerReport
   , reportMargins :: [CellMargin]
   , reportBlockMargins :: [BlockMargin]
   , reportDualDynamics :: [DualDynamics]
+  , reportBusyPeriods :: [BusyPeriod]
   } deriving (Eq, Show)
 
 data PrimeEvent = PrimeEvent
@@ -352,6 +383,9 @@ parseExplorerOptions = go defaultExplorerOptions
         explorerOmegas = [0] } rest
     go options ("roots" : rest) =
       go options { explorerMode = RootsMode, explorerPrimeCells = True,
+        explorerOmegas = [0] } rest
+    go options ("busy" : rest) =
+      go options { explorerMode = BusyMode, explorerPrimeCells = True,
         explorerOmegas = [0] } rest
     go options ("--omega" : value : rest) =
       parseDouble "--omega" value >>= \x ->
@@ -439,7 +473,8 @@ resolvedOmegas options = case
     (explorerOmegaMin options, explorerOmegaMax options,
       explorerOmegaCount options) of
   (Just lo, Just hi, Just count) -> linearGrid count lo hi
-  _ | explorerMode options `elem` [MarginsMode, BlocksMode, DualMode, RootsMode] -> [0]
+  _ | explorerMode options `elem`
+      [MarginsMode, BlocksMode, DualMode, RootsMode, BusyMode] -> [0]
     | not (null (explorerOmegas options)) -> explorerOmegas options
     | otherwise -> [0.5, 0.25, 0.125, 0]
 
@@ -456,7 +491,7 @@ exploreSuzuki options = do
       nodes = explorationNodes checked nMax
       base = buildBasePoints events nodes
       omegaResults
-        | explorerMode checked `elem` [DualMode, RootsMode] = []
+        | explorerMode checked `elem` [DualMode, RootsMode, BusyMode] = []
         | otherwise = map (exploreOmega checked primes events base) (resolvedOmegas checked)
       summaries = [summary | (summary, _, _, _) <- omegaResults]
       rawCells = concat [minima | (_, minima, _, _) <- omegaResults]
@@ -470,6 +505,7 @@ exploreSuzuki options = do
         [cell | cell <- cells, abs (cellOmega cell) < 1e-12]
       blocks = buildBlockMargins checked events
       dualRows = buildDualDynamics checked events
+      busyPeriods = buildBusyPeriods dualRows
       attachDistance cell = cell
         { cellDistanceAboveBest = cellCandidateValue cell -
             minimum [summaryMinimum summary | summary <- summaries,
@@ -486,7 +522,69 @@ exploreSuzuki options = do
     , reportMargins = margins
     , reportBlockMargins = blocks
     , reportDualDynamics = dualRows
+    , reportBusyPeriods = busyPeriods
     }
+
+-- | Collapse the event stream into completed maximal negative-discrepancy
+-- excursions.  Within each block the discrepancy is strictly increasing, so
+-- `d_q + G(q,r) >= 0` identifies the unique smooth recovery point.  If it is
+-- still negative at the next event, the next Mangoldt kick continues the same
+-- busy period.
+buildBusyPeriods :: [DualDynamics] -> [BusyPeriod]
+buildBusyPeriods = seek
+  where
+    tolerance = 1e-12
+    seek [] = []
+    seek (row : rows)
+      | dualDeficit row < (-tolerance) = case consume [row] row rows of
+          Nothing -> []
+          Just (period, remaining) -> period : seek remaining
+      | otherwise = seek rows
+    consume accumulated current remaining
+      | dualDeficit current + dualArchDrift current >= (-tolerance) =
+          Just (finish (reverse accumulated), remaining)
+      | otherwise = case remaining of
+          [] -> Nothing
+          next : rest -> consume (next : accumulated) next rest
+    finish rows = BusyPeriod
+      { busyStartEvent = dualEvent first
+      , busyRecoveryBeforeEvent = dualNextEvent final
+      , busyEventCount = length rows
+      , busyRootStart = rootStart
+      , busyRootEnd = rootEnd
+      , busyRootWidth = rootEnd - rootStart
+      , busyTWidth = dualOptimizer final - log (fromIntegral (dualEvent first))
+      , busyStartingDiscrepancy = startD
+      , busyMostNegativeDiscrepancy = minimum (map dualDeficit rows)
+      , busyEndingDiscrepancy = 0
+      , busyWeightedLoss = loss
+      , busyPsiStart = psiStart
+      , busyPsiEnd = psiEnd
+      , busyMinimumPsi = psiEnd
+      , busyArrivalMass = arrival
+      , busyServiceDrift = service
+      , busyLossOverReserve = safeRatio loss psiStart
+      , busyLossTimesSqrtStart = loss * rootStart
+      , busyLossOverInitialBacklogSq = safeRatio loss (startD * startD)
+      , busyMaxBacklogOverSqrtStart = safeRatio
+          (maximum (map (max 0 . negate . dualDeficit) rows)) rootStart
+      , busyArrivalOverService = safeRatio arrival service
+      }
+      where
+        first = head rows
+        final = last rows
+        initialRows = init rows
+        rootStart = dualSqrtEvent first
+        rootEnd = dualRootOptimizer final
+        startD = dualDeficit first
+        psiStart = dualEventValue first
+        psiEnd = dualBlockMargin final
+        loss = psiStart - psiEnd
+        arrival = sum (map dualNextImpulse initialRows)
+        service = sum (map dualArchDrift initialRows) - dualDeficit final
+        safeRatio numerator denominator
+          | abs denominator < 1e-15 = 0 / 0
+          | otherwise = numerator / denominator
 
 buildDualDynamics :: ExplorerOptions -> [PrimeEvent] -> [DualDynamics]
 buildDualDynamics options events = case events of
@@ -1531,6 +1629,7 @@ renderExplorerAscii report = unlines $
       BlocksMode -> blockSection
       DualMode -> dualSection
       RootsMode -> rootSection
+      BusyMode -> busySection
       ScanMode -> []
     marginSection =
       [ ""
@@ -1561,6 +1660,13 @@ renderExplorerAscii report = unlines $
       , "----------------------------------------------------------------------------------------------------------------------------------------------------------"
       ] ++ map renderRoot rootRowsForDisplay ++ rootSummarySection ++
         rootPotentialSection
+    busySection =
+      [ ""
+      , "Root-discrepancy busy periods (NumericalEvidence):"
+      , "Each row is one completed maximal negative excursion; finite scans do not establish RH."
+      , "start    recover<  events  root width    t width       D_start       D_min         loss          Psi_start     Psi_min       loss/reserve  arrivals/service"
+      , "----------------------------------------------------------------------------------------------------------------------------------------------------------"
+      ] ++ map renderBusy busyRowsForDisplay ++ busySummarySection
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1713,10 +1819,54 @@ renderExplorerAscii report = unlines $
       , pad 11 (fmt 8 (dualSqrtGap row))
       , pad 11 (fmt 7 (dualRootKickOverGap row))
       , boolText (dualActive row)]
+    renderBusy period = intercalate "  "
+      [ pad 8 (show (busyStartEvent period))
+      , pad 9 (show (busyRecoveryBeforeEvent period))
+      , pad 7 (show (busyEventCount period))
+      , pad 13 (fmt 8 (busyRootWidth period))
+      , pad 13 (fmt 8 (busyTWidth period))
+      , pad 13 (fmt 8 (busyStartingDiscrepancy period))
+      , pad 13 (fmt 8 (busyMostNegativeDiscrepancy period))
+      , pad 13 (fmt 9 (busyWeightedLoss period))
+      , pad 13 (fmt 9 (busyPsiStart period))
+      , pad 13 (fmt 9 (busyMinimumPsi period))
+      , pad 13 (fmt 7 (busyLossOverReserve period))
+      , fmt 7 (busyArrivalOverService period)]
     dualRowsForDisplay = take 30 (sortOn dualCurvatureSafetyEnergy
       (reportDualDynamics report))
     rootRowsForDisplay = take 40 (reverse (sortOn dualRootKickOverGap
       (reportDualDynamics report)))
+    busyRowsForDisplay = take 40 (reverse (sortOn busyLossOverReserve
+      (reportBusyPeriods report)))
+    busySummarySection =
+      let periods = reportBusyPeriods report
+          maxEvents = if null periods then Nothing else Just
+            (maximumBy (comparing busyEventCount) periods)
+          maxWidth = if null periods then Nothing else Just
+            (maximumBy (comparing busyRootWidth) periods)
+          maxFraction = if null periods then Nothing else Just
+            (maximumBy (comparing busyLossOverReserve) periods)
+          containing199 = [period | period <- periods,
+            busyStartEvent period <= 199,
+            199 < busyRecoveryBeforeEvent period]
+          showAt field period = show (field period) ++ " at start q=" ++
+            show (busyStartEvent period)
+      in [ ""
+         , "Busy-period scan summary:"
+         , "  completed periods: " ++ show (length periods)
+         , "  maximum event count: " ++ maybe "n/a" (showAt busyEventCount) maxEvents
+         , "  maximum root width: " ++ maybe "n/a"
+             (\period -> fmt 10 (busyRootWidth period) ++ " at start q=" ++
+               show (busyStartEvent period)) maxWidth
+         , "  largest reserve fraction consumed: " ++ maybe "n/a"
+             (\period -> fmt 10 (busyLossOverReserve period) ++ " at start q=" ++
+               show (busyStartEvent period)) maxFraction
+         , "  period containing event 199: " ++ case containing199 of
+             period : _ -> show (busyStartEvent period) ++ " -> recovery before " ++
+               show (busyRecoveryBeforeEvent period) ++ " (" ++
+               show (busyEventCount period) ++ " event states)"
+             [] -> "none in completed scan"
+         ]
     rootSummarySection =
       let rows = reportDualDynamics report
           maxRho = if null rows then Nothing else Just (maximumBy
@@ -1787,6 +1937,9 @@ renderExplorerAscii report = unlines $
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
+  | explorerMode (reportOptions report) == BusyMode = unlines $
+      ["trust,status,start_event,recovery_before_event,event_count,root_start,root_end,root_width,t_width,starting_discrepancy,most_negative_discrepancy,ending_discrepancy,weighted_loss,psi_start,psi_end,minimum_psi,loss_over_reserve,loss_times_sqrt_start,loss_over_initial_backlog_sq,max_backlog_over_sqrt_start,arrival_mass,service_drift,arrival_over_service"] ++
+      map renderBusyCsv (reportBusyPeriods report)
   | explorerMode (reportOptions report) == RootsMode = unlines $
       ["trust,status,event_q,next_event_r,u_star_before,u_star_after,sqrt_q,sqrt_r,root_displacement,rho,root_kick,kick_lower,kick_upper,sqrt_gap,kick_over_gap,normalized_root_impulse,active,global_margin,block_margin,margin_update,curvature_safety_energy,root_barrier_five_thirds,root_barrier_two,crude_gap_condition"] ++
       map renderRootCsv (reportDualDynamics report)
@@ -1803,6 +1956,21 @@ renderExplorerCsv report
   ["trust,status,omega,cell,t_left,t_right,t_candidate,psi,derivative,second_derivative,distance_above_best,psi_over_t,psi_over_t2,exp_neg_half_psi,exp_neg_omega_psi,omega_t,prime_gap,theta,chebyshev_psi,psi_minus_n,left_prime_power,right_prime_power"] ++
   map renderCellCsv (reportCellMinima report)
   where
+    renderBusyCsv period = intercalate ","
+      ["NumericalEvidence", "candidate", show (busyStartEvent period)
+      ,show (busyRecoveryBeforeEvent period), show (busyEventCount period)
+      ,num (busyRootStart period), num (busyRootEnd period)
+      ,num (busyRootWidth period), num (busyTWidth period)
+      ,num (busyStartingDiscrepancy period)
+      ,num (busyMostNegativeDiscrepancy period)
+      ,num (busyEndingDiscrepancy period), num (busyWeightedLoss period)
+      ,num (busyPsiStart period), num (busyPsiEnd period)
+      ,num (busyMinimumPsi period), num (busyLossOverReserve period)
+      ,num (busyLossTimesSqrtStart period)
+      ,num (busyLossOverInitialBacklogSq period)
+      ,num (busyMaxBacklogOverSqrtStart period)
+      ,num (busyArrivalMass period), num (busyServiceDrift period)
+      ,num (busyArrivalOverService period)]
     renderRootCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (dualEvent row)
       ,show (dualNextEvent row), num (dualRootOptimizer row)
@@ -1904,6 +2072,9 @@ renderExplorerJson report = unlines
   ,"  ],"
   ,"  \"dual_dynamics\": ["
   ,intercalate ",\n" (map (indent 4 . dualJson) (reportDualDynamics report))
+  ,"  ],"
+  ,"  \"busy_periods\": ["
+  ,intercalate ",\n" (map (indent 4 . busyJson) (reportBusyPeriods report))
   ,"  ]"
   ,"}"
   ]
@@ -2038,6 +2209,34 @@ dualJson row = "{" ++ intercalate ", "
   ,jsonField "root_kick_over_gap" (num (dualRootKickOverGap row))
   ,jsonField "normalized_root_impulse" (num (dualNormalizedRootImpulse row))
   ,jsonField "crude_gap_condition" (jsonBool (dualCrudeGapCondition row))] ++ "}"
+
+busyJson :: BusyPeriod -> String
+busyJson period = "{" ++ intercalate ", "
+  [jsonStringField "trust" "NumericalEvidence"
+  ,jsonStringField "status" "candidate"
+  ,jsonField "start_event" (show (busyStartEvent period))
+  ,jsonField "recovery_before_event" (show (busyRecoveryBeforeEvent period))
+  ,jsonField "event_count" (show (busyEventCount period))
+  ,jsonField "root_start" (num (busyRootStart period))
+  ,jsonField "root_end" (num (busyRootEnd period))
+  ,jsonField "root_width" (num (busyRootWidth period))
+  ,jsonField "t_width" (num (busyTWidth period))
+  ,jsonField "starting_discrepancy" (num (busyStartingDiscrepancy period))
+  ,jsonField "most_negative_discrepancy" (num (busyMostNegativeDiscrepancy period))
+  ,jsonField "ending_discrepancy" (num (busyEndingDiscrepancy period))
+  ,jsonField "weighted_loss" (num (busyWeightedLoss period))
+  ,jsonField "psi_start" (num (busyPsiStart period))
+  ,jsonField "psi_end" (num (busyPsiEnd period))
+  ,jsonField "minimum_psi" (num (busyMinimumPsi period))
+  ,jsonField "loss_over_reserve" (num (busyLossOverReserve period))
+  ,jsonField "loss_times_sqrt_start" (num (busyLossTimesSqrtStart period))
+  ,jsonField "loss_over_initial_backlog_sq"
+      (num (busyLossOverInitialBacklogSq period))
+  ,jsonField "max_backlog_over_sqrt_start"
+      (num (busyMaxBacklogOverSqrtStart period))
+  ,jsonField "arrival_mass" (num (busyArrivalMass period))
+  ,jsonField "service_drift" (num (busyServiceDrift period))
+  ,jsonField "arrival_over_service" (num (busyArrivalOverService period))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

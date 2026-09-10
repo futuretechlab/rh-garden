@@ -86,6 +86,9 @@ data Representation
   | SuzukiRootDisplacement
   | SuzukiRootKickDynamics
   | RootMarginIntegral
+  | SuzukiRootSlopeDiscrepancy
+  | SuzukiRootPrefixArea
+  | SuzukiBusyPeriodLoss
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -175,6 +178,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiRootDisplacement :: SRepresentation 'SuzukiRootDisplacement
   SSuzukiRootKickDynamics :: SRepresentation 'SuzukiRootKickDynamics
   SRootMarginIntegral :: SRepresentation 'RootMarginIntegral
+  SSuzukiRootSlopeDiscrepancy :: SRepresentation 'SuzukiRootSlopeDiscrepancy
+  SSuzukiRootPrefixArea :: SRepresentation 'SuzukiRootPrefixArea
+  SSuzukiBusyPeriodLoss :: SRepresentation 'SuzukiBusyPeriodLoss
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -265,6 +271,9 @@ representationValue SSuzukiArchDualRoot = SuzukiArchDualRoot
 representationValue SSuzukiRootDisplacement = SuzukiRootDisplacement
 representationValue SSuzukiRootKickDynamics = SuzukiRootKickDynamics
 representationValue SRootMarginIntegral = RootMarginIntegral
+representationValue SSuzukiRootSlopeDiscrepancy = SuzukiRootSlopeDiscrepancy
+representationValue SSuzukiRootPrefixArea = SuzukiRootPrefixArea
+representationValue SSuzukiBusyPeriodLoss = SuzukiBusyPeriodLoss
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -353,6 +362,9 @@ representationLabel SuzukiArchDualRoot = "square-root coordinate uStar(S)=exp(tS
 representationLabel SuzukiRootDisplacement = "event scale sqrt(q) minus the optimizer root uStar(S_q)"
 representationLabel SuzukiRootKickDynamics = "square-root-gap minus bounded root-kick Mangoldt dynamics"
 representationLabel RootMarginIntegral = "exact signed Suzuki margin area in optimizer-root coordinates"
+representationLabel SuzukiRootSlopeDiscrepancy = "smooth root slope minus the right-continuous weighted Mangoldt step slope"
+representationLabel SuzukiRootPrefixArea = "weighted root-discrepancy prefix area representation of Suzuki Psi"
+representationLabel SuzukiBusyPeriodLoss = "exact weighted backlog loss during negative root-discrepancy excursions"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

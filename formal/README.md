@@ -369,4 +369,22 @@ DeltaM = 4 * integral_{uBefore}^{uAfter}
 This is a representation of the open margin dynamics, not a proof that the
 margins are nonnegative.
 
+`RHGarden/SuzukiRootDiscrepancy.lean` exposes the underlying hybrid sawtooth.
+It defines the smooth root slope `P(u)=A'(2 log u)`, the right-continuous
+arithmetic slope `S_floor(u^2)`, and their discrepancy `D`. On complete
+Mangoldt blocks the file proves
+
+```text
+D'(u)=2*F(u),                 5/3 <= D'(u) < 2,
+Psi(2 log b)-Psi(2 log a) = integral_a^b 2*D(u)/u du,
+```
+
+while event jumps subtract exactly `Lambda(r)/sqrt(r)`. It packages the
+blockwise prefix-area form of the RH criterion, defines negative excursions
+and their weighted-backlog loss, and proves the service/arrival recurrence.
+The public exact Abel identity
+`sum_vonMangoldt_div_sqrt_eq_suzukiChebyshevPsi` expresses cumulative weighted
+arrival mass through a finite Chebyshev-psi sum and integral. No asymptotic
+prime bound, global prefix positivity, or proof of RH is claimed.
+
 No proof of RH is claimed.

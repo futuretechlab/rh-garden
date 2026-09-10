@@ -565,3 +565,31 @@ scan but decrease at roughly half the events, so none is a Lyapunov invariant.
 These are `NumericalEvidence` only. The exact next frontier is to exploit the
 signed root-area over multiple events or find arithmetic control on cumulative
 normalized overshoot; no RH positivity premise has been proved.
+
+The root-discrepancy milestone makes that multi-event frontier exact. Define
+`D(u)=A'(2 log u)-S_floor(u^2)`, where the step term is the cumulative weighted
+Mangoldt slope. Lean checks that `D'=2F` between events, with derivative in
+`[5/3,2)`, and that an event subtracts exactly `Lambda(q)/sqrt(q)`. It also
+checks `(Psi(2 log u))'=2D(u)/u`, the complete-block weighted-area identity,
+and the exact weighted-backlog loss on any negative excursion. An RH
+prefix-area equivalence has been added as a representation only; it does not
+establish its positivity side.
+
+The Explorer now groups consecutive negative blocks into busy periods. Below
+about 1.98 million it found 5,137 completed periods, 1,530 of them multi-event;
+the longest contained 4,663 event states. The old `199 -> 211` danger belongs
+to a three-state excursion starting at `193`, rather than an isolated cell.
+This is numerical discovery, not proof evidence. The exact Abel identity
+`sum_vonMangoldt_div_sqrt_eq_suzukiChebyshevPsi` connects arrival mass to a
+finite Chebyshev-psi sum without assuming PNT or an RH-strength error bound.
+The next mathematical frontier is a certified cumulative-arrival/service
+bound strong enough to dominate an entire busy-period loss.
+
+The pinned prime-bound audit found Mathlib's explicit Chebyshev bounds
+`Chebyshev.psi_le`, `psi_le_const_mul_self`, and `psi_ge`; Zeta23 also proves
+explicit `sum Lambda(n)/sqrt(n)` upper bounds (including its precise
+partial-summation estimate), while `Zeta23.FromPNTPlus.MediumPNT` contains a
+kernel-checked PNT asymptotic. These are unconditional, but their present
+global error scales do not by themselves control each short multi-event busy
+period. No zero-free or RH-strength estimate was imported into the new queue
+representation.

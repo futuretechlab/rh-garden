@@ -45,3 +45,4 @@ import RHGarden.SuzukiDualDynamics
 import RHGarden.SuzukiKickedFlow
 import RHGarden.SuzukiTrueCurvature
 import RHGarden.SuzukiRootDynamics
+import RHGarden.SuzukiRootDiscrepancy

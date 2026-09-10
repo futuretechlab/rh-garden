@@ -264,6 +264,28 @@ main = do
               dualRootKick row / dualSqrtNextEvent row)) < 1e-8)
           (zip (reportDualDynamics report) (drop 1 (reportDualDynamics report)))
       Left _ -> False
+  check "Suzuki busy mode joins multi-event negative discrepancy excursions" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = BusyMode
+        , explorerOmegas = [0]
+        , explorerTMin = log 2
+        , explorerTMax = 7
+        , explorerSamples = 401
+        , explorerPrimeCells = True
+        } of
+      Right report ->
+        not (null (reportBusyPeriods report)) &&
+        all (\period -> busyEventCount period >= 1 &&
+          busyRootEnd period >= busyRootStart period &&
+          busyWeightedLoss period >= -1e-9 &&
+          abs (busyWeightedLoss period -
+            (busyPsiStart period - busyPsiEnd period)) < 1e-10 &&
+          busyStartingDiscrepancy period < 0 &&
+          abs (busyEndingDiscrepancy period) < 1e-12 &&
+          busyServiceDrift period + 1e-8 >= busyArrivalMass period)
+          (reportBusyPeriods report) &&
+        any ((> 1) . busyEventCount) (reportBusyPeriods report)
+      Left _ -> False
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

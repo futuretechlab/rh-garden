@@ -580,3 +580,58 @@ The root-area bound suggests overshoot reserves. The candidates
 this scan, but decreased at 73,603 and 73,417 events, with worst changes about
 `-0.01666` and `-0.02055`. They are not Lyapunov invariants. The useful result
 is the exact coordinate and signed-area localization, not a scanned invariant.
+
+## Root discrepancy and multi-event busy periods
+
+The next exact coordinate is the root-slope discrepancy
+
+```text
+P(u) = A'(2 log u)
+Sroot(u) = sum_{n <= u^2} Lambda(n)/sqrt(n)
+D(u) = P(u) - Sroot(u).
+```
+
+`RHGarden.SuzukiRootDiscrepancy` kernel-checks the hybrid laws. Inside a
+complete Mangoldt block,
+
+```text
+D'(u) = 2 F(u),                  5/3 <= D'(u) < 2,
+```
+
+and at the next event `r` the right-continuous discrepancy jumps downward by
+`Lambda(r)/sqrt(r)`. With `H(u)=Psi(2 log u)`, Lean also checks
+
+```text
+H'(u) = 2 D(u)/u
+H(b)-H(a) = integral_a^b 2 D(u)/u du
+```
+
+on every complete block. Consequently a negative-discrepancy excursion
+consumes exactly the weighted backlog area `integral 2*max(-D,0)/u`. The RH
+prefix-area statement recorded in Lean is an equivalence with the existing
+initial-interval and block-margin formulation; its open positivity premise is
+not asserted.
+
+The command
+
+```text
+cabal run rh-garden -- explore-suzuki busy --t-max 14.5 --samples 801
+```
+
+groups consecutive negative-discrepancy blocks into numerical busy periods.
+The scan through events below about `1.98e6` found 5,137 completed periods,
+including 1,530 spanning more than one event. The longest contained 4,663 event
+states (`1477501` to recovery before `1543811`); the widest root interval ran
+from `324431` to recovery before `361201` and contained 2,888 event states.
+The largest reserve fraction consumed was the early one-event excursion
+`5 -> 7`, about `0.51435`. The previously dangerous `199 -> 211` block belongs
+to a three-state excursion starting at `193`, consuming about `0.02129` from a
+starting reserve of `0.04931`.
+
+These figures are `NumericalEvidence`. They show that the natural unit is a
+multi-event busy period, not an isolated prime cell. Event counts and root
+widths can grow while the logarithmic width stays small; in the largest scans
+the arrival/service ratio can be very close to one. The next certificate
+problem is therefore to bound cumulative weighted backlog loss using finite
+arrival mass and smooth service, rather than require every event to clear its
+own deficit.

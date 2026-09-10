@@ -219,6 +219,19 @@ suzukiRootDynamicsRef = Reference
       "interior hypothesis for every actual event state."
   }
 
+suzukiRootDiscrepancyRef :: Reference
+suzukiRootDiscrepancyRef = Reference
+  { refShort = "RHGarden.riemannHypothesis_iff_initial_and_rootDiscrepancyPrefixes"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiRootDiscrepancy.lean: the " ++
+      "root archimedean slope has derivative 2*F(u), the right-continuous " ++
+      "Mangoldt step slope gives an exact sawtooth discrepancy, and " ++
+      "H'(u)=2*D(u)/u between events. Weighted block-prefix areas are " ++
+      "equivalent to the exact Mangoldt block margins and hence give an " ++
+      "equivalent RH representation together with the open initial interval. " ++
+      "Negative block-excursion loss is exactly weighted backlog area."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -1071,6 +1084,33 @@ suzukiDualAreaToRootMarginIntegral = eraseRepresentationEdge $ representationEdg
   (ExactInverse "The root-coordinate integral has exactly the same value as the signed slope-coordinate event update.")
   Nothing
 
+suzukiMangoldtStateToRootDiscrepancy :: RuntimeRepresentationEdge
+suzukiMangoldtStateToRootDiscrepancy = eraseRepresentationEdge $ representationEdge
+  SSuzukiMangoldtState SSuzukiRootSlopeDiscrepancy
+  "subtract the right-continuous cumulative Mangoldt slope from the smooth root slope"
+  ExactRepresentation leanCheckedTrust 1 suzukiRootDiscrepancyRef
+  "RHGarden.suzukiRootSlopeDiscrepancy_eq_on_block and rootSlopeDiscrepancy_event_jump give the exact flow and impulse laws."
+  (NoReconstruction "The scalar discrepancy does not reconstruct the intercept or event index.")
+  Nothing
+
+suzukiRootDiscrepancyToPrefixArea :: RuntimeRepresentationEdge
+suzukiRootDiscrepancyToPrefixArea = eraseRepresentationEdge $ representationEdge
+  SSuzukiRootSlopeDiscrepancy SSuzukiRootPrefixArea
+  "integrate the exact identity H'(u)=2D(u)/u across each Mangoldt block"
+  ExactRepresentation leanCheckedTrust 1 suzukiRootDiscrepancyRef
+  "RHGarden.suzukiPsiRoot_sub_eq_integral_discrepancy_on_block and riemannHypothesis_iff_initial_and_rootDiscrepancyPrefixes are LeanChecked."
+  (ExactInverse "Differentiating away from event roots recovers the discrepancy; block endpoints are continuous.")
+  Nothing
+
+suzukiRootPrefixAreaToBusyLoss :: RuntimeRepresentationEdge
+suzukiRootPrefixAreaToBusyLoss = eraseRepresentationEdge $ representationEdge
+  SSuzukiRootPrefixArea SSuzukiBusyPeriodLoss
+  "restrict a prefix to an interval where the discrepancy is nonpositive"
+  InformationLoss leanCheckedTrust 1 suzukiRootDiscrepancyRef
+  "RHGarden.suzukiBusyPeriodLoss_eq_integral_backlog identifies reserve loss with the weighted negative-part area on each block piece."
+  (NoReconstruction "A loss scalar does not retain the signed discrepancy path.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1411,6 +1451,8 @@ representationGraph =
   , suzukiKickFlowToSharpArea, suzukiKickFlowToBacklog
   , suzukiOptimizerToRoot, suzukiMangoldtStateToRootDisplacement
   , suzukiRootDisplacementToKickDynamics, suzukiDualAreaToRootMarginIntegral
+  , suzukiMangoldtStateToRootDiscrepancy, suzukiRootDiscrepancyToPrefixArea
+  , suzukiRootPrefixAreaToBusyLoss
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate
