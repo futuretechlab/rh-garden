@@ -585,6 +585,37 @@ finite Chebyshev-psi sum without assuming PNT or an RH-strength error bound.
 The next mathematical frontier is a certified cumulative-arrival/service
 bound strong enough to dominate an entire busy-period loss.
 
+`RHGarden.SuzukiBusyPeriods` now LeanChecks the cumulative layer: exact
+weighted-Mangoldt interval additivity and Abel subtraction, root-service
+integrals and bounds, arrival/service excess telescoping, busy-period mass
+balance, and a generic weighted-loss estimate. A proof-carrying
+`SuzukiBusyPeriodCertificate` turns exact reserve/loss bounds into interval
+positivity; `SuzukiExactPrefixPlusTailCertificate` records how a finite exact
+prefix could be joined to a genuine tail theorem. Neither certificate has an
+unconditional global inhabitant.
+
+The pinned-library audit is quantitatively clarifying. Mathlib contains
+global Chebyshev-psi bounds; Zeta23 contains an explicit global prefix bound
+for `sum Lambda(n)/sqrt(n)` and kernel-checked PNT asymptotics. No usable
+short-interval weighted-Mangoldt theorem was found. Applying a prefix bound at
+the busy-period endpoint discards the large known starting prefix, so it is
+structurally too coarse even before constants are optimized. The first exact
+arithmetic improvement needed is a local bound on
+`sum_{a^2<n<=b^2} Lambda(n)/sqrt(n)` that controls the induced weighted
+backlog loss by the reserve `PsiRoot(a)`.
+
+The two-million-range comparison makes the scale concrete. The tightest
+comparable global-prefix/actual-local-arrival ratio was about `28.2423`, on
+the `324431 -> 361201` excursion (actual arrival `62.8067`, service `62.8175`,
+prefix expression `1773.8042`). Thus the checked global estimate is already
+more than an order of magnitude too coarse in its best observed case; the
+missing ingredient is interval sensitivity, not a small numerical sharpening.
+
+The RH Garden Navigator under `ui/` consumes exported registry, frontier,
+status, and bounded Explorer JSON. It is an `ExactExecutable` research tool;
+its numerical plots remain `NumericalEvidence`, and Proof Mode makes that
+boundary visible rather than changing any theorem status.
+
 The pinned prime-bound audit found Mathlib's explicit Chebyshev bounds
 `Chebyshev.psi_le`, `psi_le_const_mul_self`, and `psi_ge`; Zeta23 also proves
 explicit `sum Lambda(n)/sqrt(n)` upper bounds (including its precise

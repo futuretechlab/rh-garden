@@ -4,3 +4,9 @@ formal/.lake/
 .cabal-local/
 *.tmp
 *.bak
+ui/node_modules/
+ui/dist/
+ui/*.png
+ui/*.tsbuildinfo
+ui/vite.config.js
+ui/vite.config.d.ts

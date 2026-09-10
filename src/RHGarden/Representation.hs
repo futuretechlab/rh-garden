@@ -89,6 +89,7 @@ data Representation
   | SuzukiRootSlopeDiscrepancy
   | SuzukiRootPrefixArea
   | SuzukiBusyPeriodLoss
+  | SuzukiBusyPeriodCertificates
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -111,6 +112,9 @@ data Representation
   | ClassicalLiRealSequence
   | NegativeMobiusXi
   | StandardLiMobiusXi
+  | GardenRegistry
+  | FormalStatus
+  | RHGardenNavigator
   deriving (Eq, Ord, Show, Read, Enum, Bounded)
 
 data SRepresentation (r :: Representation) where
@@ -181,6 +185,7 @@ data SRepresentation (r :: Representation) where
   SSuzukiRootSlopeDiscrepancy :: SRepresentation 'SuzukiRootSlopeDiscrepancy
   SSuzukiRootPrefixArea :: SRepresentation 'SuzukiRootPrefixArea
   SSuzukiBusyPeriodLoss :: SRepresentation 'SuzukiBusyPeriodLoss
+  SSuzukiBusyPeriodCertificates :: SRepresentation 'SuzukiBusyPeriodCertificates
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -203,6 +208,9 @@ data SRepresentation (r :: Representation) where
   SClassicalLiRealSequence :: SRepresentation 'ClassicalLiRealSequence
   SNegativeMobiusXi :: SRepresentation 'NegativeMobiusXi
   SStandardLiMobiusXi :: SRepresentation 'StandardLiMobiusXi
+  SGardenRegistry :: SRepresentation 'GardenRegistry
+  SFormalStatus :: SRepresentation 'FormalStatus
+  SRHGardenNavigator :: SRepresentation 'RHGardenNavigator
 
 deriving instance Show (SRepresentation r)
 
@@ -274,6 +282,7 @@ representationValue SRootMarginIntegral = RootMarginIntegral
 representationValue SSuzukiRootSlopeDiscrepancy = SuzukiRootSlopeDiscrepancy
 representationValue SSuzukiRootPrefixArea = SuzukiRootPrefixArea
 representationValue SSuzukiBusyPeriodLoss = SuzukiBusyPeriodLoss
+representationValue SSuzukiBusyPeriodCertificates = SuzukiBusyPeriodCertificates
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -296,6 +305,9 @@ representationValue SClassicalLiSequence = ClassicalLiSequence
 representationValue SClassicalLiRealSequence = ClassicalLiRealSequence
 representationValue SNegativeMobiusXi = NegativeMobiusXi
 representationValue SStandardLiMobiusXi = StandardLiMobiusXi
+representationValue SGardenRegistry = GardenRegistry
+representationValue SFormalStatus = FormalStatus
+representationValue SRHGardenNavigator = RHGardenNavigator
 
 representationLabel :: Representation -> String
 representationLabel XiFunction = "completed xi function xi(s)"
@@ -365,6 +377,7 @@ representationLabel RootMarginIntegral = "exact signed Suzuki margin area in opt
 representationLabel SuzukiRootSlopeDiscrepancy = "smooth root slope minus the right-continuous weighted Mangoldt step slope"
 representationLabel SuzukiRootPrefixArea = "weighted root-discrepancy prefix area representation of Suzuki Psi"
 representationLabel SuzukiBusyPeriodLoss = "exact weighted backlog loss during negative root-discrepancy excursions"
+representationLabel SuzukiBusyPeriodCertificates = "kernel-checkable multi-event busy-period certificate interface"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"
@@ -387,6 +400,9 @@ representationLabel ClassicalLiSequence = "independently defined classical Li co
 representationLabel ClassicalLiRealSequence = "classical Li coefficients with proved real-valuedness"
 representationLabel NegativeMobiusXi = "xi(-z/(1-z)) viewpoint"
 representationLabel StandardLiMobiusXi = "xi(1/(1-z)) viewpoint"
+representationLabel GardenRegistry = "typed RH Garden theorem and representation registry"
+representationLabel FormalStatus = "kernel/build/submission status snapshot"
+representationLabel RHGardenNavigator = "interactive RH Garden Navigator research instrument"
 
 data RepresentationKind
   = ExactRepresentation

@@ -74,14 +74,34 @@ cabal run rh-garden -- check-mobius
 cabal run rh-garden -- check-lagarias 10000
 cabal run rh-garden -- submission
 cabal run rh-garden -- formal-status
+cabal run rh-garden -- ui-export
 
 cd formal
 lake build
+
+cd ../ui
+npm install
+npm run dev
 ```
 
 `garden` prints both registered routes to the same `LiSequence` node.
 `formal-status` reports static theorem-name metadata and explicitly does not
 perform proof validation.
+
+## RH Garden Navigator
+
+The Navigator under `ui/` is a React/TypeScript/Vite research instrument fed
+by the real Haskell registry and bounded Suzuki Explorer scans. Refresh its
+four versioned JSON inputs with `cabal run rh-garden -- ui-export`, then run
+`npm run dev` from `ui/` (or use `scripts/start-ui.ps1` on Windows). It offers
+the theorem Garden Map and route finder, active-frontier cards, Suzuki field
+and Mangoldt-block views, linked root-discrepancy/busy-period plots, phase
+portraits, and a certificate workbench.
+
+Proof Mode hides or desaturates numerical layers; Exploration Mode exposes
+them with textual `NumericalEvidence` labels. The UI and its JSON are tooling,
+not mathematical evidence, and never promote Explorer output to
+`LeanChecked`. See `UI.md` for architecture and the trust boundary.
 
 The formal graph now includes Lean-checked equivalences between mathlib's RH,
 the entire-xi zero formulation, and the `XiT` real-coordinate formulation.

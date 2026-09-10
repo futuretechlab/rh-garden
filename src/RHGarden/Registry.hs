@@ -232,6 +232,24 @@ suzukiRootDiscrepancyRef = Reference
       "Negative block-excursion loss is exactly weighted backlog area."
   }
 
+suzukiBusyCertificateRef :: Reference
+suzukiBusyCertificateRef = Reference
+  { refShort = "RHGarden.SuzukiBusyPeriodCertificate"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiBusyPeriods.lean: weighted " ++
+      "Mangoldt arrivals are finitely additive and satisfy exact Abel " ++
+      "summation; cumulative service and discrepancy telescope exactly; " ++
+      "a proof-carrying reserve/loss certificate verifies a whole excursion."
+  }
+
+navigatorRef :: Reference
+navigatorRef = Reference
+  { refShort = "RH Garden Navigator"
+  , refCitation =
+      "ExactExecutable tooling in src/RHGarden/UIExport.hs and ui/. It renders " ++
+      "registry and Explorer snapshots without creating mathematical evidence."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -1111,6 +1129,42 @@ suzukiRootPrefixAreaToBusyLoss = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "A loss scalar does not retain the signed discrepancy path.")
   Nothing
 
+suzukiBusyLossToCertificates :: RuntimeRepresentationEdge
+suzukiBusyLossToCertificates = eraseRepresentationEdge $ representationEdge
+  SSuzukiBusyPeriodLoss SSuzukiBusyPeriodCertificates
+  "package a reserve lower bound and weighted-loss upper bound as proof fields"
+  SufficientReduction leanCheckedTrust 1 suzukiBusyCertificateRef
+  "RHGarden.SuzukiBusyPeriodCertificate.psiRoot_nonnegative is a kernel-checked verifier; no numerical candidate inhabits its proof fields automatically."
+  (NoReconstruction "A certificate proves safety on its interval but does not reconstruct the discrepancy path.")
+  Nothing
+
+gardenRegistryToNavigator :: RuntimeRepresentationEdge
+gardenRegistryToNavigator = eraseRepresentationEdge $ representationEdge
+  SGardenRegistry SRHGardenNavigator
+  "export the typed theorem/representation registry as JSON"
+  ExactRepresentation exactExecutableTrust 0 navigatorRef
+  "Tooling edge only: it carries navigation metadata and has no mathematical implication."
+  (ExactInverse "The JSON retains stable node and edge identifiers from the registry snapshot.")
+  Nothing
+
+suzukiExplorerToNavigator :: RuntimeRepresentationEdge
+suzukiExplorerToNavigator = eraseRepresentationEdge $ representationEdge
+  SSuzukiPositivityExplorer SRHGardenNavigator
+  "export bounded NumericalEvidence scans for interactive plots"
+  InformationLoss exactExecutableTrust 0 navigatorRef
+  "Tooling edge only. Numerical rows remain visibly labelled NumericalEvidence."
+  (NoReconstruction "A bounded exported scan is a snapshot, not a proof or a complete numerical history.")
+  Nothing
+
+formalStatusToNavigator :: RuntimeRepresentationEdge
+formalStatusToNavigator = eraseRepresentationEdge $ representationEdge
+  SFormalStatus SRHGardenNavigator
+  "export the current validation and submission snapshot"
+  ExactRepresentation exactExecutableTrust 0 navigatorRef
+  "Tooling edge only. Status JSON reports its generation commit and never upgrades theorem trust."
+  (ExactInverse "The status panel displays the exported snapshot fields verbatim.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1452,7 +1506,7 @@ representationGraph =
   , suzukiOptimizerToRoot, suzukiMangoldtStateToRootDisplacement
   , suzukiRootDisplacementToKickDynamics, suzukiDualAreaToRootMarginIntegral
   , suzukiMangoldtStateToRootDiscrepancy, suzukiRootDiscrepancyToPrefixArea
-  , suzukiRootPrefixAreaToBusyLoss
+  , suzukiRootPrefixAreaToBusyLoss, suzukiBusyLossToCertificates
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate
@@ -1470,6 +1524,7 @@ representationGraph =
   , generatingToNormalizedClassical, normalizedToClassicalLi, classicalToNormalizedLi
   , classicalLiToReal
   , negativeToStandardMobiusXi, standardToNegativeMobiusXi
+  , gardenRegistryToNavigator, suzukiExplorerToNavigator, formalStatusToNavigator
   ]
 
 representationExplorationGraph :: [RuntimeRepresentationEdge]

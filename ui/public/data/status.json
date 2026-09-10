@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "snapshot_commit": "146e2559ccae492277bfb015849bda65b7218c59",
+  "snapshot_note": "Refresh with cabal run rh-garden -- ui-export; validation fields are not inferred by the frontend.",
+  "formal_build": "not_checked_by_export",
+  "cabal_test": "not_checked_by_export",
+  "submission": "NO PROOF OF RH IS CLAIMED.",
+  "submission_ready": false,
+  "counts": {
+    "criteria": 13,
+    "representations": 93,
+    "lean_checked_edges": 103,
+    "literature_edges": 16,
+    "numerical_edges": 5,
+    "open_edges": 1
+  }
+}

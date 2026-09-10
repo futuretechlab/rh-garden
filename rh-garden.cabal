@@ -17,9 +17,13 @@ library
       RHGarden.Registry
       RHGarden.Representation
       RHGarden.Search
+      RHGarden.UIExport
   build-depends:
       base >=4.14 && <5,
-      containers >=0.6
+      containers >=0.6,
+      directory >=1.3,
+      filepath >=1.4,
+      process >=1.6
   default-language:   Haskell2010
   ghc-options:        -Wall -Wcompat
 

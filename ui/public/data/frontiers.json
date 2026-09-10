@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "frontiers": [
+    {"id": "multi-event-arrival-service", "title": "Multi-event weighted-Mangoldt arrival/service control", "category": "arithmetic", "status": "open", "trust": "Open", "known_chain": "Exact arrivals -> exact Chebyshev Abel identity -> exact discrepancy balance -> weighted backlog loss", "exact_blocker": "For each completed negative excursion [a,b], bound the local mass sum_{a^2<n<=b^2} Lambda(n)/sqrt(n) sharply enough that integral_a^b 2 max(-D(u),0)/u du <= PsiRoot(a).", "current_bound": "Pinned global prefix estimates discard the lower endpoint and are structurally too coarse for short root intervals.", "source_modules": ["formal/RHGarden/SuzukiBusyPeriods.lean", "formal/RHGarden/SuzukiRootDiscrepancy.lean", "src/RHGarden/Explorer/Suzuki.hs"], "candidate_approaches": ["short-interval Chebyshev psi bounds", "exact-prefix plus theorem-backed tail", "multi-event reserve/loss certificates"]}
+
+,
+    {"id": "initial-suzuki-interval", "title": "Close the remaining initial Suzuki interval", "category": "analytic", "status": "open", "trust": "Open", "known_chain": "Local punctured positivity and complete cell-2 positivity are LeanChecked", "exact_blocker": "Certify nonnegativity from the existing local endpoint through log 2.", "current_bound": "Finite local result only.", "source_modules": ["formal/RHGarden/SuzukiLocalPositive.lean"], "candidate_approaches": ["archimedean prime-free bounds"]}
+
+  ]
+}

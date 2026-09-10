@@ -635,3 +635,51 @@ the arrival/service ratio can be very close to one. The next certificate
 problem is therefore to bound cumulative weighted backlog loss using finite
 arrival mass and smooth service, rather than require every event to clear its
 own deficit.
+
+## Cumulative arrival/service certificates
+
+`RHGarden.SuzukiBusyPeriods` formalizes the multi-event quantities suggested
+by those scans. For integer endpoints it defines
+
+```text
+Arrival(m,n) = sum_{m < k <= n} Lambda(k)/sqrt(k)
+Service(a,b) = P(b)-P(a),
+Excess = Arrival-Service.
+```
+
+The arrival is nonnegative, additive, and exactly the difference of the two
+checked Chebyshev-prefix expressions. Thus
+`weightedMangoldtInterval_eq_chebyshevPartialSummation` is a finite Abel
+identity, not an asymptotic estimate. Service is additive, equals
+`integral_a^b 2 F(u) du`, and lies between `(5/3)(b-a)` and `2(b-a)`.
+The discrepancy balance telescopes these quantities across arbitrarily many
+events.
+
+The proof-carrying `SuzukiBusyPeriodCertificate` separates a lower bound for
+the reserve from an upper bound for the weighted backlog loss. Its verifier
+proves nonnegativity throughout the certified root interval; it cannot ingest
+floating-point Explorer output. `SuzukiExactPrefixPlusTailCertificate`
+records the complementary architecture of an exact finite prefix followed by
+a theorem-backed tail.
+
+The pinned-source audit found global Chebyshev bounds in Mathlib and precise
+prefix estimates plus PNT infrastructure in Zeta23, but no checked
+short-interval estimate suited to a completed busy period. The Navigator and
+busy CLI report Zeta23's precise global-prefix upper expression beside the
+actual local arrival. This intentionally measures the mismatch: subtracting
+two upper bounds cannot retain the cancellation from the starting prefix.
+The exact frontier is a local inequality strong enough to imply
+
+```text
+integral_a^b 2 max(-D(u),0)/u du <= PsiRoot(a)
+```
+
+for every negative excursion `[a,b]`.
+
+In the reproducible scan through events below about `1.98e6`, even the
+tightest comparable application of the pinned global-prefix expression was
+`28.2422635` times the actual local arrival. It occurred on the wide
+`324431 -> 361201` excursion: actual arrival `62.8067305`, service
+`62.8175140`, and prefix upper expression `1773.8042361`. This is useful but
+insufficient quantitative information; it diagnoses a loss of interval
+cancellation rather than a constant that should merely be optimized.

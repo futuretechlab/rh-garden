@@ -3,6 +3,7 @@
 module Main (main) where
 
 import Control.Monad (unless)
+import Data.List (isInfixOf)
 import System.Exit (exitFailure)
 
 import RHGarden.Algebra
@@ -13,6 +14,7 @@ import RHGarden.Mobius
 import RHGarden.Registry
 import RHGarden.Representation
 import RHGarden.Search
+import RHGarden.UIExport
 
 main :: IO ()
 main = do
@@ -282,10 +284,23 @@ main = do
             (busyPsiStart period - busyPsiEnd period)) < 1e-10 &&
           busyStartingDiscrepancy period < 0 &&
           abs (busyEndingDiscrepancy period) < 1e-12 &&
-          busyServiceDrift period + 1e-8 >= busyArrivalMass period)
+          busyServiceDrift period + 1e-8 >= busyArrivalMass period &&
+          busyPinnedPrefixArrivalUpper period >= busyArrivalMass period &&
+          (busyArrivalMass period <= 1e-12 ||
+            busyPinnedBoundOverArrival period >= 1))
           (reportBusyPeriods report) &&
         any ((> 1) . busyEventCount) (reportBusyPeriods report)
       Left _ -> False
+  check "UI garden export contains live registry nodes and trust metadata" $
+    "RHGardenNavigator" `isInfixOf` gardenJson &&
+    "LeanChecked" `isInfixOf` gardenJson &&
+    "NumericalEvidence" `isInfixOf` gardenJson
+  check "UI frontier export names the exact busy-period blocker" $
+    "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
+    "short root intervals" `isInfixOf` frontiersJson
+  check "UI status export keeps submission negative" $
+    "NO PROOF OF RH IS CLAIMED" `isInfixOf` statusJson "test-head" &&
+    "test-head" `isInfixOf` statusJson "test-head"
   check "formal Mobius-to-coefficients route is LeanChecked" $
     case shortestRepresentationRoute KernelMode representationGraph MobiusFormalSeries LiFormalCoefficientSequence of
       Just _ -> True

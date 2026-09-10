@@ -337,6 +337,19 @@ crossing criterion, kick-area bound, and exact global-dual-margin update.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 
+## Cumulative Suzuki busy-period certificates
+
+`RHGarden/SuzukiBusyPeriods.lean` adds the cumulative multi-event layer. It
+defines finite weighted-Mangoldt arrivals, proves their exact interval Abel
+identity by subtracting the checked Chebyshev-prefix formula, defines smooth
+root service and arrival/service excess, and proves the telescoping
+discrepancy/busy-period balance. `weightedBacklogIntegral_le_unweighted` is a
+generic interface for converting an unweighted backlog-area estimate into the
+actual `2/u` loss. `SuzukiBusyPeriodCertificate` and
+`SuzukiExactPrefixPlusTailCertificate` are proof-carrying interfaces only:
+they accept exact Lean hypotheses and do not trust generated JSON or floating
+point data. No global certificate value or RH conclusion is supplied.
+
 `RHGarden/SuzukiTrueCurvature.lean` retains the growing archimedean
 curvature. It kernel-checks the factorized curvature formula and the bound
 `A''(t)>=(5/6)exp(t/2)` for `t>=log 2`, yielding block curvature

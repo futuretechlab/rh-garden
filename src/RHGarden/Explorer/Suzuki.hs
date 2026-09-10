@@ -281,6 +281,9 @@ data BusyPeriod = BusyPeriod
   , busyLossOverInitialBacklogSq :: Double
   , busyMaxBacklogOverSqrtStart :: Double
   , busyArrivalOverService :: Double
+  , busyPinnedPrefixArrivalUpper :: Double
+  , busyPinnedBoundOverArrival :: Double
+  , busyPinnedExcessOverService :: Double
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -569,6 +572,9 @@ buildBusyPeriods = seek
       , busyMaxBacklogOverSqrtStart = safeRatio
           (maximum (map (max 0 . negate . dualDeficit) rows)) rootStart
       , busyArrivalOverService = safeRatio arrival service
+      , busyPinnedPrefixArrivalUpper = pinnedUpper
+      , busyPinnedBoundOverArrival = safeRatio pinnedUpper arrival
+      , busyPinnedExcessOverService = pinnedUpper - service
       }
       where
         first = head rows
@@ -582,6 +588,13 @@ buildBusyPeriods = seek
         loss = psiStart - psiEnd
         arrival = sum (map dualNextImpulse initialRows)
         service = sum (map dualArchDrift initialRows) - dualDeficit final
+        endpoint = fromIntegral (dualNextEvent final)
+        endpointLog = log endpoint
+        -- Numerical evaluation of Zeta23.Cheb.sum_vonMangoldt_div_sqrt_le_precise.
+        -- Applying a global prefix estimate to a short busy interval discards
+        -- the lower prefix; the resulting looseness is itself research data.
+        pinnedUpper = 2 * log 4 * sqrt endpoint + 2 * endpointLog +
+          endpointLog * endpointLog / 2
         safeRatio numerator denominator
           | abs denominator < 1e-15 = 0 / 0
           | otherwise = numerator / denominator
@@ -1846,6 +1859,11 @@ renderExplorerAscii report = unlines $
             (maximumBy (comparing busyRootWidth) periods)
           maxFraction = if null periods then Nothing else Just
             (maximumBy (comparing busyLossOverReserve) periods)
+          comparablePinned = [period | period <- periods,
+            busyArrivalMass period > 1e-12,
+            isFinite (busyPinnedBoundOverArrival period)]
+          tightestPinned = if null comparablePinned then Nothing else Just
+            (minimumBy (comparing busyPinnedBoundOverArrival) comparablePinned)
           containing199 = [period | period <- periods,
             busyStartEvent period <= 199,
             199 < busyRecoveryBeforeEvent period]
@@ -1861,6 +1879,9 @@ renderExplorerAscii report = unlines $
          , "  largest reserve fraction consumed: " ++ maybe "n/a"
              (\period -> fmt 10 (busyLossOverReserve period) ++ " at start q=" ++
                show (busyStartEvent period)) maxFraction
+         , "  tightest pinned global-prefix/actual-arrival ratio: " ++ maybe "n/a"
+             (\period -> fmt 6 (busyPinnedBoundOverArrival period) ++
+               "x at start q=" ++ show (busyStartEvent period)) tightestPinned
          , "  period containing event 199: " ++ case containing199 of
              period : _ -> show (busyStartEvent period) ++ " -> recovery before " ++
                show (busyRecoveryBeforeEvent period) ++ " (" ++
@@ -1938,7 +1959,7 @@ renderExplorerAscii report = unlines $
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
   | explorerMode (reportOptions report) == BusyMode = unlines $
-      ["trust,status,start_event,recovery_before_event,event_count,root_start,root_end,root_width,t_width,starting_discrepancy,most_negative_discrepancy,ending_discrepancy,weighted_loss,psi_start,psi_end,minimum_psi,loss_over_reserve,loss_times_sqrt_start,loss_over_initial_backlog_sq,max_backlog_over_sqrt_start,arrival_mass,service_drift,arrival_over_service"] ++
+      ["trust,status,start_event,recovery_before_event,event_count,root_start,root_end,root_width,t_width,starting_discrepancy,most_negative_discrepancy,ending_discrepancy,weighted_loss,psi_start,psi_end,minimum_psi,loss_over_reserve,loss_times_sqrt_start,loss_over_initial_backlog_sq,max_backlog_over_sqrt_start,arrival_mass,service_drift,arrival_over_service,pinned_prefix_arrival_upper,pinned_bound_over_arrival,pinned_bound_excess_over_service"] ++
       map renderBusyCsv (reportBusyPeriods report)
   | explorerMode (reportOptions report) == RootsMode = unlines $
       ["trust,status,event_q,next_event_r,u_star_before,u_star_after,sqrt_q,sqrt_r,root_displacement,rho,root_kick,kick_lower,kick_upper,sqrt_gap,kick_over_gap,normalized_root_impulse,active,global_margin,block_margin,margin_update,curvature_safety_energy,root_barrier_five_thirds,root_barrier_two,crude_gap_condition"] ++
@@ -1970,7 +1991,10 @@ renderExplorerCsv report
       ,num (busyLossOverInitialBacklogSq period)
       ,num (busyMaxBacklogOverSqrtStart period)
       ,num (busyArrivalMass period), num (busyServiceDrift period)
-      ,num (busyArrivalOverService period)]
+      ,num (busyArrivalOverService period)
+      ,num (busyPinnedPrefixArrivalUpper period)
+      ,num (busyPinnedBoundOverArrival period)
+      ,num (busyPinnedExcessOverService period)]
     renderRootCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (dualEvent row)
       ,show (dualNextEvent row), num (dualRootOptimizer row)
@@ -2236,7 +2260,13 @@ busyJson period = "{" ++ intercalate ", "
       (num (busyMaxBacklogOverSqrtStart period))
   ,jsonField "arrival_mass" (num (busyArrivalMass period))
   ,jsonField "service_drift" (num (busyServiceDrift period))
-  ,jsonField "arrival_over_service" (num (busyArrivalOverService period))] ++ "}"
+  ,jsonField "arrival_over_service" (num (busyArrivalOverService period))
+  ,jsonField "pinned_prefix_arrival_upper"
+      (num (busyPinnedPrefixArrivalUpper period))
+  ,jsonField "pinned_bound_over_arrival"
+      (num (busyPinnedBoundOverArrival period))
+  ,jsonField "pinned_bound_excess_over_service"
+      (num (busyPinnedExcessOverService period))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

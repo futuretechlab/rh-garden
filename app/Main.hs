@@ -12,6 +12,7 @@ import RHGarden.Mobius
 import RHGarden.Registry
 import RHGarden.Representation
 import RHGarden.Search
+import RHGarden.UIExport
 
 main :: IO ()
 main = do
@@ -28,6 +29,7 @@ main = do
     ["submission"] -> submissionStatus
     ["formal-status"] -> formalStatus
     ["garden"] -> garden LiteratureMode
+    ["ui-export"] -> writeUiExport "."
     "explore-suzuki" : explorerArgs ->
       case parseExplorerOptions explorerArgs of
         Left err -> putStrLn err >> suzukiExplorerUsage
@@ -52,6 +54,7 @@ overview = do
   putStrLn "  rh-garden check-lagarias 10000"
   putStrLn "  rh-garden check-mobius"
   putStrLn "  rh-garden garden"
+  putStrLn "  rh-garden ui-export"
   putStrLn "  rh-garden explore-suzuki --omega 0.5 --t-max 6 --samples 801 --prime-cells"
   putStrLn "  rh-garden explore-suzuki blocks --t-max 5.71 --samples 3001"
   putStrLn "  rh-garden explore-suzuki busy --t-max 14.5 --samples 801"
@@ -611,6 +614,13 @@ formalStatus = do
     , "suzukiBusyPeriodLoss_eq_integral_backlog"
     , "rootSlopeDiscrepancy_event_recurrence"
     , "sum_vonMangoldt_div_sqrt_eq_suzukiChebyshevPsi"
+    , "weightedMangoldtInterval_eq_chebyshevPartialSummation"
+    , "weightedMangoldt_arrival_le_service_add_error"
+    , "rootSlopeDiscrepancy_sqrt_sub_eq_neg_excess"
+    , "suzukiBusyPeriodBalance"
+    , "weightedBacklogIntegral_le_unweighted"
+    , "SuzukiBusyPeriodCertificate.psiRoot_nonnegative"
+    , "SuzukiExactPrefixPlusTailCertificate.global_nonnegative"
     , "xiZeroFreeRightOf_implies_shiftedEventuallyNonnegative_of_bridge"
     , "xiZeroFreeRightOf_iff_shiftedEventuallyNonnegative_of_bridge"
     , "suzukiShiftedEventualCriterion_of_nevanlinna_bridge"
