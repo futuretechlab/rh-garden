@@ -337,4 +337,16 @@ crossing criterion, kick-area bound, and exact global-dual-margin update.
 - A Lean derivative theorem for `liMobius`. The rational identity is checked by
   Haskell as `ExactExecutable`; it is not registered as `LeanChecked`.
 
+`RHGarden/SuzukiTrueCurvature.lean` retains the growing archimedean
+curvature. It kernel-checks the factorized curvature formula and the bound
+`A''(t)>=(5/6)exp(t/2)` for `t>=log 2`, yielding block curvature
+`(5/6)sqrt(q)`. The resulting curvature safety energy is a certified lower
+bound for the exact block margin and gives a conditional sufficient RH
+criterion; its universal premise is not proved. The module also proves the
+sharp kick-area bounds
+`DeltaT^2/2 <= area <= lambda*DeltaT-DeltaT^2/2`, the associated
+final-displacement margin bounds and decrease localization, a backlog
+recurrence, and the true-curvature response estimate
+`DeltaT <= 6*lambda/(5*exp(tStar/2))`.
+
 No proof of RH is claimed.

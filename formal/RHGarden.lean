@@ -43,3 +43,4 @@ import RHGarden.SuzukiMangoldtState
 import RHGarden.SuzukiMangoldtBlocks
 import RHGarden.SuzukiDualDynamics
 import RHGarden.SuzukiKickedFlow
+import RHGarden.SuzukiTrueCurvature

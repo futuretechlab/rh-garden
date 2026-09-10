@@ -194,6 +194,17 @@ suzukiKickedFlowRef = Reference
       "displacement obeys an exact gap-minus-kick sawtooth update."
   }
 
+suzukiTrueCurvatureRef :: Reference
+suzukiTrueCurvatureRef = Reference
+  { refShort = "RHGarden.five_sixths_exp_le_secondDeriv_arch"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiTrueCurvature.lean: the exact " ++
+      "archimedean curvature is at least (5/6)exp(t/2), giving a growing " ++
+      "block safety energy; sharp endpoint-sensitive optimizer-kick area " ++
+      "bounds, post-event margin localization, backlog recurrence, and a " ++
+      "true-curvature optimizer-displacement bound are kernel checked."
+  }
+
 suzukiTriangleRef :: Reference
 suzukiTriangleRef = Reference
   { refShort = "RHGarden.suzukiPsi_eq_primeSide"
@@ -974,6 +985,42 @@ suzukiEventSafetyToBlockMargins = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "Exact block margins may remain positive when the conservative safety energy is negative.")
   Nothing
 
+suzukiPrimeConvexityToCurvatureSafety :: RuntimeRepresentationEdge
+suzukiPrimeConvexityToCurvatureSafety = eraseRepresentationEdge $ representationEdge
+  SSuzukiPrimeCellStrictConvexity SSuzukiCurvatureSafetyEnergy
+  "retain exponential archimedean curvature in the event drawdown reserve"
+  InformationLoss leanCheckedTrust 1 suzukiTrueCurvatureRef
+  "RHGarden.five_sixths_exp_le_secondDeriv_arch and RHGarden.blockCurvatureLower give the uniform block curvature (5/6)*sqrt(q); RHGarden.suzukiEventCurvatureSafetyEnergy uses it exactly."
+  (NoReconstruction "The scalar safety energy does not reconstruct the event value and slope state.")
+  Nothing
+
+suzukiCurvatureSafetyToBlockMargins :: RuntimeRepresentationEdge
+suzukiCurvatureSafetyToBlockMargins = eraseRepresentationEdge $ representationEdge
+  SSuzukiCurvatureSafetyEnergy SSuzukiMangoldtBlockMargins
+  "certify a complete block with the growing-curvature quadratic envelope"
+  SufficientReduction leanCheckedTrust 1 suzukiTrueCurvatureRef
+  "RHGarden.curvatureSafetyEnergy_le_blockMargin and RHGarden.mangoldtBlock_nonnegative_of_curvatureSafetyEnergy are LeanChecked. The premise is not asserted globally."
+  (NoReconstruction "The exact block margin can be positive even when the sufficient curvature safety energy is negative.")
+  Nothing
+
+suzukiKickFlowToSharpArea :: RuntimeRepresentationEdge
+suzukiKickFlowToSharpArea = eraseRepresentationEdge $ representationEdge
+  SSuzukiKickFlowDynamics SSuzukiSharpKickArea
+  "use monotone one-Lipschitz endpoint geometry for the optimizer response"
+  ExactRepresentation leanCheckedTrust 1 suzukiTrueCurvatureRef
+  "RHGarden.optimizerKickArea_bounds_sharp sandwiches the kick area between DeltaT^2/2 and lambda*DeltaT-DeltaT^2/2; the resulting margin bounds show that a decrease requires negative post-event displacement."
+  (NoReconstruction "Bounds on the area do not recover the optimizer path pointwise.")
+  Nothing
+
+suzukiKickFlowToBacklog :: RuntimeRepresentationEdge
+suzukiKickFlowToBacklog = eraseRepresentationEdge $ representationEdge
+  SSuzukiKickFlowDynamics SSuzukiOptimizerBacklog
+  "take the negative part of optimizer displacement"
+  InformationLoss leanCheckedTrust 1 suzukiTrueCurvatureRef
+  "RHGarden.suzukiOptimizerBacklog_next_le gives the deterministic gap-minus-kick workload recurrence; RHGarden.optimizerKickDisplacement_le_exp_bound replaces the unit-curvature kick estimate by its exponential-curvature scale."
+  (NoReconstruction "The positive part loses the signed optimizer displacement.")
+  Nothing
+
 suzukiExplorerToCellCandidate :: RuntimeRepresentationEdge
 suzukiExplorerToCellCandidate = eraseRepresentationEdge $ representationEdge
   SSuzukiPositivityExplorer SCandidateCellCertificate
@@ -1310,6 +1357,8 @@ representationGraph =
   , suzukiMangoldtStateToDualAreaDynamics
   , suzukiMangoldtStateToEventBoundary, suzukiEventBoundaryToKickFlow
   , suzukiEventBoundaryToSafetyEnergy, suzukiEventSafetyToBlockMargins
+  , suzukiPrimeConvexityToCurvatureSafety, suzukiCurvatureSafetyToBlockMargins
+  , suzukiKickFlowToSharpArea, suzukiKickFlowToBacklog
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

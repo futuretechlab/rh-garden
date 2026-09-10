@@ -216,11 +216,24 @@ data DualDynamics = DualDynamics
   , dualEventValue :: Double
   , dualSafetyEnergy :: Double
   , dualSafetySlack :: Double
+  , dualCurvatureLower :: Double
+  , dualExactCurvature :: Double
+  , dualCurvatureSafetyEnergy :: Double
+  , dualExactCurvatureSafetyEnergy :: Double
+  , dualCurvatureSafetySlack :: Double
   , dualLogGap :: Double
   , dualConvexRemainder :: Double
   , dualOptimizerDisplacement :: Double
   , dualKickDisplacement :: Double
   , dualKickArea :: Double
+  , dualPreKickDisplacement :: Double
+  , dualPostKickDisplacement :: Double
+  , dualBacklogBefore :: Double
+  , dualBacklogAfter :: Double
+  , dualKickOverLambda :: Double
+  , dualKickOverLogGap :: Double
+  , dualPrimeScaleKickBound :: Double
+  , dualCurvatureScaledDeficit :: Double
   , dualImpulseOverDrift :: Double
   , dualImpulseOverLogGap :: Double
   , dualDriftOverLogGap :: Double
@@ -496,11 +509,24 @@ buildDualDynamics options events = case events of
           , dualEventValue = eventValue
           , dualSafetyEnergy = safetyEnergy
           , dualSafetySlack = blockMargin - safetyEnergy
+          , dualCurvatureLower = curvatureLower
+          , dualExactCurvature = exactCurvature
+          , dualCurvatureSafetyEnergy = curvatureSafetyEnergy
+          , dualExactCurvatureSafetyEnergy = exactCurvatureSafetyEnergy
+          , dualCurvatureSafetySlack = blockMargin - curvatureSafetyEnergy
           , dualLogGap = logGap
           , dualConvexRemainder = convexRemainder
           , dualOptimizerDisplacement = displacement
           , dualKickDisplacement = kickDisplacement
           , dualKickArea = kickArea
+          , dualPreKickDisplacement = preKickDisplacement
+          , dualPostKickDisplacement = postKickDisplacement
+          , dualBacklogBefore = max (-displacement) 0
+          , dualBacklogAfter = max (-postKickDisplacement) 0
+          , dualKickOverLambda = safeRatio kickDisplacement (eventWeight nextEvent)
+          , dualKickOverLogGap = safeRatio kickDisplacement logGap
+          , dualPrimeScaleKickBound = primeScaleKickBound
+          , dualCurvatureScaledDeficit = descending / fromIntegral (eventN event) ** 0.25
           , dualImpulseOverDrift = safeRatio (eventWeight nextEvent) drift
           , dualImpulseOverLogGap = safeRatio (eventWeight nextEvent) logGap
           , dualDriftOverLogGap = safeRatio drift logGap
@@ -527,6 +553,12 @@ buildDualDynamics options events = case events of
         eventValue = archLeft - slope * left + intercept
         descending = max (-deficit) 0
         safetyEnergy = eventValue - descending * descending / 2
+        curvatureLower = (5 / 6) * sqrt (fromIntegral (eventN event))
+        exactCurvature = archimedeanSecondDerivative left
+        curvatureSafetyEnergy = eventValue -
+          descending * descending / (2 * curvatureLower)
+        exactCurvatureSafetyEnergy = eventValue -
+          descending * descending / (2 * exactCurvature)
         displacement = left - optimizer
         activeBlock = left < optimizer && optimizer < right
         blockOptimizer
@@ -543,6 +575,10 @@ buildDualDynamics options events = case events of
         eventAreaUpdate = nextGlobalMargin - globalMargin
         kickArea = eventWeight nextEvent * (right - optimizer) -
           (nextGlobalMargin - globalMargin)
+        preKickDisplacement = right - optimizer
+        postKickDisplacement = right - nextOptimizer
+        primeScaleKickBound = (6 / 5) * eventWeight nextEvent *
+          exp (preKickDisplacement / 2) / sqrt (fromIntegral (eventN nextEvent))
         safeRatio numerator denominator
           | abs denominator < 1e-15 = 0 / 0
           | otherwise = numerator / denominator
@@ -1474,9 +1510,9 @@ renderExplorerAscii report = unlines $
     dualSection =
       [ ""
       , "Kicked convex-flow event dynamics (NumericalEvidence):"
-      , "Rows are ranked by safety energy; finite scans do not establish a global invariant."
-      , "q      r      B_q          d_q          E_q          block M      slack        x_q          h            G            lambda_r/G active"
-      , "------------------------------------------------------------------------------------------------------------------------------------------"
+      , "Rows are ranked by curvature safety energy; finite scans do not establish a global invariant."
+      , "q      r      B_q          d_q          Esharp       block M      slack        m_q          x_q          h            dT/h        active"
+      , "--------------------------------------------------------------------------------------------------------------------------------------------"
       ] ++ map renderDual dualRowsForDisplay ++ lyapunovSection
     criticalSection =
       [ ""
@@ -1608,15 +1644,15 @@ renderExplorerAscii report = unlines $
       , pad 6 (show (dualNextEvent row))
       , pad 12 (fmt 8 (dualEventValue row))
       , pad 12 (fmt 8 (dualDeficit row))
-      , pad 12 (fmt 8 (dualSafetyEnergy row))
+      , pad 12 (fmt 8 (dualCurvatureSafetyEnergy row))
       , pad 12 (fmt 8 (dualBlockMargin row))
-      , pad 12 (fmt 8 (dualSafetySlack row))
+      , pad 12 (fmt 8 (dualCurvatureSafetySlack row))
+      , pad 12 (fmt 6 (dualCurvatureLower row))
       , pad 12 (fmt 8 (dualOptimizerDisplacement row))
       , pad 12 (fmt 8 (dualLogGap row))
-      , pad 12 (fmt 8 (dualArchDrift row))
-      , pad 12 (fmt 7 (dualImpulseOverDrift row))
+      , pad 12 (fmt 7 (dualKickOverLogGap row))
       , boolText (dualActive row)]
-    dualRowsForDisplay = take 30 (sortOn dualSafetyEnergy
+    dualRowsForDisplay = take 30 (sortOn dualCurvatureSafetyEnergy
       (reportDualDynamics report))
     lyapunovSection =
       [ ""
@@ -1646,7 +1682,7 @@ renderExplorerAscii report = unlines $
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
   | explorerMode (reportOptions report) == DualMode = unlines $
-      ["trust,status,event_q,next_event_r,lambda_q,S_q,C_q,t_star,A_star,global_margin,deficit_q,arch_drift,next_lambda,predicted_next_deficit,active,block_margin,block_equals_global,event_area_update,event_value,safety_energy,safety_slack,log_gap,convex_remainder,optimizer_displacement,kick_displacement,kick_area,next_lambda_over_drift,next_lambda_over_log_gap,drift_over_log_gap"] ++
+      ["trust,status,event_q,next_event_r,lambda_q,S_q,C_q,t_star,A_star,global_margin,deficit_q,arch_drift,next_lambda,predicted_next_deficit,active,block_margin,block_equals_global,event_area_update,event_value,safety_energy,safety_slack,curvature_lower,exact_curvature,curvature_safety_energy,exact_curvature_safety_energy,curvature_safety_slack,log_gap,convex_remainder,optimizer_displacement,kick_displacement,kick_area,pre_kick_displacement,post_kick_displacement,backlog_before,backlog_after,kick_over_lambda,kick_over_log_gap,prime_scale_kick_bound,curvature_scaled_deficit,next_lambda_over_drift,next_lambda_over_log_gap,drift_over_log_gap"] ++
       map renderDualCsv (reportDualDynamics report)
   | explorerMode (reportOptions report) == BlocksMode = unlines $
       ["trust,status,event_q,next_event_r,gap,S_q,C_q,slope_deficit_left,slope_deficit_right,margin,t_candidate,exp_t_candidate,minimizer_type,winning_cell"] ++
@@ -1667,9 +1703,16 @@ renderExplorerCsv report
       ,boolText (dualActive row), num (dualBlockMargin row)
       ,boolText (dualBlockEqualsGlobal row), num (dualEventAreaUpdate row)
       ,num (dualEventValue row), num (dualSafetyEnergy row)
-      ,num (dualSafetySlack row), num (dualLogGap row)
+      ,num (dualSafetySlack row), num (dualCurvatureLower row)
+      ,num (dualExactCurvature row), num (dualCurvatureSafetyEnergy row)
+      ,num (dualExactCurvatureSafetyEnergy row), num (dualCurvatureSafetySlack row)
+      ,num (dualLogGap row)
       ,num (dualConvexRemainder row), num (dualOptimizerDisplacement row)
       ,num (dualKickDisplacement row), num (dualKickArea row)
+      ,num (dualPreKickDisplacement row), num (dualPostKickDisplacement row)
+      ,num (dualBacklogBefore row), num (dualBacklogAfter row)
+      ,num (dualKickOverLambda row), num (dualKickOverLogGap row)
+      ,num (dualPrimeScaleKickBound row), num (dualCurvatureScaledDeficit row)
       ,num (dualImpulseOverDrift row), num (dualImpulseOverLogGap row)
       ,num (dualDriftOverLogGap row)]
     renderBlockCsv row = intercalate ","
@@ -1835,11 +1878,24 @@ dualJson row = "{" ++ intercalate ", "
   ,jsonField "event_value" (num (dualEventValue row))
   ,jsonField "safety_energy" (num (dualSafetyEnergy row))
   ,jsonField "safety_slack" (num (dualSafetySlack row))
+  ,jsonField "curvature_lower" (num (dualCurvatureLower row))
+  ,jsonField "exact_curvature" (num (dualExactCurvature row))
+  ,jsonField "curvature_safety_energy" (num (dualCurvatureSafetyEnergy row))
+  ,jsonField "exact_curvature_safety_energy" (num (dualExactCurvatureSafetyEnergy row))
+  ,jsonField "curvature_safety_slack" (num (dualCurvatureSafetySlack row))
   ,jsonField "log_gap" (num (dualLogGap row))
   ,jsonField "convex_remainder" (num (dualConvexRemainder row))
   ,jsonField "optimizer_displacement" (num (dualOptimizerDisplacement row))
   ,jsonField "kick_displacement" (num (dualKickDisplacement row))
   ,jsonField "kick_area" (num (dualKickArea row))
+  ,jsonField "pre_kick_displacement" (num (dualPreKickDisplacement row))
+  ,jsonField "post_kick_displacement" (num (dualPostKickDisplacement row))
+  ,jsonField "backlog_before" (num (dualBacklogBefore row))
+  ,jsonField "backlog_after" (num (dualBacklogAfter row))
+  ,jsonField "kick_over_lambda" (num (dualKickOverLambda row))
+  ,jsonField "kick_over_log_gap" (num (dualKickOverLogGap row))
+  ,jsonField "prime_scale_kick_bound" (num (dualPrimeScaleKickBound row))
+  ,jsonField "curvature_scaled_deficit" (num (dualCurvatureScaledDeficit row))
   ,jsonField "next_lambda_over_drift" (num (dualImpulseOverDrift row))
   ,jsonField "next_lambda_over_log_gap" (num (dualImpulseOverLogGap row))
   ,jsonField "drift_over_log_gap" (num (dualDriftOverLogGap row))] ++ "}"

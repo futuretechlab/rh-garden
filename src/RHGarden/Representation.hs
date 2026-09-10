@@ -79,6 +79,9 @@ data Representation
   | SuzukiEventBoundaryState
   | SuzukiEventSafetyEnergy
   | SuzukiKickFlowDynamics
+  | SuzukiCurvatureSafetyEnergy
+  | SuzukiOptimizerBacklog
+  | SuzukiSharpKickArea
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -161,6 +164,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiEventBoundaryState :: SRepresentation 'SuzukiEventBoundaryState
   SSuzukiEventSafetyEnergy :: SRepresentation 'SuzukiEventSafetyEnergy
   SSuzukiKickFlowDynamics :: SRepresentation 'SuzukiKickFlowDynamics
+  SSuzukiCurvatureSafetyEnergy :: SRepresentation 'SuzukiCurvatureSafetyEnergy
+  SSuzukiOptimizerBacklog :: SRepresentation 'SuzukiOptimizerBacklog
+  SSuzukiSharpKickArea :: SRepresentation 'SuzukiSharpKickArea
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -244,6 +250,9 @@ representationValue SSuzukiDualAreaDynamics = SuzukiDualAreaDynamics
 representationValue SSuzukiEventBoundaryState = SuzukiEventBoundaryState
 representationValue SSuzukiEventSafetyEnergy = SuzukiEventSafetyEnergy
 representationValue SSuzukiKickFlowDynamics = SuzukiKickFlowDynamics
+representationValue SSuzukiCurvatureSafetyEnergy = SuzukiCurvatureSafetyEnergy
+representationValue SSuzukiOptimizerBacklog = SuzukiOptimizerBacklog
+representationValue SSuzukiSharpKickArea = SuzukiSharpKickArea
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -325,6 +334,9 @@ representationLabel SuzukiDualAreaDynamics = "signed-area evolution of the globa
 representationLabel SuzukiEventBoundaryState = "event-boundary Suzuki state (B_q,d_q)"
 representationLabel SuzukiEventSafetyEnergy = "strong-convexity event safety energy E_q"
 representationLabel SuzukiKickFlowDynamics = "two-dimensional kicked convex flow between Mangoldt events"
+representationLabel SuzukiCurvatureSafetyEnergy = "exponentially weighted Suzuki event safety energy"
+representationLabel SuzukiOptimizerBacklog = "positive-part backlog of the archimedean optimizer beyond an event"
+representationLabel SuzukiSharpKickArea = "sharp endpoint-sensitive bounds for optimizer kick area"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

@@ -513,6 +513,25 @@ decrease at tens of thousands of events. These failures are useful
 response than the unit-curvature quadratic envelope, and no tail positivity
 claim follows.
 
+`RHGarden.SuzukiTrueCurvature` strengthens this state machine using the exact
+closed curvature. It proves `A''(t)>=(5/6)exp(t/2)` above `log 2`, hence the
+uniform block bound `(5/6)sqrt(q)`, a curvature-weighted safety energy that
+certifies the following complete block, and the corresponding sufficient RH
+criterion (whose universal premise remains open). It also proves sharp
+endpoint-dependent kick-area bounds, localizes every possible negative
+global-margin update to negative post-event optimizer displacement, gives a
+Lindley-style backlog recurrence, and bounds optimizer response by
+`6*lambda/(5*exp(tStar/2))`.
+
+The million-range Explorer scan covered 78,733 complete blocks. Unlike the
+unit-curvature energy, the curvature-weighted energy had no numerical
+failure; its smallest sampled value was about `0.02478999` on `5->7`.
+This is only `NumericalEvidence`. The next research frontier is an exact
+event-update law or arithmetic lower bound for this sharper energy, not an
+extrapolation of the finite scan. Eventwise backlog clearing also fails as a
+simple universal picture: only 29,865 of 78,733 scanned transitions had
+`DeltaT<h`.
+
 The numerical `explore-suzuki dual` regression through event integers below
 5000 contains 710 complete blocks. Its candidate global dual margins stayed
 positive, with the smallest about `0.02752057` on `3089->3109`, but event

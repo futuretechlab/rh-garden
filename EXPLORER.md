@@ -470,3 +470,56 @@ The impulse-to-drift ratios `lambda_r/G` for these blocks are approximately
 The heuristic comparison of Mangoldt impulses with prime-power gaps remains
 only a guide for choosing arithmetic statistics. All displayed scans are
 `NumericalEvidence`, never a finite-range or tail certificate.
+
+## True-curvature safety and optimizer queues
+
+`RHGarden.SuzukiTrueCurvature` retains the exact curvature instead of
+discarding it to the unit lower bound. Lean checks
+
+```text
+A''(t) = exp(t/2) * (1 - 1/(exp(t/2)^2*(exp(t/2)^4-1)))
+A''(t) >= (5/6)*exp(t/2),                 t >= log 2.
+```
+
+Thus a block beginning at `q` has certified curvature
+`m_q=(5/6)*sqrt(q)`, and
+
+```text
+E_q^curv = B_q - max(-d_q,0)^2/(2*m_q)
+```
+
+is a LeanChecked lower bound for the entire following complete block.
+Universal nonnegativity of these energies, together with the still-open
+initial interval, would suffice for RH; that premise is not asserted.
+
+The scan of all 78,733 complete blocks with event integers below one million
+found no negative `E_q^curv`. Its smallest candidate value was
+`0.024789985513` on `5 -> 7`. This finite result is strictly
+`NumericalEvidence`, not evidence adequate for RH and not a tail
+certificate. Representative rows are:
+
+```text
+block        m_q          old E_q       E_q^curv      exact margin   slack
+5 -> 7       1.86338998   -0.01179463    0.02478999    0.03261803     0.00782804
+13 -> 16     3.00462606   -0.04141566    0.02500469    0.03106868     0.00606399
+32 -> 37     4.71404521   -0.04717752    0.02628495    0.02978690     0.00350195
+199 -> 211  11.75561332   -0.16172846    0.02502080    0.02802262     0.00300183
+59797 -> 59809
+             203.77854265 -0.21434087    0.04249561    0.04362295     0.00112734
+```
+
+The optimizer kick area now has the sharp checked bounds
+
+```text
+DeltaT^2/2 <= kickArea <= lambda*DeltaT - DeltaT^2/2.
+```
+
+Consequently a negative global-margin update requires negative post-event
+optimizer displacement. The backlog `max(-x_q,0)` obeys a checked
+Lindley-style upper recurrence, while true curvature improves the kick
+response to `DeltaT <= 6*lambda/(5*exp(tStar/2))`.
+
+Numerically, `DeltaT<h` held for 29,865 of the 78,733 scanned transitions,
+so eventwise queue clearing is not a viable universal invariant. The largest
+post-event backlog in this range was about `0.18165663`, at `q=2`. These
+queue statistics remain discovery data only.

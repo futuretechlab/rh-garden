@@ -213,10 +213,18 @@ main = do
           dualArchDrift row + 1e-10 >= dualLogGap row &&
           dualConvexRemainder row + 1e-10 >= dualLogGap row ^ (2 :: Int) / 2 &&
           dualSafetyEnergy row <= dualBlockMargin row + 1e-9 &&
+          dualCurvatureSafetyEnergy row <= dualBlockMargin row + 1e-9 &&
+          dualCurvatureLower row > 0 &&
+          dualExactCurvature row + 1e-10 >= dualCurvatureLower row &&
           dualKickDisplacement row >= -1e-10 &&
           dualKickDisplacement row <= dualNextImpulse row + 1e-9 &&
           dualKickArea row >= -1e-9 &&
-          dualKickArea row <= dualNextImpulse row ^ (2 :: Int) / 2 + 1e-8)
+          dualKickArea row <= dualNextImpulse row ^ (2 :: Int) / 2 + 1e-8 &&
+          dualKickArea row + 1e-8 >= dualKickDisplacement row ^ (2 :: Int) / 2 &&
+          dualKickArea row <= dualNextImpulse row * dualKickDisplacement row -
+            dualKickDisplacement row ^ (2 :: Int) / 2 + 1e-8 &&
+          dualBacklogAfter row <= max (dualBacklogBefore row +
+            dualKickDisplacement row - dualLogGap row) 0 + 1e-9)
           (reportDualDynamics report) &&
         all (\(row, next) -> dualNextEvent row == dualEvent next &&
           abs (dualEventValue next -
