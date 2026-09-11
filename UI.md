@@ -56,6 +56,27 @@ accepted by the kernel.
 - Certificates: candidate, failed, and formal certificate lanes; only actual
   registry entries are labelled checked.
 
+- Arithmetic Frontier: a clickable `thetaEff` versus prefix-envelope-slack
+  scatter, reference regimes at `1/2`, `17/30`, `3/5`, and `2/3`, and a
+  synchronized busy-period inspector. The `17/30` background is explicitly
+  `LiteratureCertified` context; it is not a formal or effective theorem in
+  this project.
+
+The arrival gauge compares exact terminal arrival, the largest terminal
+proxy compatible with the scalar verifier, and the LeanChecked local-width
+upper bound. It also reports the much coarser pinned global-prefix expression.
+The selected period exposes the observed maximum prefix excess and whether
+the constant envelope itself fails. Terminal `epsilonRequired` and the
+stronger prefix-relative slack are displayed separately. In the failure case
+the cockpit points to
+`SuzukiWeightedShortIntervalProfileBound` and
+`busyPeriod_safe_of_weightedMangoldt_profile`.
+
+The exported UI data deliberately uses two scan sizes: a smaller full event
+trace for responsive sawtooth inspection and a ten-million-period summary for
+the arithmetic scatter and frontier rankings. Both remain
+`NumericalEvidence`.
+
 ## Development
 
 From the repository root on Windows:

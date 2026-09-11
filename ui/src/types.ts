@@ -43,6 +43,9 @@ export interface Frontier {
   current_bound: string
   source_modules: string[]
   candidate_approaches: string[]
+  literature_reference?: string
+  literature_url?: string
+  literature_scope?: string
 }
 
 export interface FrontierData { frontiers: Frontier[] }
@@ -108,6 +111,13 @@ export interface BusyPeriod {
   start_event: number
   recovery_before_event: number
   event_count: number
+  interval_start: number
+  interval_end: number
+  interval_width: number
+  theta_eff: number | null
+  width_over_sqrt_x: number | null
+  width_over_sqrt_x_log_x: number | null
+  h_over_x_17_30: number | null
   root_start: number
   root_end: number
   root_width: number
@@ -121,9 +131,21 @@ export interface BusyPeriod {
   arrival_mass: number
   service_drift: number
   arrival_over_service: number | null
+  arrival_excess_budget: number
+  actual_max_arrival_service_excess: number
+  prefix_envelope_slack: number
+  required_arrival_upper: number
+  arrival_slack: number
+  epsilon_required: number | null
+  prefix_epsilon_required: number | null
+  checked_elementary_arrival_upper: number
+  arithmetic_bound_factor: number | null
+  arithmetic_bound_excess: number
   pinned_prefix_arrival_upper: number
   pinned_bound_over_arrival: number | null
   pinned_bound_excess_over_service: number
+  pinned_bound_over_required: number | null
+  pinned_bound_excess_over_required: number
 }
 
 export interface ExplorerSlice {
@@ -140,4 +162,5 @@ export interface ExplorerData {
   field_samples: FieldSample[]
   scan: ExplorerSlice
   busy: ExplorerSlice
+  arithmetic_frontier_periods: BusyPeriod[]
 }

@@ -36,13 +36,21 @@ writeUiExport projectRoot = do
         , explorerSamples = 401
         , explorerPrimeCells = True
         }
+      frontierOptions = defaultExplorerOptions
+        { explorerMode = BusyMode
+        , explorerOmegas = [0]
+        , explorerTMax = log 10000000
+        , explorerSamples = 401
+        , explorerPrimeCells = True
+        }
   scanReport <- requireReport "field scan" scanOptions
   busyReport <- requireReport "busy-period scan" busyOptions
+  frontierReport <- requireReport "short-interval frontier scan" frontierOptions
   writeFile (outputDir </> "garden.json") gardenJson
   writeFile (outputDir </> "frontiers.json") frontiersJson
   writeFile (outputDir </> "status.json") (statusJson headCommit)
   writeFile (outputDir </> "explorer-summary.json")
-    (explorerSummaryJson scanReport busyReport)
+    (explorerSummaryJson scanReport busyReport frontierReport)
   putStrLn $ "RH Garden Navigator data exported to " ++ outputDir
   putStrLn $ "Snapshot commit: " ++ headCommit
   where
@@ -77,9 +85,9 @@ frontiersJson = unlines
       , stringField "category" "arithmetic"
       , stringField "status" "open"
       , stringField "trust" "Open"
-      , stringField "known_chain" "Exact arrivals -> exact Chebyshev Abel identity -> exact discrepancy balance -> weighted backlog loss"
-      , stringField "exact_blocker" "For each completed negative excursion [a,b], bound the local mass sum_{a^2<n<=b^2} Lambda(n)/sqrt(n) sharply enough that integral_a^b 2 max(-D(u),0)/u du <= PsiRoot(a)."
-      , stringField "current_bound" "Pinned global prefix estimates discard the lower endpoint and are structurally too coarse for short root intervals."
+      , stringField "known_chain" "Exact arrivals -> exact Chebyshev Abel identity -> prefix-uniform arrival/service profile -> checked 2/u-weighted loss bound"
+      , stringField "exact_blocker" "Find a nonnegative profile E(u) such that every root prefix satisfies sum_{m<n<=floor(u^2)} Lambda(n)/sqrt(n) <= Service(sqrt(m),u)+E(u), and integral 2/u*(backlog(sqrt(m))+E(u)) du stays below the starting Psi reserve."
+      , stringField "current_bound" "The new LeanChecked local-width bound is 13.03x the terminal proxy on the 324431 excursion and reaches 16.06x on the widest hard scanned period; the pinned global-prefix expression is 28.24x the actual local arrival at 324431. The constant-E rectangle is itself infeasible there, so the exact formal frontier is profile-valued."
       , arrayField "source_modules"
           ["formal/RHGarden/SuzukiBusyPeriods.lean",
            "formal/RHGarden/SuzukiRootDiscrepancy.lean",
@@ -88,6 +96,9 @@ frontiersJson = unlines
           ["short-interval Chebyshev psi bounds",
            "exact-prefix plus theorem-backed tail",
            "multi-event reserve/loss certificates"]
+      , stringField "literature_reference" "Larry Guth and James Maynard, New large value estimates for Dirichlet polynomials, arXiv:2405.20552"
+      , stringField "literature_url" "https://arxiv.org/abs/2405.20552"
+      , stringField "literature_scope" "External all-interval asymptotic reference at length x^(17/30+o(1)); not formalized, not made effective here, and not a busy-period certificate."
       ]
   , ","
   , indent 4 $ object
@@ -133,8 +144,8 @@ statusJson headCommit = unlines
     numericalEdges = count (== numericalEvidenceTrust) trusts
     conjecturalEdges = count (== conjecturalTrust) trusts
 
-explorerSummaryJson :: ExplorerReport -> ExplorerReport -> String
-explorerSummaryJson scanReport busyReport = unlines
+explorerSummaryJson :: ExplorerReport -> ExplorerReport -> ExplorerReport -> String
+explorerSummaryJson scanReport busyReport frontierReport = unlines
   [ "{"
   , "  \"schema_version\": 1,"
   , "  \"trust\": \"NumericalEvidence\","
@@ -143,7 +154,9 @@ explorerSummaryJson scanReport busyReport = unlines
   , intercalate ",\n" (map (indent 4 . fieldSampleJson) fieldSamples)
   , "  ],"
   , "  \"scan\": " ++ indentAfter 2 (renderExplorerJson scanReport) ++ ","
-  , "  \"busy\": " ++ indentAfter 2 (renderExplorerJson busyReport)
+  , "  \"busy\": " ++ indentAfter 2 (renderExplorerJson busyReport) ++ ","
+  , "  \"arithmetic_frontier_periods\": " ++
+      indentAfter 2 (renderBusyPeriodsJson (reportBusyPeriods frontierReport))
   , "}"
   ]
   where
@@ -241,6 +254,8 @@ mutuallyReachable a b = reachable a b && reachable b a
 representationTrust :: Representation -> Trust
 representationTrust representation
   | representation `elem` numericalRepresentations = numericalEvidenceTrust
+  | representation == SuzukiWeightedShortIntervalFrontier = conjecturalTrust
+  | representation == ShortIntervalPrimeTheory = literatureCertifiedTrust
   | representation == RHGardenNavigator = exactExecutableTrust
   | representation == GardenRegistry = exactExecutableTrust
   | representation == FormalStatus = exactExecutableTrust
@@ -270,6 +285,11 @@ sourceFiles representation
       SuzukiBusyPeriodLoss] = ["formal/RHGarden/SuzukiRootDiscrepancy.lean"]
   | representation == SuzukiBusyPeriodCertificates =
       ["formal/RHGarden/SuzukiBusyPeriods.lean"]
+  | representation `elem` [SuzukiWeightedShortIntervalFrontier,
+      SuzukiBusyPeriodArithmeticCertificate] =
+      ["formal/RHGarden/SuzukiBusyPeriods.lean"]
+  | representation == ShortIntervalPrimeTheory =
+      ["https://arxiv.org/abs/2405.20552"]
   | representation == SuzukiPositivityExplorer =
       ["src/RHGarden/Explorer/Suzuki.hs"]
   | representation == RHGardenNavigator = ["ui/src/App.tsx", "src/RHGarden/UIExport.hs"]

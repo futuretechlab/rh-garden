@@ -285,6 +285,20 @@ main = do
           busyStartingDiscrepancy period < 0 &&
           abs (busyEndingDiscrepancy period) < 1e-12 &&
           busyServiceDrift period + 1e-8 >= busyArrivalMass period &&
+          busyIntervalEnd period >= busyIntervalStart period &&
+          busyIntervalWidth period == busyIntervalEnd period - busyIntervalStart period &&
+          busyActualMaxArrivalServiceExcess period >= -1e-10 &&
+          abs (busyPrefixEnvelopeSlack period -
+            (busyArrivalExcessBudget period -
+              busyActualMaxArrivalServiceExcess period)) < 1e-9 &&
+          (busyArrivalMass period <= 1e-12 ||
+            abs (busyEpsilonRequired period - busyArrivalSlack period /
+              busyArrivalMass period) < 1e-9) &&
+          (busyArrivalMass period <= 1e-12 ||
+            abs (busyPrefixEpsilonRequired period -
+              busyPrefixEnvelopeSlack period / busyArrivalMass period) < 1e-9) &&
+          busyCheckedElementaryArrivalUpper period + 1e-8 >=
+            busyArrivalMass period &&
           busyPinnedPrefixArrivalUpper period >= busyArrivalMass period &&
           (busyArrivalMass period <= 1e-12 ||
             busyPinnedBoundOverArrival period >= 1))
@@ -293,11 +307,15 @@ main = do
       Left _ -> False
   check "UI garden export contains live registry nodes and trust metadata" $
     "RHGardenNavigator" `isInfixOf` gardenJson &&
+    "SuzukiWeightedShortIntervalFrontier" `isInfixOf` gardenJson &&
+    "SuzukiBusyPeriodArithmeticCertificate" `isInfixOf` gardenJson &&
     "LeanChecked" `isInfixOf` gardenJson &&
     "NumericalEvidence" `isInfixOf` gardenJson
   check "UI frontier export names the exact busy-period blocker" $
     "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
-    "short root intervals" `isInfixOf` frontiersJson
+    "every root prefix" `isInfixOf` frontiersJson &&
+    "17/30" `isInfixOf` frontiersJson &&
+    "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $
     "NO PROOF OF RH IS CLAIMED" `isInfixOf` statusJson "test-head" &&
     "test-head" `isInfixOf` statusJson "test-head"

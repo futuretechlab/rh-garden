@@ -90,6 +90,9 @@ data Representation
   | SuzukiRootPrefixArea
   | SuzukiBusyPeriodLoss
   | SuzukiBusyPeriodCertificates
+  | SuzukiWeightedShortIntervalFrontier
+  | SuzukiBusyPeriodArithmeticCertificate
+  | ShortIntervalPrimeTheory
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
   | CandidateCellCertificate
@@ -186,6 +189,9 @@ data SRepresentation (r :: Representation) where
   SSuzukiRootPrefixArea :: SRepresentation 'SuzukiRootPrefixArea
   SSuzukiBusyPeriodLoss :: SRepresentation 'SuzukiBusyPeriodLoss
   SSuzukiBusyPeriodCertificates :: SRepresentation 'SuzukiBusyPeriodCertificates
+  SSuzukiWeightedShortIntervalFrontier :: SRepresentation 'SuzukiWeightedShortIntervalFrontier
+  SSuzukiBusyPeriodArithmeticCertificate :: SRepresentation 'SuzukiBusyPeriodArithmeticCertificate
+  SShortIntervalPrimeTheory :: SRepresentation 'ShortIntervalPrimeTheory
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
   SCandidateCellCertificate :: SRepresentation 'CandidateCellCertificate
@@ -283,6 +289,9 @@ representationValue SSuzukiRootSlopeDiscrepancy = SuzukiRootSlopeDiscrepancy
 representationValue SSuzukiRootPrefixArea = SuzukiRootPrefixArea
 representationValue SSuzukiBusyPeriodLoss = SuzukiBusyPeriodLoss
 representationValue SSuzukiBusyPeriodCertificates = SuzukiBusyPeriodCertificates
+representationValue SSuzukiWeightedShortIntervalFrontier = SuzukiWeightedShortIntervalFrontier
+representationValue SSuzukiBusyPeriodArithmeticCertificate = SuzukiBusyPeriodArithmeticCertificate
+representationValue SShortIntervalPrimeTheory = ShortIntervalPrimeTheory
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
 representationValue SCandidateCellCertificate = CandidateCellCertificate
@@ -378,6 +387,9 @@ representationLabel SuzukiRootSlopeDiscrepancy = "smooth root slope minus the ri
 representationLabel SuzukiRootPrefixArea = "weighted root-discrepancy prefix area representation of Suzuki Psi"
 representationLabel SuzukiBusyPeriodLoss = "exact weighted backlog loss during negative root-discrepancy excursions"
 representationLabel SuzukiBusyPeriodCertificates = "kernel-checkable multi-event busy-period certificate interface"
+representationLabel SuzukiWeightedShortIntervalFrontier = "prefix-uniform weighted Mangoldt arrival/service frontier"
+representationLabel SuzukiBusyPeriodArithmeticCertificate = "busy-period safety certificate from one explicit local arrival envelope"
+representationLabel ShortIntervalPrimeTheory = "external all-interval and almost-all short-interval prime theory"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"
 representationLabel CandidateCellCertificate = "candidate rational lower-bound data for one Suzuki prime cell"

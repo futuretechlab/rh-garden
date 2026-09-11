@@ -21,6 +21,7 @@ module RHGarden.Explorer.Suzuki
   , renderExplorerAscii
   , renderExplorerCsv
   , renderExplorerJson
+  , renderBusyPeriodsJson
   , renderCertificatesJson
   , runSuzukiExplorer
   , suzukiPsiNumeric
@@ -263,6 +264,13 @@ data BusyPeriod = BusyPeriod
   { busyStartEvent :: Int
   , busyRecoveryBeforeEvent :: Int
   , busyEventCount :: Int
+  , busyIntervalStart :: Int
+  , busyIntervalEnd :: Int
+  , busyIntervalWidth :: Int
+  , busyEffectiveTheta :: Double
+  , busyWidthOverSqrtStart :: Double
+  , busyWidthOverSqrtLogStart :: Double
+  , busyGuthMaynardScaleRatio :: Double
   , busyRootStart :: Double
   , busyRootEnd :: Double
   , busyRootWidth :: Double
@@ -284,6 +292,18 @@ data BusyPeriod = BusyPeriod
   , busyPinnedPrefixArrivalUpper :: Double
   , busyPinnedBoundOverArrival :: Double
   , busyPinnedExcessOverService :: Double
+  , busyPinnedBoundOverRequired :: Double
+  , busyPinnedBoundExcessOverRequired :: Double
+  , busyArrivalExcessBudget :: Double
+  , busyActualMaxArrivalServiceExcess :: Double
+  , busyPrefixEnvelopeSlack :: Double
+  , busyRequiredArrivalUpper :: Double
+  , busyArrivalSlack :: Double
+  , busyEpsilonRequired :: Double
+  , busyPrefixEpsilonRequired :: Double
+  , busyCheckedElementaryArrivalUpper :: Double
+  , busyArithmeticBoundFactor :: Double
+  , busyArithmeticBoundExcess :: Double
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -485,8 +505,12 @@ exploreSuzuki :: ExplorerOptions -> Either String ExplorerReport
 exploreSuzuki options = do
   checked <- validateOptions options
   let nMaxDouble = exp (explorerTMax checked)
-  if nMaxDouble > 2000000
-    then Left "t-max creates more than 2,000,000 arithmetic cells; use a smaller exploratory range"
+      eventOnly = explorerMode checked `elem` [DualMode, RootsMode, BusyMode]
+      maximumCells :: Int
+      maximumCells = if eventOnly then 20000000 else 2000000
+  if nMaxDouble > fromIntegral maximumCells
+    then Left $ "t-max creates more than " ++ show maximumCells ++
+      " arithmetic cells for this mode; use a smaller exploratory range"
     else pure ()
   let nMax = max 1 (floor nMaxDouble)
       primes = primesUpTo (nMax + 100)
@@ -553,6 +577,16 @@ buildBusyPeriods = seek
       { busyStartEvent = dualEvent first
       , busyRecoveryBeforeEvent = dualNextEvent final
       , busyEventCount = length rows
+      , busyIntervalStart = intervalStart
+      , busyIntervalEnd = intervalEnd
+      , busyIntervalWidth = intervalWidth
+      , busyEffectiveTheta = thetaEff
+      , busyWidthOverSqrtStart = safeRatio (fromIntegral intervalWidth)
+          (sqrt (fromIntegral intervalStart))
+      , busyWidthOverSqrtLogStart = safeRatio (fromIntegral intervalWidth)
+          (sqrt (fromIntegral intervalStart) * log (fromIntegral intervalStart))
+      , busyGuthMaynardScaleRatio = safeRatio (fromIntegral intervalWidth)
+          (fromIntegral intervalStart ** (17 / 30))
       , busyRootStart = rootStart
       , busyRootEnd = rootEnd
       , busyRootWidth = rootEnd - rootStart
@@ -575,6 +609,21 @@ buildBusyPeriods = seek
       , busyPinnedPrefixArrivalUpper = pinnedUpper
       , busyPinnedBoundOverArrival = safeRatio pinnedUpper arrival
       , busyPinnedExcessOverService = pinnedUpper - service
+      , busyPinnedBoundOverRequired = safeRatio pinnedUpper requiredArrivalUpper
+      , busyPinnedBoundExcessOverRequired = pinnedUpper - requiredArrivalUpper
+      , busyArrivalExcessBudget = arrivalExcessBudget
+      , busyActualMaxArrivalServiceExcess = actualMaxArrivalServiceExcess
+      , busyPrefixEnvelopeSlack = prefixEnvelopeSlack
+      , busyRequiredArrivalUpper = requiredArrivalUpper
+      , busyArrivalSlack = arrivalSlack
+      -- The terminal metric requested by the certificate diagnostics.
+      , busyEpsilonRequired = safeRatio arrivalSlack arrival
+      -- The stronger prefix-uniform diagnostic used by the actual verifier.
+      , busyPrefixEpsilonRequired = safeRatio prefixEnvelopeSlack arrival
+      , busyCheckedElementaryArrivalUpper = checkedElementaryUpper
+      , busyArithmeticBoundFactor = safeRatio checkedElementaryUpper
+          requiredArrivalUpper
+      , busyArithmeticBoundExcess = checkedElementaryUpper - requiredArrivalUpper
       }
       where
         first = head rows
@@ -582,12 +631,36 @@ buildBusyPeriods = seek
         initialRows = init rows
         rootStart = dualSqrtEvent first
         rootEnd = dualRootOptimizer final
+        intervalStart = ceiling (rootStart * rootStart - 1e-9)
+        intervalEnd = floor (rootEnd * rootEnd + 1e-9)
+        intervalWidth = max 0 (intervalEnd - intervalStart)
+        thetaEff
+          | intervalStart > 1 && intervalWidth > 0 =
+              log (fromIntegral intervalWidth) / log (fromIntegral intervalStart)
+          | otherwise = 0 / 0
         startD = dualDeficit first
         psiStart = dualEventValue first
         psiEnd = dualBlockMargin final
         loss = psiStart - psiEnd
         arrival = sum (map dualNextImpulse initialRows)
         service = sum (map dualArchDrift initialRows) - dualDeficit final
+        initialBacklog = max (-startD) 0
+        -- The checked rectangle-envelope verifier asks for every local prefix
+        -- arrival to be at most service plus this excess budget.  The terminal
+        -- value below is a diagnostic proxy for that pointwise requirement.
+        arrivalExcessBudget
+          | rootEnd > rootStart =
+              psiStart * rootStart / (2 * (rootEnd - rootStart)) - initialBacklog
+          | otherwise = 0 / 0
+        -- At an event root, Arrival-Service equals D(start)-D(current).
+        -- Discrepancy rises between events, so the most negative event state
+        -- gives the exact sampled maximum prefix excess for this excursion.
+        actualMaxArrivalServiceExcess =
+          startD - minimum (map dualDeficit rows)
+        prefixEnvelopeSlack =
+          arrivalExcessBudget - actualMaxArrivalServiceExcess
+        requiredArrivalUpper = service + arrivalExcessBudget
+        arrivalSlack = requiredArrivalUpper - arrival
         endpoint = fromIntegral (dualNextEvent final)
         endpointLog = log endpoint
         -- Numerical evaluation of Zeta23.Cheb.sum_vonMangoldt_div_sqrt_le_precise.
@@ -595,6 +668,14 @@ buildBusyPeriods = seek
         -- the lower prefix; the resulting looseness is itself research data.
         pinnedUpper = 2 * log 4 * sqrt endpoint + 2 * endpointLog +
           endpointLog * endpointLog / 2
+        checkedEndpoint = fromIntegral intervalEnd
+        checkedStart = fromIntegral intervalStart
+        checkedWidth = fromIntegral intervalWidth
+        -- Numerical value of weightedMangoldtInterval_le_localWidth.
+        checkedElementaryUpper
+          | intervalEnd > 1 = checkedWidth * log checkedEndpoint /
+              sqrt (checkedStart + 1)
+          | otherwise = 0
         safeRatio numerator denominator
           | abs denominator < 1e-15 = 0 / 0
           | otherwise = numerator / denominator
@@ -1677,9 +1758,10 @@ renderExplorerAscii report = unlines $
       [ ""
       , "Root-discrepancy busy periods (NumericalEvidence):"
       , "Each row is one completed maximal negative excursion; finite scans do not establish RH."
-      , "start    recover<  events  root width    t width       D_start       D_min         loss          Psi_start     Psi_min       loss/reserve  arrivals/service"
-      , "----------------------------------------------------------------------------------------------------------------------------------------------------------"
-      ] ++ map renderBusy busyRowsForDisplay ++ busySummarySection
+      , "start    recover<  events  x          h        theta     epsilon req   loss/reserve  elementary/required"
+      , "---------------------------------------------------------------------------------------------------------"
+      ] ++ map renderBusy busyRowsForDisplay ++ busySummarySection ++
+        busyScaleSection ++ busyRankingSection
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -1836,15 +1918,12 @@ renderExplorerAscii report = unlines $
       [ pad 8 (show (busyStartEvent period))
       , pad 9 (show (busyRecoveryBeforeEvent period))
       , pad 7 (show (busyEventCount period))
-      , pad 13 (fmt 8 (busyRootWidth period))
-      , pad 13 (fmt 8 (busyTWidth period))
-      , pad 13 (fmt 8 (busyStartingDiscrepancy period))
-      , pad 13 (fmt 8 (busyMostNegativeDiscrepancy period))
-      , pad 13 (fmt 9 (busyWeightedLoss period))
-      , pad 13 (fmt 9 (busyPsiStart period))
-      , pad 13 (fmt 9 (busyMinimumPsi period))
+      , pad 10 (show (busyIntervalStart period))
+      , pad 8 (show (busyIntervalWidth period))
+      , pad 9 (fmt 6 (busyEffectiveTheta period))
+      , pad 13 (fmt 7 (busyEpsilonRequired period))
       , pad 13 (fmt 7 (busyLossOverReserve period))
-      , fmt 7 (busyArrivalOverService period)]
+      , fmt 5 (busyArithmeticBoundFactor period)]
     dualRowsForDisplay = take 30 (sortOn dualCurvatureSafetyEnergy
       (reportDualDynamics report))
     rootRowsForDisplay = take 40 (reverse (sortOn dualRootKickOverGap
@@ -1867,6 +1946,11 @@ renderExplorerAscii report = unlines $
           containing199 = [period | period <- periods,
             busyStartEvent period <= 199,
             199 < busyRecoveryBeforeEvent period]
+          infeasibleRectangles = [period | period <- periods,
+            isFinite (busyPrefixEnvelopeSlack period),
+            busyPrefixEnvelopeSlack period < 0]
+          worstRectangle = if null infeasibleRectangles then Nothing else Just
+            (minimumBy (comparing busyPrefixEnvelopeSlack) infeasibleRectangles)
           showAt field period = show (field period) ++ " at start q=" ++
             show (busyStartEvent period)
       in [ ""
@@ -1882,12 +1966,77 @@ renderExplorerAscii report = unlines $
          , "  tightest pinned global-prefix/actual-arrival ratio: " ++ maybe "n/a"
              (\period -> fmt 6 (busyPinnedBoundOverArrival period) ++
                "x at start q=" ++ show (busyStartEvent period)) tightestPinned
+         , "  constant-excess rectangle infeasible even with exact sampled prefixes: " ++
+             show (length infeasibleRectangles) ++ maybe ""
+               (\period -> " (worst start q=" ++ show (busyStartEvent period) ++
+                 ", slack=" ++ fmt 8 (busyPrefixEnvelopeSlack period) ++ ")")
+               worstRectangle
          , "  period containing event 199: " ++ case containing199 of
              period : _ -> show (busyStartEvent period) ++ " -> recovery before " ++
                show (busyRecoveryBeforeEvent period) ++ " (" ++
                show (busyEventCount period) ++ " event states)"
              [] -> "none in completed scan"
          ]
+    busyScaleSection =
+      let periods = [p | p <- reportBusyPeriods report,
+            isFinite (busyEffectiveTheta p)]
+          countAbove x = length (filter ((> x) . busyEffectiveTheta) periods)
+          countAtMost x = length (filter ((<= x) . busyEffectiveTheta) periods)
+          decades = [3 .. 8 :: Int]
+          renderDecade k =
+            let lo = 10 ^ k
+                hi = 10 ^ (k + 1)
+                rows = [p | p <- periods, busyIntervalStart p >= lo,
+                  busyIntervalStart p < hi]
+                values = sort (map busyEffectiveTheta rows)
+                danger = if null rows then Nothing else Just
+                  (maximumBy (comparing busyLossOverReserve) rows)
+            in if null rows then "  1e" ++ show k ++ "..1e" ++ show (k + 1) ++
+                "  no completed periods"
+              else "  1e" ++ show k ++ "..1e" ++ show (k + 1) ++
+                "  count=" ++ show (length rows) ++
+                "  min=" ++ fmt 6 (head values) ++
+                "  median=" ++ fmt 6 (medianSorted values) ++
+                "  dangerous=" ++ maybe "n/a" (fmt 6 . busyEffectiveTheta) danger
+      in [ ""
+         , "Short-interval scale audit (NumericalEvidence; theta_GM=17/30 is literature context only):"
+         , "  theta > 2/3:   " ++ show (countAbove (2 / 3))
+         , "  theta > 3/5:   " ++ show (countAbove (3 / 5))
+         , "  theta > 17/30: " ++ show (countAbove (17 / 30))
+         , "  theta > 1/2:   " ++ show (countAbove (1 / 2))
+         , "  theta <= 1/2:  " ++ show (countAtMost (1 / 2))
+         , "  logarithmic start bins:"
+         ] ++ map renderDecade decades
+    busyRankingSection =
+      let periods = reportBusyPeriods report
+          comparable = [p | p <- periods, busyArrivalMass p > 1e-12,
+            isFinite (busyEpsilonRequired p),
+            isFinite (busyPrefixEpsilonRequired p),
+            isFinite (busyArithmeticBoundFactor p)]
+          feasible = filter ((>= 0) . busyPrefixEnvelopeSlack) comparable
+          infeasible = filter ((< 0) . busyPrefixEnvelopeSlack) comparable
+          rank title rows = ["", title,
+            "  start -> recover     theta       terminal eps  profile eps   loss/reserve   elementary/required"] ++
+            map renderRank (take 20 rows)
+          renderRank p = "  " ++ pad 20
+            (show (busyStartEvent p) ++ " -> " ++ show (busyRecoveryBeforeEvent p)) ++
+            pad 12 (fmt 7 (busyEffectiveTheta p)) ++
+            pad 13 (fmt 7 (busyEpsilonRequired p)) ++
+            pad 13 (fmt 7 (busyPrefixEpsilonRequired p)) ++
+            pad 15 (fmt 7 (busyLossOverReserve p)) ++
+            fmt 5 (busyArithmeticBoundFactor p)
+      in rank "Top 20 by reserve fraction consumed:"
+           (reverse (sortOn busyLossOverReserve comparable)) ++
+         rank "Constant-excess rectangle failures (exact sampled prefix already exceeds budget):"
+           (sortOn busyPrefixEnvelopeSlack infeasible) ++
+         rank "Top 20 feasible periods by smallest prefix-envelope slack:"
+           (sortOn busyPrefixEpsilonRequired feasible) ++
+         rank "Top 20 by smallest terminal arrival epsilonRequired:"
+           (sortOn busyEpsilonRequired comparable) ++
+         rank "Top 20 by largest checked-bound/required-bound factor:"
+           (reverse (sortOn busyArithmeticBoundFactor comparable)) ++
+         rank "Top 20 by smallest effective exponent:"
+           (sortOn busyEffectiveTheta comparable)
     rootSummarySection =
       let rows = reportDualDynamics report
           maxRho = if null rows then Nothing else Just (maximumBy
@@ -1955,11 +2104,17 @@ renderExplorerAscii report = unlines $
           decreases = length (filter (< (-1e-12)) changes)
       in intercalate "  " [pad 31 label, pad 14 (fmt 9 minValue),
           pad 18 (fmt 9 minChange), show decreases]
+    medianSorted [] = 0 / 0
+    medianSorted values
+      | odd count = values !! (count `div` 2)
+      | otherwise = (values !! (count `div` 2 - 1) +
+          values !! (count `div` 2)) / 2
+      where count = length values
 
 renderExplorerCsv :: ExplorerReport -> String
 renderExplorerCsv report
   | explorerMode (reportOptions report) == BusyMode = unlines $
-      ["trust,status,start_event,recovery_before_event,event_count,root_start,root_end,root_width,t_width,starting_discrepancy,most_negative_discrepancy,ending_discrepancy,weighted_loss,psi_start,psi_end,minimum_psi,loss_over_reserve,loss_times_sqrt_start,loss_over_initial_backlog_sq,max_backlog_over_sqrt_start,arrival_mass,service_drift,arrival_over_service,pinned_prefix_arrival_upper,pinned_bound_over_arrival,pinned_bound_excess_over_service"] ++
+      ["trust,status,start_event,recovery_before_event,event_count,interval_start,interval_end,interval_width,theta_eff,width_over_sqrt_x,width_over_sqrt_x_log_x,h_over_x_17_30,root_start,root_end,root_width,t_width,starting_discrepancy,most_negative_discrepancy,ending_discrepancy,weighted_loss,psi_start,psi_end,minimum_psi,loss_over_reserve,loss_times_sqrt_start,loss_over_initial_backlog_sq,max_backlog_over_sqrt_start,arrival_mass,service_drift,arrival_over_service,arrival_excess_budget,actual_max_arrival_service_excess,prefix_envelope_slack,required_arrival_upper,arrival_slack,epsilon_required,prefix_epsilon_required,checked_elementary_arrival_upper,arithmetic_bound_factor,arithmetic_bound_excess,pinned_prefix_arrival_upper,pinned_bound_over_arrival,pinned_bound_excess_over_service,pinned_bound_over_required,pinned_bound_excess_over_required"] ++
       map renderBusyCsv (reportBusyPeriods report)
   | explorerMode (reportOptions report) == RootsMode = unlines $
       ["trust,status,event_q,next_event_r,u_star_before,u_star_after,sqrt_q,sqrt_r,root_displacement,rho,root_kick,kick_lower,kick_upper,sqrt_gap,kick_over_gap,normalized_root_impulse,active,global_margin,block_margin,margin_update,curvature_safety_energy,root_barrier_five_thirds,root_barrier_two,crude_gap_condition"] ++
@@ -1980,6 +2135,11 @@ renderExplorerCsv report
     renderBusyCsv period = intercalate ","
       ["NumericalEvidence", "candidate", show (busyStartEvent period)
       ,show (busyRecoveryBeforeEvent period), show (busyEventCount period)
+      ,show (busyIntervalStart period), show (busyIntervalEnd period)
+      ,show (busyIntervalWidth period), num (busyEffectiveTheta period)
+      ,num (busyWidthOverSqrtStart period)
+      ,num (busyWidthOverSqrtLogStart period)
+      ,num (busyGuthMaynardScaleRatio period)
       ,num (busyRootStart period), num (busyRootEnd period)
       ,num (busyRootWidth period), num (busyTWidth period)
       ,num (busyStartingDiscrepancy period)
@@ -1992,9 +2152,20 @@ renderExplorerCsv report
       ,num (busyMaxBacklogOverSqrtStart period)
       ,num (busyArrivalMass period), num (busyServiceDrift period)
       ,num (busyArrivalOverService period)
+      ,num (busyArrivalExcessBudget period)
+      ,num (busyActualMaxArrivalServiceExcess period)
+      ,num (busyPrefixEnvelopeSlack period)
+      ,num (busyRequiredArrivalUpper period)
+      ,num (busyArrivalSlack period), num (busyEpsilonRequired period)
+      ,num (busyPrefixEpsilonRequired period)
+      ,num (busyCheckedElementaryArrivalUpper period)
+      ,num (busyArithmeticBoundFactor period)
+      ,num (busyArithmeticBoundExcess period)
       ,num (busyPinnedPrefixArrivalUpper period)
       ,num (busyPinnedBoundOverArrival period)
-      ,num (busyPinnedExcessOverService period)]
+      ,num (busyPinnedExcessOverService period)
+      ,num (busyPinnedBoundOverRequired period)
+      ,num (busyPinnedBoundExcessOverRequired period)]
     renderRootCsv row = intercalate ","
       ["NumericalEvidence", "candidate", show (dualEvent row)
       ,show (dualNextEvent row), num (dualRootOptimizer row)
@@ -2102,6 +2273,10 @@ renderExplorerJson report = unlines
   ,"  ]"
   ,"}"
   ]
+
+renderBusyPeriodsJson :: [BusyPeriod] -> String
+renderBusyPeriodsJson periods = "[\n" ++
+  intercalate ",\n" (map (indent 2 . busyJson) periods) ++ "\n]"
 
 renderCertificatesJson :: ExplorerReport -> String
 renderCertificatesJson report = unlines
@@ -2241,6 +2416,13 @@ busyJson period = "{" ++ intercalate ", "
   ,jsonField "start_event" (show (busyStartEvent period))
   ,jsonField "recovery_before_event" (show (busyRecoveryBeforeEvent period))
   ,jsonField "event_count" (show (busyEventCount period))
+  ,jsonField "interval_start" (show (busyIntervalStart period))
+  ,jsonField "interval_end" (show (busyIntervalEnd period))
+  ,jsonField "interval_width" (show (busyIntervalWidth period))
+  ,jsonField "theta_eff" (num (busyEffectiveTheta period))
+  ,jsonField "width_over_sqrt_x" (num (busyWidthOverSqrtStart period))
+  ,jsonField "width_over_sqrt_x_log_x" (num (busyWidthOverSqrtLogStart period))
+  ,jsonField "h_over_x_17_30" (num (busyGuthMaynardScaleRatio period))
   ,jsonField "root_start" (num (busyRootStart period))
   ,jsonField "root_end" (num (busyRootEnd period))
   ,jsonField "root_width" (num (busyRootWidth period))
@@ -2261,12 +2443,29 @@ busyJson period = "{" ++ intercalate ", "
   ,jsonField "arrival_mass" (num (busyArrivalMass period))
   ,jsonField "service_drift" (num (busyServiceDrift period))
   ,jsonField "arrival_over_service" (num (busyArrivalOverService period))
+  ,jsonField "arrival_excess_budget" (num (busyArrivalExcessBudget period))
+  ,jsonField "actual_max_arrival_service_excess"
+      (num (busyActualMaxArrivalServiceExcess period))
+  ,jsonField "prefix_envelope_slack" (num (busyPrefixEnvelopeSlack period))
+  ,jsonField "required_arrival_upper" (num (busyRequiredArrivalUpper period))
+  ,jsonField "arrival_slack" (num (busyArrivalSlack period))
+  ,jsonField "epsilon_required" (num (busyEpsilonRequired period))
+  ,jsonField "prefix_epsilon_required"
+      (num (busyPrefixEpsilonRequired period))
+  ,jsonField "checked_elementary_arrival_upper"
+      (num (busyCheckedElementaryArrivalUpper period))
+  ,jsonField "arithmetic_bound_factor" (num (busyArithmeticBoundFactor period))
+  ,jsonField "arithmetic_bound_excess" (num (busyArithmeticBoundExcess period))
   ,jsonField "pinned_prefix_arrival_upper"
       (num (busyPinnedPrefixArrivalUpper period))
   ,jsonField "pinned_bound_over_arrival"
       (num (busyPinnedBoundOverArrival period))
   ,jsonField "pinned_bound_excess_over_service"
-      (num (busyPinnedExcessOverService period))] ++ "}"
+      (num (busyPinnedExcessOverService period))
+  ,jsonField "pinned_bound_over_required"
+      (num (busyPinnedBoundOverRequired period))
+  ,jsonField "pinned_bound_excess_over_required"
+      (num (busyPinnedBoundExcessOverRequired period))] ++ "}"
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

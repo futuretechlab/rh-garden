@@ -103,6 +103,12 @@ them with textual `NumericalEvidence` labels. The UI and its JSON are tooling,
 not mathematical evidence, and never promote Explorer output to
 `LeanChecked`. See `UI.md` for architecture and the trust boundary.
 
+The Navigator's Arithmetic Frontier view uses a ten-million-range busy-period
+summary. It shows effective interval exponents, the external Guth--Maynard
+`17/30` reference scale, the LeanChecked local-width bound, and the exact
+profile-valued formal target. Literature shading and finite scans remain
+visibly separate from kernel-checked implications.
+
 The formal graph now includes Lean-checked equivalences between mathlib's RH,
 the entire-xi zero formulation, and the `XiT` real-coordinate formulation.
 These are equivalences between open propositions, not proofs of either endpoint;

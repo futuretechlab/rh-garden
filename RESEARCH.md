@@ -624,3 +624,72 @@ kernel-checked PNT asymptotic. These are unconditional, but their present
 global error scales do not by themselves control each short multi-event busy
 period. No zero-free or RH-strength estimate was imported into the new queue
 representation.
+
+## Short-interval arithmetic frontier
+
+The local arithmetic input is now a named Lean interface rather than the
+phrase "better prime bounds." `SuzukiWeightedShortIntervalProfileBound` asks,
+for every root prefix `u` of an excursion beginning at `sqrt m`, for
+
+```text
+sum_{m < n <= floor(u^2)} Lambda(n)/sqrt(n)
+  <= Service(sqrt m,u) + E(u).
+```
+
+`busyPeriod_safe_of_weightedMangoldt_profile` proves the excursion safe when
+`E` is nonnegative and
+
+```text
+integral 2/u * (backlog(sqrt m) + E(u)) du
+  <= PsiRoot(sqrt m).
+```
+
+The constant-profile specialization remains checked, but the ten-million
+Explorer scan shows why it is not the final interface. On the numerical
+`324431 -> 361201` excursion, the constant-excess budget is `0.5993354` while
+the observed maximum prefix arrival/service excess is `0.6750328`; the scalar
+rectangle is short by `0.0756974` even before replacing exact arrivals by a
+theorem. The profile theorem charges error at its actual `2/u` weight and is
+therefore the exact current target.
+
+The same module now proves the interval-sensitive elementary bound
+
+```text
+Arrival(m,n) <= (n-m) * log(n) / sqrt(m+1).
+```
+
+It improves dramatically on throwing away the lower prefix, but is still
+about `13.0255` times the terminal proxy on `324431 -> 361201` and reaches
+about `16.7814` on the worst terminal comparison in the twenty-million scan. The pinned
+global-prefix expression is `1773.8042` versus exact local arrival `62.8067`
+on the former period, a factor `28.2423`.
+
+The extended scan through twenty million found 14,451 completed numerical busy
+periods. Of the 13,436 with a finite positive-width exponent, 219 have
+`thetaEff = log(h)/log(x)` above `17/30`, while 13,063 are at or below `1/2`.
+The short periods are numerous but generally have enormous reserve slack;
+the hard large excursions instead had `thetaEff` around `0.77--0.84`. For
+example, `324431 -> 361201` has `thetaEff=0.828406` and
+`h/x^(17/30)=27.6998`; the widest scanned hard excursion beginning at
+`6932909` has `thetaEff=0.837892` and ratio `71.6849`. No further substantive
+constant-envelope failure appeared; the smallest positive relative slack in
+the larger scan is about `0.0006811` at `12284411 -> 13067531`.
+
+The export keeps two precision diagnostics distinct. `epsilonRequired` is
+the requested terminal arrival headroom divided by exact arrival;
+`prefixEpsilonRequired` is the stronger sampled prefix-envelope slack on the
+same scale. The latter is what exposes the failure of a constant rectangle
+and drives the profile-valued formal target.
+
+The `17/30` line is external context from Guth--Maynard,
+arXiv:2405.20552. It is `LiteratureCertified` metadata only: no effective
+constants, weighted translation, or Lean formalization are claimed, and an
+almost-all interval result would not suffice for every busy period.
+
+A single numerical family `E = C h/(sqrt(x) log(x)^A)` does not fit all
+scanned periods under the constant rectangle. Already for `A=0` the narrow
+periods demand `C` about `0.790`, while the widest hard period allows at most
+about `0.003997`. The next plausible architecture is consequently two-regime
+and profile-valued: a local discrete bound for narrow intervals plus an
+all-interval PNT-quality profile for long intervals. This is an exploratory
+design constraint, not a theorem or evidence for RH.

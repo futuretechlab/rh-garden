@@ -242,6 +242,27 @@ suzukiBusyCertificateRef = Reference
       "a proof-carrying reserve/loss certificate verifies a whole excursion."
   }
 
+suzukiWeightedShortIntervalRef :: Reference
+suzukiWeightedShortIntervalRef = Reference
+  { refShort = "RHGarden.busyPeriod_safe_of_weightedMangoldt_profile"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiBusyPeriods.lean expose the " ++
+      "single local arithmetic input SuzukiWeightedShortIntervalProfileBound: " ++
+      "each root-prefix arrival is at most smooth service plus a nonnegative " ++
+      "profile E(u). Its checked 2/u-weighted reserve inequality then certifies " ++
+      "the interval. A constant-E rectangle remains available as a coarser corollary."
+  }
+
+guthMaynardShortIntervalRef :: Reference
+guthMaynardShortIntervalRef = Reference
+  { refShort = "Guth--Maynard short-interval reference scale"
+  , refCitation =
+      "Larry Guth and James Maynard, New large value estimates for Dirichlet " ++
+      "polynomials, arXiv:2405.20552. The exponent 17/30 is recorded only as " ++
+      "external asymptotic all-interval context. It is not formalized, made " ++
+      "effective, or registered as sufficient for the Suzuki certificate."
+  }
+
 navigatorRef :: Reference
 navigatorRef = Reference
   { refShort = "RH Garden Navigator"
@@ -1138,6 +1159,33 @@ suzukiBusyLossToCertificates = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "A certificate proves safety on its interval but does not reconstruct the discrepancy path.")
   Nothing
 
+suzukiRootDiscrepancyToWeightedFrontier :: RuntimeRepresentationEdge
+suzukiRootDiscrepancyToWeightedFrontier = eraseRepresentationEdge $ representationEdge
+  SSuzukiRootSlopeDiscrepancy SSuzukiWeightedShortIntervalFrontier
+  "isolate the cumulative weighted-arrival inequality needed at every busy-period prefix"
+  ExactRepresentation leanCheckedTrust 1 suzukiWeightedShortIntervalRef
+  "The target is explicit: Arrival(m,u) <= Service(sqrt(m),u)+E(u) at every prefix, with E charged by its 2/u-weighted area. No such global arithmetic estimate is asserted."
+  (NoReconstruction "The inequality target does not reconstruct the discrepancy path.")
+  Nothing
+
+suzukiWeightedFrontierToArithmeticCertificate :: RuntimeRepresentationEdge
+suzukiWeightedFrontierToArithmeticCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiWeightedShortIntervalFrontier SSuzukiBusyPeriodArithmeticCertificate
+  "combine a prefix-uniform arrival profile with its explicit weighted reserve budget"
+  SufficientReduction leanCheckedTrust 1 suzukiWeightedShortIntervalRef
+  "RHGarden.busyPeriod_safe_of_weightedMangoldt_profile is LeanChecked. Its short-interval profile hypothesis remains open; the constant rectangle is a coarser specialization."
+  (NoReconstruction "A successful safety certificate does not determine the exact local arrivals.")
+  Nothing
+
+shortIntervalLiteratureToWeightedFrontier :: RuntimeRepresentationEdge
+shortIntervalLiteratureToWeightedFrontier = eraseRepresentationEdge $ representationEdge
+  SShortIntervalPrimeTheory SSuzukiWeightedShortIntervalFrontier
+  "supply an external interval-length reference scale only"
+  InformationLoss literatureCertifiedTrust 1 guthMaynardShortIntervalRef
+  "The 17/30+o(1) asymptotic regime is contextual. Effectivity, constants, weighting, and prefix-uniform translation are not checked here."
+  (NoReconstruction "A literature scale does not instantiate the formal Suzuki arrival bound.")
+  Nothing
+
 gardenRegistryToNavigator :: RuntimeRepresentationEdge
 gardenRegistryToNavigator = eraseRepresentationEdge $ representationEdge
   SGardenRegistry SRHGardenNavigator
@@ -1507,6 +1555,9 @@ representationGraph =
   , suzukiRootDisplacementToKickDynamics, suzukiDualAreaToRootMarginIntegral
   , suzukiMangoldtStateToRootDiscrepancy, suzukiRootDiscrepancyToPrefixArea
   , suzukiRootPrefixAreaToBusyLoss, suzukiBusyLossToCertificates
+  , suzukiRootDiscrepancyToWeightedFrontier
+  , suzukiWeightedFrontierToArithmeticCertificate
+  , shortIntervalLiteratureToWeightedFrontier
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate
   , suzukiExplorerToOperatorCandidate

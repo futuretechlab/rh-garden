@@ -4,7 +4,7 @@ import type {
   GardenNode, MangoldtBlock, StatusData, Trust,
 } from './types'
 
-type View = 'map' | 'frontier' | 'field' | 'blocks' | 'discrepancy' | 'phase' | 'certificates'
+type View = 'map' | 'frontier' | 'field' | 'blocks' | 'discrepancy' | 'arithmetic' | 'phase' | 'certificates'
 type RouteMode = 'lean' | 'literature' | 'all'
 
 const trustMeta: Record<Trust, {label: string; icon: string}> = {
@@ -22,8 +22,9 @@ const views: Array<[View, string, string]> = [
   ['field', 'Suzuki field', '03'],
   ['blocks', 'Mangoldt blocks', '04'],
   ['discrepancy', 'Root discrepancy', '05'],
-  ['phase', 'State space', '06'],
-  ['certificates', 'Certificates', '07'],
+  ['arithmetic', 'Arithmetic frontier', '06'],
+  ['phase', 'State space', '07'],
+  ['certificates', 'Certificates', '08'],
 ]
 
 export default function App() {
@@ -80,10 +81,11 @@ export default function App() {
 
     <main>
       {view === 'map' && <GardenMap data={garden} proofMode={proofMode} />}
-      {view === 'frontier' && <FrontierCockpit data={frontiers} explorer={explorer} />}
+      {view === 'frontier' && <FrontierCockpit data={frontiers} periods={explorer.arithmetic_frontier_periods} />}
       {view === 'field' && <SuzukiField explorer={explorer} proofMode={proofMode} />}
       {view === 'blocks' && <BlockMap blocks={explorer.busy.mangoldt_blocks} proofMode={proofMode} />}
       {view === 'discrepancy' && <DiscrepancyView explorer={explorer} proofMode={proofMode} />}
+      {view === 'arithmetic' && <ArithmeticFrontier periods={explorer.arithmetic_frontier_periods} proofMode={proofMode} />}
       {view === 'phase' && <PhaseView rows={explorer.busy.dual_dynamics} proofMode={proofMode} />}
       {view === 'certificates' && <CertificateWorkbench busy={explorer.busy.busy_periods} />}
     </main>
@@ -178,13 +180,17 @@ function NodeInspector({node, edges, nodes}: {node: GardenNode | null; edges: Ga
   </aside>
 }
 
-function FrontierCockpit({data, explorer}: {data: FrontierData; explorer: ExplorerData}) {
-  const periods = explorer.busy.busy_periods
+function FrontierCockpit({data, periods}: {data: FrontierData; periods: BusyPeriod[]}) {
   const comparable = periods.filter((period): period is BusyPeriod & {pinned_bound_over_arrival: number} =>
     period.arrival_mass > 1e-12 && period.pinned_bound_over_arrival !== null &&
       Number.isFinite(period.pinned_bound_over_arrival))
   const tightest = comparable.length ? [...comparable].sort((a,b) =>
     a.pinned_bound_over_arrival - b.pinned_bound_over_arrival)[0] : null
+  const precisionRows = periods.filter((period): period is BusyPeriod & {prefix_epsilon_required: number} =>
+    period.arrival_mass > 1e-12 && period.prefix_epsilon_required !== null &&
+      Number.isFinite(period.prefix_epsilon_required))
+  const hardest = precisionRows.length ? [...precisionRows].sort((a,b) =>
+    a.prefix_epsilon_required - b.prefix_epsilon_required)[0] : null
   return <section className="screen">
     <ScreenHeading eyebrow="OPEN MATHEMATICS / EXACTLY LOCATED" title="Frontier cockpit" blurb="The first missing inequality is displayed as a mathematical interface, not hidden behind a project-status label." />
     <div className="frontier-grid">{data.frontiers.map((frontier, index) => <article className={`frontier-card ${index === 0 ? 'headline' : ''}`} key={frontier.id}>
@@ -192,9 +198,11 @@ function FrontierCockpit({data, explorer}: {data: FrontierData; explorer: Explor
       <div className="chain"><small>CHECKED APPROACH</small><p>{frontier.known_chain}</p></div>
       <div className="blocker"><small>FIRST OPEN BRIDGE</small><p>{frontier.exact_blocker}</p></div>
       <div className="bound"><small>CURRENT BOUND</small><p>{frontier.current_bound}</p></div>
+      {frontier.literature_reference && <div className="literature-frontier"><TrustBadge trust="LiteratureCertified"/><p>{frontier.literature_reference}</p><small>{frontier.literature_scope}</small></div>}
       <div className="tags">{frontier.candidate_approaches.map(x => <span key={x}>{x}</span>)}</div>
     </article>)}</div>
     {tightest && <div className="metric-band panel"><div><small>PINNED PREFIX BOUND / ACTUAL ARRIVAL</small><strong>{format(tightest.pinned_bound_over_arrival)}×</strong></div><p>Even the tightest interval in this exported scan inherits a global-prefix bound this much larger than its actual local arrival. The issue is structural: the theorem discards the starting prefix.</p><div><small>AT BUSY PERIOD</small><strong>{tightest.start_event} → {tightest.recovery_before_event}</strong></div></div>}
+    {hardest && <div className="frontier-target panel"><div><small>HARDEST EXPORTED PREFIX-ENVELOPE TARGET</small><strong>{hardest.start_event} -&gt; {hardest.recovery_before_event}</strong><span>x={hardest.interval_start.toLocaleString()} / h={hardest.interval_width.toLocaleString()} / theta={format(hardest.theta_eff)}</span></div><div><small>FORMAL TARGET</small><code>SuzukiWeightedShortIntervalProfileBound</code><code>busyPeriod_safe_of_weightedMangoldt_profile</code></div><div><small>{hardest.prefix_epsilon_required < 0 ? 'CONSTANT ENVELOPE STATUS' : 'PREFIX RELATIVE SLACK'}</small><strong>{hardest.prefix_epsilon_required < 0 ? 'INFEASIBLE' : `${format(hardest.prefix_epsilon_required * 100)}%`}</strong><span>{hardest.prefix_epsilon_required < 0 ? 'the constant rectangle loses too much before arithmetic estimation' : 'prefix-uniform arrival excess over smooth service'}</span></div></div>}
     <MilestoneStrip />
   </section>
 }
@@ -252,7 +260,61 @@ function DiscrepancyView({explorer, proofMode}: {explorer: ExplorerData; proofMo
 
 function BusyInspector({period}: {period: BusyPeriod | null}) {
   if (!period) return null
-  return <aside className="busy-inspector panel"><small>NEGATIVE EXCURSION</small><h2>{period.start_event} → {period.recovery_before_event}</h2><div className="reserve-gauge"><i style={{width: `${Math.min(100, period.loss_over_reserve * 100)}%`}}/><span>{format(period.loss_over_reserve * 100)}% reserve consumed</span></div><Metric label="event states" value={String(period.event_count)}/><Metric label="root width" value={format(period.root_width)}/><Metric label="start reserve" value={format(period.psi_start)}/><Metric label="weighted loss" value={format(period.weighted_loss)}/><Metric label="minimum Ψ" value={format(period.minimum_psi)}/><Metric label="maximum backlog" value={format(-period.most_negative_discrepancy)}/><Metric label="arrival / service" value={format(period.arrival_over_service)}/><div className="bound-warning"><small>PINNED GLOBAL PREFIX BOUND</small><strong>{format(period.pinned_prefix_arrival_upper)} arrival units</strong><p>{period.arrival_mass > 1e-12 ? `${format(period.pinned_bound_over_arrival)}× actual interval arrival.` : 'No internal impulse: a prefix estimate still ignores the interval geometry.'}</p></div></aside>
+  return <aside className="busy-inspector panel">
+    <small>NEGATIVE EXCURSION / NUMERICAL EVIDENCE</small>
+    <h2>{period.start_event} → {period.recovery_before_event}</h2>
+    <div className="reserve-gauge"><i style={{width: `${Math.min(100, period.loss_over_reserve * 100)}%`}}/><span>{format(period.loss_over_reserve * 100)}% reserve consumed</span></div>
+    <Metric label="integer interval" value={`${period.interval_start.toLocaleString()} + ${period.interval_width.toLocaleString()}`}/>
+    <Metric label="effective theta" value={format(period.theta_eff)}/>
+    <Metric label="h / x^(17/30)" value={format(period.h_over_x_17_30)}/>
+    <Metric label="event states" value={String(period.event_count)}/>
+    <Metric label="root width" value={format(period.root_width)}/>
+    <Metric label="start reserve" value={format(period.psi_start)}/>
+    <Metric label="weighted loss" value={format(period.weighted_loss)}/>
+    <Metric label="minimum Ψ" value={format(period.minimum_psi)}/>
+    <Metric label="prefix excess observed" value={format(period.actual_max_arrival_service_excess)}/>
+    <Metric label="prefix-envelope slack" value={format(period.prefix_envelope_slack)}/>
+    <Metric label="terminal epsilonRequired" value={format(period.epsilon_required)}/>
+    <Metric label="prefix relative slack" value={format(period.prefix_epsilon_required)}/>
+    <ArrivalGauge period={period}/>
+    <div className="literature-note"><TrustBadge trust="LiteratureCertified"/><b>17/30 is external context only</b><p>Guth–Maynard, arXiv:2405.20552. The asymptotic all-interval scale is not formalized or made effective here; almost-all interval results cannot certify every busy period.</p></div>
+  </aside>
+}
+
+function ArrivalGauge({period}: {period: BusyPeriod}) {
+  const scale = Math.max(period.checked_elementary_arrival_upper, period.required_arrival_upper, period.arrival_mass, 1e-12)
+  const marker = (value: number) => `${Math.max(0, Math.min(100, value / scale * 100))}%`
+  return <div className="arrival-gauge"><small>CERTIFICATE TIGHTNESS / PREFIX ENVELOPE</small><div className="arrival-track"><i className="arrival-exact" style={{width: marker(period.arrival_mass)}}/><i className="arrival-required" style={{left: marker(period.required_arrival_upper)}}/><i className="arrival-current" style={{left: marker(period.checked_elementary_arrival_upper)}}/></div><div className="arrival-labels"><span><i className="exact-dot"/>exact terminal arrival {format(period.arrival_mass)}</span><span><i className="required-dot"/>terminal proxy {format(period.required_arrival_upper)}</span><span><i className="current-dot"/>LeanChecked local-width bound {format(period.checked_elementary_arrival_upper)}</span></div><p>The pinned global-prefix expression is {format(period.pinned_prefix_arrival_upper)}. Neither terminal comparison replaces the profile inequality required at every prefix.</p></div>
+}
+
+function ArithmeticFrontier({periods, proofMode}: {periods: BusyPeriod[]; proofMode: boolean}) {
+  const comparable = periods.filter((p): p is BusyPeriod & {theta_eff: number; epsilon_required: number; prefix_epsilon_required: number} =>
+    p.arrival_mass > 1e-12 && p.theta_eff !== null && p.epsilon_required !== null &&
+      p.prefix_epsilon_required !== null && Number.isFinite(p.theta_eff) &&
+      Number.isFinite(p.epsilon_required) && Number.isFinite(p.prefix_epsilon_required))
+  const candidates = comparable.filter(p => p.prefix_epsilon_required > 0)
+  const hardest = [...comparable].sort((a,b) => a.prefix_epsilon_required - b.prefix_epsilon_required)
+  const infeasible = comparable.filter(p => p.prefix_epsilon_required < 0)
+  const [selected, setSelected] = useState<BusyPeriod | null>(hardest[0] ?? null)
+  return <section className="screen">
+    <ScreenHeading eyebrow="SHORT-INTERVAL ARITHMETIC / EXACT TARGET" title="How sharp must the local prime theorem be?" blurb="Each point is a completed numerical busy period. Horizontal position is interval scale; vertical position is the relative arrival slack left by the checked prefix-envelope verifier." />
+    <NumericalBanner hidden={proofMode}/>
+    {proofMode ? <ProofModeVeil title="Numerical interval diagnostics hidden"><div className="formula-stack"><code>Arrival(m,u) ≤ Service(√m,u) + E(u)</code><code>∫ 2/u (backlog(a)+E(u)) du ≤ reserve</code><code>busyPeriod_safe_of_weightedMangoldt_profile</code></div><p>The 17/30 marker is literature context, not a LeanChecked implication.</p></ProofModeVeil> : <div className="arithmetic-layout">
+      <div className="panel arithmetic-scatter"><ArithmeticScatter periods={candidates} selected={selected} onSelect={setSelected}/><span className="axis-label y">log10 prefix-envelope slack / arrival</span><span className="axis-label x">effective theta = log h / log x</span></div>
+      <BusyInspector period={selected}/>
+      <div className="regime-panel panel"><small>ALL-INTERVAL LENGTH REGIMES</small>{[[1/2,'1/2'],[17/30,'17/30 literature'],[3/5,'3/5'],[2/3,'2/3']].map(([value,label]) => <div key={String(label)}><b>{label}</b><i style={{width: `${Number(value)*100}%`}}/><span>{comparable.filter(p => p.theta_eff > Number(value)).length.toLocaleString()} exported periods above</span></div>)}<p><TrustBadge trust="LiteratureCertified"/> Guth–Maynard supplies an asymptotic all-interval reference at exponent 17/30+o(1). Almost-all interval theorems are a different regime and do not certify every dangerous period. {infeasible.length} exported period(s) require the profile-valued verifier because the constant rectangle is already too coarse.</p></div>
+      <div className="frontier-table panel"><div className="table-head"><span>period</span><span>theta</span><span>profile ε</span><span>local / required</span><span>reserve used</span></div>{hardest.slice(0,24).map(p => <button key={p.start_event} className={selected?.start_event === p.start_event ? 'selected' : ''} onClick={() => setSelected(p)}><span>{p.start_event} → {p.recovery_before_event}</span><span>{format(p.theta_eff)}</span><span>{format(p.prefix_epsilon_required)}</span><span>{format(p.arithmetic_bound_factor)}</span><span>{format(p.loss_over_reserve)}</span></button>)}</div>
+    </div>}
+  </section>
+}
+
+function ArithmeticScatter({periods, selected, onSelect}: {periods: Array<BusyPeriod & {theta_eff: number; prefix_epsilon_required: number}>; selected: BusyPeriod | null; onSelect: (period: BusyPeriod) => void}) {
+  if (!periods.length) return <div className="empty-chart">No comparable busy periods.</div>
+  const ymin = Math.min(...periods.map(p => Math.log10(p.prefix_epsilon_required))), ymax = Math.max(...periods.map(p => Math.log10(p.prefix_epsilon_required)))
+  const sx=(x:number)=>55+clamp(x,0,1)*825, sy=(y:number)=>300-(y-ymin)/Math.max(ymax-ymin,1e-9)*250
+  const stride=Math.max(1,Math.floor(periods.length/2800)); const visible=periods.filter((_,i)=>i%stride===0 || periods[i].start_event===selected?.start_event)
+  const refs: Array<[number,string,string]> = [[.5,'1/2','context'],[17/30,'17/30','literature'],[.6,'3/5','context'],[2/3,'2/3','context']]
+  return <svg className="chart frontier-scatter" viewBox="0 0 920 335" preserveAspectRatio="none"><rect x={sx(17/30)} y="35" width={880-sx(17/30)} height="265" className="gm-regime"/>{refs.map(([x,label,kind])=><g key={label}><line x1={sx(x)} x2={sx(x)} y1="35" y2="300" className={`regime-line ${kind}`}/><text x={sx(x)+4} y="49">{label}</text></g>)}{[0,.25,.5,.75,1].map(k=><line className="gridline" key={k} x1="55" x2="880" y1={50+k*250} y2={50+k*250}/>)}{visible.map(p=><circle key={p.start_event} cx={sx(p.theta_eff)} cy={sy(Math.log10(p.prefix_epsilon_required))} r={selected?.start_event===p.start_event?5:Math.min(4,1.5+4*p.loss_over_reserve)} className={selected?.start_event===p.start_event?'selected-point':''} onClick={()=>onSelect(p)}><title>{p.start_event} to {p.recovery_before_event}; theta={p.theta_eff}; profile epsilon={p.prefix_epsilon_required}</title></circle>)}<text x="55" y="327">0</text><text x="880" y="327" textAnchor="end">1</text></svg>
 }
 
 function PhaseView({rows, proofMode}: {rows: DualRow[]; proofMode: boolean}) {
@@ -280,6 +342,7 @@ function CertificateWorkbench({busy}: {busy: BusyPeriod[]}) {
     <div className="certificate-grid">
       <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Prime cell 2</h2><code>suzukiPsi_pos_cell_two</code><p>Ψ(t) &gt; 0 on [log 2, log 3]. This is finite certified coverage, not a tail theorem.</p><div className="certificate-margin">COMPLETE CELL <strong>✓</strong></div></article>
       <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Busy-period verifier</h2><code>SuzukiBusyPeriodCertificate.psiRoot_nonnegative</code><p>Reserve lower bound + excursion loss upper bound + exact ordering imply ΨRoot ≥ 0 throughout the interval.</p><div className="certificate-margin">INTERFACE <strong>READY</strong></div></article>
+      <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Weighted-arrival verifier</h2><code>busyPeriod_safe_of_weightedMangoldt_profile</code><p>A prefix-uniform arrival ≤ service + E(u) estimate and its 2/u-weighted reserve inequality certify the full interval. The constant rectangle is only a coarser specialization.</p><div className="certificate-margin">ARITHMETIC INPUT <strong>EXPOSED</strong></div></article>
       {candidates.map(candidate => <article className="certificate candidate" key={candidate.start_event}><TrustBadge trust="NumericalEvidence"/><h2>{candidate.start_event} → {candidate.recovery_before_event}</h2><p>{candidate.event_count} event states · proposed exact loss envelope still missing.</p><Metric label="reserve" value={format(candidate.psi_start)}/><Metric label="loss" value={format(candidate.weighted_loss)}/><Metric label="candidate slack" value={format(candidate.psi_start - candidate.weighted_loss)}/><div className="certificate-margin">STATUS <strong>CANDIDATE</strong></div></article>)}
     </div>
     <div className="tail-strip"><span>FINITE CERTIFIED COVERAGE</span><b>[log 2, log 3]</b><i /><span>UNCERTIFIED TAIL</span><b>[log 3, ∞)</b></div>

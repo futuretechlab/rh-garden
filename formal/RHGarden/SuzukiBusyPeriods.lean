@@ -30,6 +30,13 @@ theorem suzukiWeightedMangoldtInterval_add
   rw [← Finset.sum_union (Finset.Ioc_disjoint_Ioc_of_le le_rfl),
     Finset.Ioc_union_Ioc_eq_Ioc hmn hnp]
 
+theorem suzukiWeightedMangoldtInterval_mono_right
+    {m n p : ℕ} (hmn : m ≤ n) (hnp : n ≤ p) :
+    suzukiWeightedMangoldtInterval m n ≤
+      suzukiWeightedMangoldtInterval m p := by
+  rw [suzukiWeightedMangoldtInterval_add hmn hnp]
+  exact le_add_of_nonneg_right (suzukiWeightedMangoldtInterval_nonneg n p)
+
 theorem suzukiWeightedMangoldtInterval_eq_prefix_sub
     {m n : ℕ} (hmn : m ≤ n) :
     suzukiWeightedMangoldtInterval m n =
@@ -86,6 +93,45 @@ theorem weightedMangoldtInterval_le_checkedElementary
     _ ≤ n * Real.log n := by
       have hcard : ((n - m : ℕ) : ℝ) ≤ n := by exact_mod_cast Nat.sub_le n m
       exact mul_le_mul_of_nonneg_right hcard (Real.log_nonneg (by exact_mod_cast hn))
+
+/-- A genuinely interval-sensitive elementary bound.  It uses only
+`Λ(k) ≤ log n` and `sqrt (m+1) ≤ sqrt k` on `(m,n]`; unlike a global-prefix
+estimate it retains the interval width. -/
+theorem weightedMangoldtInterval_le_localWidth
+    {m n : ℕ} (hmn : m ≤ n) (hn : 1 ≤ n) :
+    suzukiWeightedMangoldtInterval m n ≤
+      ((n - m : ℕ) : ℝ) *
+        (Real.log n / Real.sqrt (m + 1)) := by
+  unfold suzukiWeightedMangoldtInterval
+  have hm1pos : (0 : ℝ) < Real.sqrt (m + 1) :=
+    Real.sqrt_pos.2 (by positivity)
+  calc
+    ∑ k ∈ Finset.Ioc m n,
+        ArithmeticFunction.vonMangoldt k / Real.sqrt k
+        ≤ ∑ _k ∈ Finset.Ioc m n,
+            Real.log n / Real.sqrt (m + 1) := by
+          refine Finset.sum_le_sum fun k hk => ?_
+          have hkI : m < k ∧ k ≤ n := Finset.mem_Ioc.mp hk
+          have hkpos : 0 < k := lt_of_le_of_lt (Nat.zero_le m) hkI.1
+          have hsqrtpos : (0 : ℝ) < Real.sqrt k :=
+            Real.sqrt_pos.2 (by exact_mod_cast hkpos)
+          have hm1k : m + 1 ≤ k := Nat.succ_le_iff.mpr hkI.1
+          have hsqrt : Real.sqrt (m + 1) ≤ Real.sqrt k :=
+            Real.sqrt_le_sqrt (by exact_mod_cast hm1k)
+          have hlog : ArithmeticFunction.vonMangoldt k ≤ Real.log n :=
+            (ArithmeticFunction.vonMangoldt_le_log.trans
+              (Real.log_le_log (by exact_mod_cast hkpos)
+                (by exact_mod_cast hkI.2)))
+          calc
+            ArithmeticFunction.vonMangoldt k / Real.sqrt k
+                ≤ Real.log n / Real.sqrt k :=
+              div_le_div_of_nonneg_right hlog hsqrtpos.le
+            _ ≤ Real.log n / Real.sqrt (m + 1) := by
+              exact (div_le_div_iff₀ hsqrtpos hm1pos).2
+                (mul_le_mul_of_nonneg_left hsqrt
+                  (Real.log_nonneg (by exact_mod_cast hn)))
+    _ = ((n - m : ℕ) : ℝ) *
+        (Real.log n / Real.sqrt (m + 1)) := by simp
 
 /-! ## Cumulative smooth service and excess -/
 
@@ -152,6 +198,11 @@ noncomputable def suzukiCheckedArrivalServiceError (m n : ℕ) : ℝ :=
   n * Real.log n -
     suzukiRootService (Real.sqrt m) (Real.sqrt n)
 
+/-- Error produced by the checked local-width arrival bound. -/
+noncomputable def suzukiLocalWidthArrivalServiceError (m n : ℕ) : ℝ :=
+  ((n - m : ℕ) : ℝ) * (Real.log n / Real.sqrt (m + 1)) -
+    suzukiRootService (Real.sqrt m) (Real.sqrt n)
+
 theorem weightedMangoldt_arrival_le_service_add_error
     {m n : ℕ} (hmn : m ≤ n) (hn : 1 ≤ n) :
     suzukiWeightedMangoldtInterval m n ≤
@@ -159,6 +210,15 @@ theorem weightedMangoldt_arrival_le_service_add_error
         suzukiCheckedArrivalServiceError m n := by
   have h := weightedMangoldtInterval_le_checkedElementary hmn hn
   unfold suzukiCheckedArrivalServiceError
+  linarith
+
+theorem weightedMangoldt_arrival_le_service_add_localWidthError
+    {m n : ℕ} (hmn : m ≤ n) (hn : 1 ≤ n) :
+    suzukiWeightedMangoldtInterval m n ≤
+      suzukiRootService (Real.sqrt m) (Real.sqrt n) +
+        suzukiLocalWidthArrivalServiceError m n := by
+  have h := weightedMangoldtInterval_le_localWidth hmn hn
+  unfold suzukiLocalWidthArrivalServiceError
   linarith
 
 theorem suzukiArrivalServiceExcess_add
@@ -211,7 +271,109 @@ theorem suzukiBusyPeriodBalance
   unfold suzukiArrivalServiceExcess at h
   linarith
 
-/-! ## Loss envelopes and certificates -/
+/-! ## A local short-interval arithmetic interface -/
+
+private theorem nat_le_floor_sq_of_sqrt_le
+    {m : ℕ} {u : ℝ} (hmu : Real.sqrt m ≤ u) :
+    m ≤ ⌊u ^ 2⌋₊ := by
+  have hu0 : 0 ≤ u := (Real.sqrt_nonneg m).trans hmu
+  have hmul : 0 ≤ (u + Real.sqrt m) * (u - Real.sqrt m) :=
+    mul_nonneg (add_nonneg hu0 (Real.sqrt_nonneg m)) (sub_nonneg.mpr hmu)
+  have hsq : (m : ℝ) ≤ u ^ 2 := by
+    nlinarith [hmul, Real.sq_sqrt (Nat.cast_nonneg m)]
+  exact Nat.le_floor hsq
+
+private theorem suzukiRootMangoldtSlope_sqrt_nat' (n : ℕ) :
+    suzukiRootMangoldtSlope (Real.sqrt n) = suzukiMangoldtSlope n := by
+  unfold suzukiRootMangoldtSlope
+  rw [Real.sq_sqrt (Nat.cast_nonneg n), Nat.floor_natCast]
+
+/-- Exact discrepancy balance from an integer event root to an arbitrary
+later root coordinate.  This is the local-prefix form needed by a genuine
+short-interval arrival theorem. -/
+theorem rootSlopeDiscrepancy_sub_sqrt_eq_service_sub_arrival
+    {m : ℕ} {u : ℝ} (hm : 1 ≤ m) (hmu : Real.sqrt m ≤ u) :
+    suzukiRootSlopeDiscrepancy u -
+        suzukiRootSlopeDiscrepancy (Real.sqrt m) =
+      suzukiRootService (Real.sqrt m) u -
+        suzukiWeightedMangoldtInterval m ⌊u ^ 2⌋₊ := by
+  have hfloor := nat_le_floor_sq_of_sqrt_le hmu
+  have hslope := suzukiMangoldtSlope_sub_eq_weightedInterval hm hfloor
+  rw [suzukiRootSlopeDiscrepancy, suzukiRootSlopeDiscrepancy,
+    suzukiRootMangoldtSlope_sqrt_nat']
+  unfold suzukiRootService suzukiRootMangoldtSlope
+  linarith
+
+/-- A pointwise, cumulative short-interval hypothesis.  At every prefix of
+the root interval, arithmetic arrivals may exceed smooth service by at most
+`excess`.  This is deliberately explicit and is not asserted globally. -/
+def SuzukiWeightedShortIntervalBound
+    (m : ℕ) (b excess : ℝ) : Prop :=
+  ∀ u ∈ Icc (Real.sqrt m) b,
+    suzukiWeightedMangoldtInterval m ⌊u ^ 2⌋₊ ≤
+      suzukiRootService (Real.sqrt m) u + excess
+
+/-- The exact profile-valued arithmetic frontier.  A short-interval theorem
+may spend a different arrival/service excess at each root prefix; its weighted
+integral, rather than a worst-case rectangle, is what consumes Suzuki reserve. -/
+def SuzukiWeightedShortIntervalProfileBound
+    (m : ℕ) (b : ℝ) (excess : ℝ → ℝ) : Prop :=
+  ∀ u ∈ Icc (Real.sqrt m) b,
+    suzukiWeightedMangoldtInterval m ⌊u ^ 2⌋₊ ≤
+      suzukiRootService (Real.sqrt m) u + excess u
+
+theorem suzukiRootService_nonneg
+    {m : ℕ} {u : ℝ} (hm : 2 ≤ m) (hmu : Real.sqrt m ≤ u) :
+    0 ≤ suzukiRootService (Real.sqrt m) u := by
+  rcases hmu.eq_or_lt with h | h
+  · simp [h, suzukiRootService]
+  · have hsqrt2 : Real.sqrt 2 ≤ Real.sqrt m :=
+      Real.sqrt_le_sqrt (by exact_mod_cast hm)
+    have hbound := (suzukiRootService_bounds hsqrt2 h).1
+    have hgap : 0 ≤ u - Real.sqrt m := sub_nonneg.mpr h.le
+    nlinarith
+
+/-- A local arrival/service excess controls the discrepancy backlog at every
+prefix.  No prime-distribution estimate is used here. -/
+theorem rootSlopeBacklog_le_of_weightedShortIntervalBound
+    {m : ℕ} {b excess u : ℝ}
+    (hm : 2 ≤ m) (hub : u ∈ Icc (Real.sqrt m) b)
+    (hexcess : 0 ≤ excess)
+    (hbound : SuzukiWeightedShortIntervalBound m b excess) :
+    suzukiRootSlopeBacklog u ≤
+      suzukiRootSlopeBacklog (Real.sqrt m) + excess := by
+  have hbalance := rootSlopeDiscrepancy_sub_sqrt_eq_service_sub_arrival
+    (show 1 ≤ m from hm.trans' (by norm_num)) hub.1
+  have harrival := hbound u hub
+  have hdrop : suzukiRootSlopeDiscrepancy (Real.sqrt m) -
+      suzukiRootSlopeDiscrepancy u ≤ excess := by
+    linarith
+  unfold suzukiRootSlopeBacklog
+  apply max_le
+  · have hstart : -suzukiRootSlopeDiscrepancy (Real.sqrt m) ≤
+        max (-suzukiRootSlopeDiscrepancy (Real.sqrt m)) 0 := le_max_left _ _
+    linarith
+  · exact add_nonneg (le_max_right _ _) hexcess
+
+theorem rootSlopeBacklog_le_of_weightedShortIntervalProfileBound
+    {m : ℕ} {b u : ℝ} {excess : ℝ → ℝ}
+    (hm : 2 ≤ m) (hub : u ∈ Icc (Real.sqrt m) b)
+    (hexcess : ∀ v ∈ Icc (Real.sqrt m) b, 0 ≤ excess v)
+    (hbound : SuzukiWeightedShortIntervalProfileBound m b excess) :
+    suzukiRootSlopeBacklog u ≤
+      suzukiRootSlopeBacklog (Real.sqrt m) + excess u := by
+  have hbalance := rootSlopeDiscrepancy_sub_sqrt_eq_service_sub_arrival
+    (show 1 ≤ m from hm.trans' (by norm_num)) hub.1
+  have harrival := hbound u hub
+  have hdrop : suzukiRootSlopeDiscrepancy (Real.sqrt m) -
+      suzukiRootSlopeDiscrepancy u ≤ excess u := by
+    linarith
+  unfold suzukiRootSlopeBacklog
+  apply max_le
+  · have hstart : -suzukiRootSlopeDiscrepancy (Real.sqrt m) ≤
+        max (-suzukiRootSlopeDiscrepancy (Real.sqrt m)) 0 := le_max_left _ _
+    linarith
+  · exact add_nonneg (le_max_right _ _) (hexcess u hub)
 
 /-- Removing the root weight costs at most `2/a` on a positive interval. -/
 theorem weightedBacklogIntegral_le_unweighted
@@ -233,6 +395,136 @@ theorem weightedBacklogIntegral_le_unweighted
     nlinarith [huI.1]
   exact mul_le_mul_of_nonneg_right hcoeff (by
     exact le_max_right _ _)
+
+/-- The explicit rectangle estimate used by the arithmetic frontier. -/
+theorem weightedBacklogIntegral_le_rectangle
+    {a b bound : ℝ} (ha : 0 < a) (hab : a ≤ b)
+    (hbound : 0 ≤ bound)
+    (hback : IntervalIntegrable suzukiRootSlopeBacklog volume a b)
+    (hweighted : IntervalIntegrable
+      (fun u => 2 / u * suzukiRootSlopeBacklog u) volume a b)
+    (hpoint : ∀ u ∈ Icc a b, suzukiRootSlopeBacklog u ≤ bound) :
+    (∫ u in a..b, 2 / u * suzukiRootSlopeBacklog u) ≤
+      2 / a * (b - a) * bound := by
+  have hfirst := weightedBacklogIntegral_le_unweighted ha hab hback hweighted
+  have hunweighted : (∫ u in a..b, suzukiRootSlopeBacklog u) ≤
+      (b - a) * bound := by
+    calc
+      (∫ u in a..b, suzukiRootSlopeBacklog u) ≤ ∫ _u in a..b, bound := by
+        exact intervalIntegral.integral_mono_on hab hback
+          intervalIntegrable_const hpoint
+      _ = (b - a) * bound := by simp
+  have hcoef : 0 ≤ 2 / a := div_nonneg (by norm_num) ha.le
+  calc
+    (∫ u in a..b, 2 / u * suzukiRootSlopeBacklog u) ≤
+        2 / a * ∫ u in a..b, suzukiRootSlopeBacklog u := hfirst
+    _ ≤ 2 / a * ((b - a) * bound) :=
+      mul_le_mul_of_nonneg_left hunweighted hcoef
+    _ = 2 / a * (b - a) * bound := by ring
+
+/-- Largest admissible cumulative arrival/service excess in the rectangle
+certificate.  The Explorer reports the corresponding terminal arrival
+`service + budget`, but the checked hypothesis is prefix-uniform. -/
+noncomputable def suzukiBusyPeriodArrivalExcessBudget
+    (m : ℕ) (b reserve : ℝ) : ℝ :=
+  reserve * Real.sqrt m / (2 * (b - Real.sqrt m)) -
+    suzukiRootSlopeBacklog (Real.sqrt m)
+
+/-- Parametric busy-period verifier.  All analytic hypotheses are explicit;
+the single number-theoretic input is `hshort`, a local cumulative weighted
+Mangoldt upper bound. -/
+theorem busyPeriod_safe_of_weightedMangoldt_upper
+    {m : ℕ} {b excess reserve : ℝ}
+    (hm : 2 ≤ m) (hb : Real.sqrt m ≤ b) (hexcess : 0 ≤ excess)
+    (hshort : SuzukiWeightedShortIntervalBound m b excess)
+    (hreserve : reserve ≤ suzukiPsiRoot (Real.sqrt m))
+    (hsafe : 2 / Real.sqrt m * (b - Real.sqrt m) *
+        (suzukiRootSlopeBacklog (Real.sqrt m) + excess) ≤ reserve)
+    (hloss : ∀ u ∈ Icc (Real.sqrt m) b,
+      suzukiPsiRoot (Real.sqrt m) - suzukiPsiRoot u ≤
+        ∫ v in Real.sqrt m..u, 2 / v * suzukiRootSlopeBacklog v)
+    (hback : ∀ u ∈ Icc (Real.sqrt m) b,
+      IntervalIntegrable suzukiRootSlopeBacklog volume (Real.sqrt m) u)
+    (hweighted : ∀ u ∈ Icc (Real.sqrt m) b,
+      IntervalIntegrable (fun v => 2 / v * suzukiRootSlopeBacklog v)
+        volume (Real.sqrt m) u) :
+    ∀ u ∈ Icc (Real.sqrt m) b, 0 ≤ suzukiPsiRoot u := by
+  intro u hu
+  have ha : 0 < Real.sqrt m := Real.sqrt_pos.2 (by exact_mod_cast hm.trans' (by norm_num))
+  have hpoint : ∀ v ∈ Icc (Real.sqrt m) u,
+      suzukiRootSlopeBacklog v ≤
+        suzukiRootSlopeBacklog (Real.sqrt m) + excess := by
+    intro v hv
+    exact rootSlopeBacklog_le_of_weightedShortIntervalBound hm
+      ⟨hv.1, hv.2.trans hu.2⟩ hexcess hshort
+  have hrect := weightedBacklogIntegral_le_rectangle ha hu.1
+    (add_nonneg (le_max_right _ _) hexcess) (hback u hu) (hweighted u hu) hpoint
+  have hcoef : 0 ≤ 2 / Real.sqrt m *
+      (suzukiRootSlopeBacklog (Real.sqrt m) + excess) :=
+    mul_nonneg (div_nonneg (by norm_num) ha.le)
+      (add_nonneg (le_max_right _ _) hexcess)
+  have hwidth : 2 / Real.sqrt m * (u - Real.sqrt m) *
+        (suzukiRootSlopeBacklog (Real.sqrt m) + excess) ≤
+      2 / Real.sqrt m * (b - Real.sqrt m) *
+        (suzukiRootSlopeBacklog (Real.sqrt m) + excess) := by
+    have hscale : 0 ≤ 2 / Real.sqrt m := div_nonneg (by norm_num) ha.le
+    have hM : 0 ≤ suzukiRootSlopeBacklog (Real.sqrt m) + excess :=
+      add_nonneg (le_max_right _ _) hexcess
+    have hfirst := mul_le_mul_of_nonneg_left
+      (sub_le_sub_right hu.2 (Real.sqrt m)) hscale
+    have hsecond := mul_le_mul_of_nonneg_right hfirst hM
+    simpa [mul_assoc] using hsecond
+  have hl := hloss u hu
+  have hintegral : (∫ v in Real.sqrt m..u,
+      2 / v * suzukiRootSlopeBacklog v) ≤ reserve :=
+    hrect.trans (hwidth.trans hsafe)
+  linarith
+
+/-- Profile-valued busy-period verifier.  This is the sharp formal reduction:
+the one open arithmetic input is a prefix-uniform weighted-Mangoldt estimate,
+and the admissible error is charged with its actual `2/u` loss weight. -/
+theorem busyPeriod_safe_of_weightedMangoldt_profile
+    {m : ℕ} {b reserve : ℝ} {excess : ℝ → ℝ}
+    (hm : 2 ≤ m)
+    (hshort : SuzukiWeightedShortIntervalProfileBound m b excess)
+    (hexcess : ∀ u ∈ Icc (Real.sqrt m) b, 0 ≤ excess u)
+    (hreserve : reserve ≤ suzukiPsiRoot (Real.sqrt m))
+    (hsafe : ∀ u ∈ Icc (Real.sqrt m) b,
+      (∫ v in Real.sqrt m..u,
+        2 / v * (suzukiRootSlopeBacklog (Real.sqrt m) + excess v)) ≤ reserve)
+    (hloss : ∀ u ∈ Icc (Real.sqrt m) b,
+      suzukiPsiRoot (Real.sqrt m) - suzukiPsiRoot u ≤
+        ∫ v in Real.sqrt m..u, 2 / v * suzukiRootSlopeBacklog v)
+    (hback : ∀ u ∈ Icc (Real.sqrt m) b,
+      IntervalIntegrable (fun v => 2 / v * suzukiRootSlopeBacklog v)
+        volume (Real.sqrt m) u)
+    (henvelope : ∀ u ∈ Icc (Real.sqrt m) b,
+      IntervalIntegrable
+        (fun v => 2 / v *
+          (suzukiRootSlopeBacklog (Real.sqrt m) + excess v))
+        volume (Real.sqrt m) u) :
+    ∀ u ∈ Icc (Real.sqrt m) b, 0 ≤ suzukiPsiRoot u := by
+  intro u hu
+  have ha : 0 < Real.sqrt m :=
+    Real.sqrt_pos.2 (by exact_mod_cast hm.trans' (by norm_num))
+  have hpoint : ∀ v ∈ Icc (Real.sqrt m) u,
+      2 / v * suzukiRootSlopeBacklog v ≤
+        2 / v * (suzukiRootSlopeBacklog (Real.sqrt m) + excess v) := by
+    intro v hv
+    have hvb : v ∈ Icc (Real.sqrt m) b := ⟨hv.1, hv.2.trans hu.2⟩
+    have hvpos : 0 < v := ha.trans_le hv.1
+    exact mul_le_mul_of_nonneg_left
+      (rootSlopeBacklog_le_of_weightedShortIntervalProfileBound hm hvb
+        hexcess hshort)
+      (div_nonneg (by norm_num) hvpos.le)
+  have hintegral : (∫ v in Real.sqrt m..u,
+      2 / v * suzukiRootSlopeBacklog v) ≤
+      ∫ v in Real.sqrt m..u,
+        2 / v * (suzukiRootSlopeBacklog (Real.sqrt m) + excess v) :=
+    intervalIntegral.integral_mono_on hu.1 (hback u hu) (henvelope u hu) hpoint
+  linarith [hloss u hu, hintegral, hsafe u hu]
+
+/-! ## Loss envelopes and certificates -/
 
 /-- A finite, auditable certificate for a multi-event root excursion.  The
 numerical Explorer may propose its fields, but only proofs of the bounds can

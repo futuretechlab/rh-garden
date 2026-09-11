@@ -683,3 +683,50 @@ tightest comparable application of the pinned global-prefix expression was
 `62.8175140`, and prefix upper expression `1773.8042361`. This is useful but
 insufficient quantitative information; it diagnoses a loss of interval
 cancellation rather than a constant that should merely be optimized.
+
+## Effective short-interval scale and required precision
+
+`explore-suzuki busy` now attaches the integer interval
+`x=ceil(a^2)`, `y=floor(b^2)`, `h=y-x` to each root excursion and reports
+`thetaEff=log(h)/log(x)`, `h/sqrt(x)`, `h/(sqrt(x) log(x))`, and
+`h/x^(17/30)`. The `17/30` threshold is labelled external literature context
+and never enters a formal certificate.
+
+The command separates terminal arrival headroom, the observed maximum
+*prefix* arrival-minus-service excess, and the admissible prefix-envelope
+budget from the checked loss verifier. Their difference is
+`prefix_envelope_slack`; divided by exact arrival it is
+`prefix_epsilon_required`. Separately, the requested terminal metric
+`epsilon_required` is `(required_arrival_upper-exact_arrival)/exact_arrival`.
+A negative prefix value means that the constant rectangle is
+analytically too coarse even with exact sampled arithmetic, so a profile
+`E(u)` is required. The ten-million scan found two such records (one is the
+degenerate early `5 -> 7` interval); the substantive one is
+`324431 -> 361201`, with slack `-0.0756974`.
+
+The ten-million scan used by `ui-export` is:
+
+```text
+cabal run rh-garden -- explore-suzuki busy \
+  --t-min 0.6931471805599453 --t-max 16.118095 --samples 401
+```
+
+It contains 10,341 completed periods. Threshold counts are 59 above `2/3`,
+137 above `3/5`, 183 above `17/30`, 306 above `1/2`, and 9,291 at or below
+`1/2` (zero-width periods have no exponent). The smallest positive relative
+prefix slack is about `0.00127294`, at `6932909 -> 7472359`; the scalar
+failure at `324431` is displayed separately rather than hidden from a
+logarithmic scatter plot.
+
+The same event-only algorithm was also run to its configured twenty-million
+limit (`--t-max 16.8112428315`). It found 14,451 completed periods: 76 above
+`2/3`, 166 above `3/5`, 219 above `17/30`, 373 above `1/2`, and 13,063 at or
+below `1/2`. The smallest positive prefix slack moved to about `0.0006811` at
+`12284411 -> 13067531`; no additional substantive negative scalar-envelope
+case appeared. The largest local-width/terminal-proxy factor observed was
+about `16.7814`.
+
+`checked_elementary_arrival_upper` is now the numerical value of the
+LeanChecked local-width theorem, not `n log n`. The output ranks reserve
+consumption, prefix precision, local-bound gap, and interval exponent
+independently because these select different periods.

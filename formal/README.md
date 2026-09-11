@@ -350,6 +350,27 @@ actual `2/u` loss. `SuzukiBusyPeriodCertificate` and
 they accept exact Lean hypotheses and do not trust generated JSON or floating
 point data. No global certificate value or RH conclusion is supplied.
 
+The same module now exposes the missing local arithmetic theorem at two
+resolutions. `SuzukiWeightedShortIntervalBound` is the coarse constant-excess
+form. `SuzukiWeightedShortIntervalProfileBound` permits a nonnegative prefix
+error `E(u)`, and `busyPeriod_safe_of_weightedMangoldt_profile` charges that
+error through the exact `2/u` loss weight before concluding positivity on the
+whole root interval. This profile theorem is LeanChecked; no global inhabitant
+of its arithmetic premise is supplied.
+
+`weightedMangoldtInterval_le_localWidth` is an unconditional, interval-aware
+fallback:
+
+```text
+sum_{m<k<=n} Lambda(k)/sqrt(k)
+  <= (n-m) log(n) / sqrt(m+1).
+```
+
+It uses only `vonMangoldt_le_log` and monotonicity of the square root. It is
+quantitatively insufficient for the hard long excursions, but it cleanly
+separates the remaining short-interval cancellation problem from the earlier
+global-prefix loss.
+
 `RHGarden/SuzukiTrueCurvature.lean` retains the growing archimedean
 curvature. It kernel-checks the factorized curvature formula and the bound
 `A''(t)>=(5/6)exp(t/2)` for `t>=log 2`, yielding block curvature
