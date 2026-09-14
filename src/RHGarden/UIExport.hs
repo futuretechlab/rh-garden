@@ -85,34 +85,23 @@ frontiersJson = unlines
       , stringField "category" "arithmetic"
       , stringField "status" "open"
       , stringField "trust" "Open"
-      , stringField "known_chain" "Exact root Abel identity -> Arrival-Service = transformed (psi(x)-x) + explicit archimedean defect -> positive-part backlog profile -> checked 2/u-weighted loss certificate"
-      , stringField "exact_blocker" "Prove at every root prefix a one-sided envelope psi(x)-x <= U(x) whose induced profile max(W0 + U(v^2)/v - R(m)/sqrt(m) + integral U(s^2)/s^2 + ArchDefect, 0) has weighted area at most the exact starting Psi reserve."
-      , stringField "current_bound" "The start error R(m) is retained exactly; no lower or absolute error bound is requested. Pinned explicit estimates remain too coarse on the 324431 excursion, while the exported profile decomposition agrees with direct Arrival-Service to floating regression tolerance."
+      , stringField "known_chain" "Complete finite Mangoldt-event partition -> signed event-state bounds -> exact monotone service interpolation -> exact 2/u-weighted cell costs -> one finite total-cost comparison"
+      , stringField "exact_blocker" "For every universal-tail event q_i, prove the finite local arithmetic inequality Arrival(m,q_i)-Service(sqrt(m),sqrt(q_i)) <= e_i strongly enough that the sum of exact service-decay cell costs stays below the starting Psi reserve."
+      , stringField "current_bound" "SuzukiFiniteEventProfileCertificate is LeanChecked and removes every continuum input obligation. Exact finite event samples and a proved slope-minus-one jump-aware Chebyshev envelope work on bounded scans, but pinned unconditional prefix estimates remain quantitatively too coarse for a universal tail."
       , arrayField "source_modules"
           ["formal/RHGarden/SuzukiBusyPeriods.lean",
            "formal/RHGarden/SuzukiChebyshevProfiles.lean",
+           "formal/RHGarden/SuzukiFiniteEventCertificates.lean",
            "formal/RHGarden/SuzukiRootDiscrepancy.lean",
            "src/RHGarden/Explorer/Suzuki.hs"]
       , arrayField "candidate_approaches"
-          ["one-sided Chebyshev error envelopes",
+          ["finite event-profile inequalities",
+           "jump-aware one-sided Chebyshev envelopes",
            "exact-prefix plus theorem-backed tail",
-           "event-prefix piecewise envelopes"]
+           "explicit local weighted-Mangoldt bounds"]
       , stringField "literature_reference" "Larry Guth and James Maynard, New large value estimates for Dirichlet polynomials, arXiv:2405.20552"
       , stringField "literature_url" "https://arxiv.org/abs/2405.20552"
       , stringField "literature_scope" "External all-interval asymptotic reference at length x^(17/30+o(1)); not formalized, not made effective here, and not a busy-period certificate."
-      ]
-  , ","
-  , indent 4 $ object
-      [ stringField "id" "initial-suzuki-interval"
-      , stringField "title" "Close the remaining initial Suzuki interval"
-      , stringField "category" "analytic"
-      , stringField "status" "open"
-      , stringField "trust" "Open"
-      , stringField "known_chain" "Local punctured positivity and complete cell-2 positivity are LeanChecked"
-      , stringField "exact_blocker" "Certify nonnegativity from the existing local endpoint through log 2."
-      , stringField "current_bound" "Finite local result only."
-      , arrayField "source_modules" ["formal/RHGarden/SuzukiLocalPositive.lean"]
-      , arrayField "candidate_approaches" ["archimedean prime-free bounds"]
       ]
   , "  ]"
   , "}"
@@ -295,10 +284,18 @@ sourceFiles representation
   | representation `elem` [SuzukiRootSlopeDiscrepancy, SuzukiRootPrefixArea,
       SuzukiBusyPeriodLoss] = ["formal/RHGarden/SuzukiRootDiscrepancy.lean"]
   | representation == SuzukiBusyPeriodCertificates =
-      ["formal/RHGarden/SuzukiBusyPeriods.lean"]
+      ["formal/RHGarden/SuzukiBusyPeriods.lean",
+       "formal/RHGarden/SuzukiFiniteEventCertificates.lean"]
+  | representation == SuzukiPsiLocalPositive =
+      ["formal/RHGarden/SuzukiLocalPositive.lean",
+       "formal/RHGarden/SuzukiInitialInterval.lean"]
+  | representation == SuzukiCertifiedPrimeCells =
+      ["formal/RHGarden/SuzukiCellTwo.lean",
+       "formal/RHGarden/SuzukiInitialInterval.lean"]
   | representation `elem` [SuzukiWeightedShortIntervalFrontier,
       SuzukiBusyPeriodArithmeticCertificate] =
-      ["formal/RHGarden/SuzukiBusyPeriods.lean"]
+      ["formal/RHGarden/SuzukiBusyPeriods.lean",
+       "formal/RHGarden/SuzukiFiniteEventCertificates.lean"]
   | representation `elem` [SuzukiChebyshevErrorProfile,
       SuzukiChebyshevBusyPeriodCertificate] =
       ["formal/RHGarden/SuzukiChebyshevProfiles.lean"]

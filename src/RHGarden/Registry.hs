@@ -228,7 +228,8 @@ suzukiRootDiscrepancyRef = Reference
       "Mangoldt step slope gives an exact sawtooth discrepancy, and " ++
       "H'(u)=2*D(u)/u between events. Weighted block-prefix areas are " ++
       "equivalent to the exact Mangoldt block margins and hence give an " ++
-      "equivalent RH representation together with the open initial interval. " ++
+      "equivalent RH representation; the formerly open initial interval is " ++
+      "now discharged by RHGarden.suzukiInitialNonnegative_proved. " ++
       "Negative block-excursion loss is exactly weighted backlog area."
   }
 
@@ -262,6 +263,29 @@ suzukiChebyshevProfileRef = Reference
       "Chebyshev error term, its root-coordinate integral, and an explicit " ++
       "nonnegative archimedean defect. The proof-carrying certificate uses only " ++
       "a one-sided upper envelope for psi(x)-x and retains the start error exactly."
+  }
+
+suzukiFiniteEventRef :: Reference
+suzukiFiniteEventRef = Reference
+  { refShort = "RHGarden.SuzukiFiniteEventProfileCertificate.psiRoot_nonnegative"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiFiniteEventCertificates.lean: " ++
+      "the canonical finite partition contains every nonzero von-Mangoldt event; " ++
+      "signed event states interpolate by exact service decay; exact and 5/3-linear " ++
+      "cell costs retain the 2/u weight; and a finite list of event bounds plus one " ++
+      "finite total-cost inequality certifies every point of the interval. The same " ++
+      "module proves the slope-minus-one jump-aware Chebyshev envelope."
+  }
+
+suzukiInitialIntervalRef :: Reference
+suzukiInitialIntervalRef = Reference
+  { refShort = "RHGarden.suzukiInitialNonnegative_proved"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiInitialInterval.lean: a nine-term " ++
+      "quarter-lattice truncation, a rational polynomial strong-convexity " ++
+      "certificate, and a proved cubic logarithm minorant give " ++
+      "A(t)>=(151/20000)(exp(t/2)-1) for t>=0 and discharge the compact initial " ++
+      "Suzuki interval. This does not discharge the infinite block-margin family."
   }
 
 guthMaynardShortIntervalRef :: Reference
@@ -954,6 +978,15 @@ strongCertificateToCertifiedCells = eraseRepresentationEdge $ representationEdge
   (NoReconstruction "One certified finite cell neither supplies certificates for other cells nor controls the infinite tail.")
   Nothing
 
+initialIntervalToCertifiedCoverage :: RuntimeRepresentationEdge
+initialIntervalToCertifiedCoverage = eraseRepresentationEdge $ representationEdge
+  SSuzukiPsiLocalPositive SSuzukiCertifiedPrimeCells
+  "extend the punctured local result through the first event and join it to cell 2"
+  SufficientReduction leanCheckedTrust 1 suzukiInitialIntervalRef
+  "RHGarden.suzukiInitialNonnegative_proved and RHGarden.suzukiPsi_pos_zero_to_log_three certify the compact initial interval and strict positivity on (0,log 3]. The infinite block-margin family remains open."
+  (NoReconstruction "Finite initial coverage supplies neither later cell margins nor a tail theorem.")
+  Nothing
+
 suzukiPrimeToMangoldtState :: RuntimeRepresentationEdge
 suzukiPrimeToMangoldtState = eraseRepresentationEdge $ representationEdge
   SSuzukiPsiPrimeSide SSuzukiMangoldtState
@@ -1213,6 +1246,24 @@ suzukiChebyshevCertificateToBusyCertificate = eraseRepresentationEdge $ represen
   SufficientReduction leanCheckedTrust 1 suzukiChebyshevProfileRef
   "SuzukiChebyshevBusyPeriodCertificate.psiRoot_nonnegative produces the same interval-safety conclusion as the generic busy-period verifier."
   (NoReconstruction "The generic interval conclusion does not reconstruct the Chebyshev envelope proof.")
+  Nothing
+
+suzukiChebyshevProfileToFiniteEventCertificate :: RuntimeRepresentationEdge
+suzukiChebyshevProfileToFiniteEventCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiChebyshevErrorProfile SSuzukiBusyPeriodArithmeticCertificate
+  "replace continuum profile obligations by a complete finite Mangoldt-event chain"
+  SufficientReduction leanCheckedTrust 1 suzukiFiniteEventRef
+  "RHGarden.SuzukiFiniteEventProfileCertificate requires only finite left-event excess bounds, a reserve lower bound, and one finite total-cost inequality. Between-event interpolation, integrability, exact 2/u costs, and finite gluing are proved theorems."
+  (NoReconstruction "Finite upper bounds and their total cost do not reconstruct the exact Chebyshev-error path.")
+  Nothing
+
+suzukiFiniteEventCertificateToBusyCertificate :: RuntimeRepresentationEdge
+suzukiFiniteEventCertificateToBusyCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiBusyPeriodArithmeticCertificate SSuzukiBusyPeriodCertificates
+  "forget the event table after its exact finite-cost verifier proves interval positivity"
+  SufficientReduction leanCheckedTrust 1 suzukiFiniteEventRef
+  "RHGarden.SuzukiFiniteEventProfileCertificate.toBusyPeriodCertificate constructs the established generic certificate with its continuum loss field discharged by the finite chain theorem."
+  (NoReconstruction "The generic interval conclusion does not recover the finite event bounds or cutoff costs.")
   Nothing
 
 shortIntervalLiteratureToWeightedFrontier :: RuntimeRepresentationEdge
@@ -1580,7 +1631,7 @@ representationGraph =
   , shiftedNevanlinnaToShiftedScrew, shiftedScrewToShiftedGlobalPositivity
   , shiftedNevanlinnaToShiftedEventual, shiftedEventualToZeroFree
   , suzukiPrimeToCellStrictConvexity, cellStrictConvexityToStrongCertificate
-  , strongCertificateToCertifiedCells
+  , strongCertificateToCertifiedCells, initialIntervalToCertifiedCoverage
   , suzukiPrimeToMangoldtState, suzukiMangoldtStateToDual, suzukiDualToCellMargins
   , suzukiMangoldtStateToBlocks, suzukiMangoldtBlocksToMargins
   , suzukiArchDualToOptimizer, suzukiMangoldtStateToSlopeDeficit
@@ -1598,6 +1649,8 @@ representationGraph =
   , suzukiWeightedFrontierToChebyshevProfile
   , suzukiChebyshevProfileToCertificate
   , suzukiChebyshevCertificateToBusyCertificate
+  , suzukiChebyshevProfileToFiniteEventCertificate
+  , suzukiFiniteEventCertificateToBusyCertificate
   , shortIntervalLiteratureToWeightedFrontier
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate

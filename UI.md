@@ -80,6 +80,19 @@ anchored `U_m(x)=R(m)+epsilon*(x-m)` required/budget comparison.  The formal coc
 `busyPeriod_safe_of_chebyshev_error_profile`; all plotted values and envelope
 budgets remain visibly `NumericalEvidence`.
 
+The inspector also exposes the finite-event verifier. Every displayed event
+cell reports its exact-service cutoff cost, conservative `5/3` linear-service
+cost, cumulative cost, and remaining reserve. Explorer event samples are
+rounded upward by `0.001`; this is a numerical candidate coarsening, not a
+Lean proof of the corresponding arithmetic bound. The checked interface is
+`SuzukiFiniteEventProfileCertificate.psiRoot_nonnegative`: it consumes a
+complete finite prime-power chain, finitely many proved event inequalities,
+a proved starting reserve, and one finite total-cost inequality.
+
+Proof Mode marks `[0,log 3]` as finite LeanChecked coverage, combining the
+nine-term initial-interval certificate with the certified second prime cell.
+The interval beyond `log 3` and every universal tail claim remain open.
+
 The exported UI data deliberately uses two scan sizes: a smaller full event
 trace for responsive sawtooth inspection and a ten-million-period summary for
 the arithmetic scatter and frontier rankings. Both remain

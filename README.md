@@ -142,9 +142,12 @@ Nevanlinna criterion, screw continuity, and the high-strip Fourier--Laplace
 transform.  Its specialized xi screw/Nevanlinna and shifted zero-free
 criteria are checked without claiming the general Krein--Langer theorem.
 The prime-side representation and universal strict convexity on prime cells
-are also checked; `suzukiPsi_pos_cell_two` is the first exact certificate for
-the actual unshifted function on a complete cell `[log 2,log 3]`.  This finite
-result does not prove global positivity or RH. An Euler--Maclaurin remainder estimate proves
+are also checked. `suzukiInitialNonnegative_proved` closes `[0,log 2]` by a
+nine-term rational archimedean certificate, while `suzukiPsi_pos_cell_two`
+certifies the actual unshifted function on `[log 2,log 3]`. The finite-event
+verifier reduces later bounded intervals to finitely many proved event
+inequalities and exact weighted cell costs. This finite coverage does not
+prove the open universal event bounds, global positivity, or RH. An Euler--Maclaurin remainder estimate proves
 `riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula
 is unconditionally nonzero; see `SUZUKI_SCREW.md`.
 

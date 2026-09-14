@@ -752,3 +752,82 @@ Mathlib's explicit global `psi` bounds, Zeta23's precise weighted-prefix
 bound, and Zeta23's non-effective `MediumPNT` big-O statement of shape
 `x*exp(-c*(log x)^(1/10))`.  None supplies explicit, prefix-sensitive constants
 for this certificate.  No short-interval or RH-strength estimate is assumed.
+
+## Finite event certificates and the jump-aware frontier
+
+`RHGarden.SuzukiFiniteEventCertificates` replaces the continuum of profile
+inputs by a finite, complete Mangoldt-event chain. The checked signed state is
+
+```text
+z_m(u) = -D(sqrt m) + Arrival(m,u) - Service(sqrt m,u) = -D(u).
+```
+
+No reflected queue identity is used: surplus service remains in the signed
+state. On an event-free cell the arrival term is constant, while the right
+endpoint contributes exactly `Lambda(r)/sqrt(r)` (zero for a non-event
+terminal). Every prime power is present because the canonical partition is
+defined by `IsMangoldtEvent`, and consecutiveness proves that no event was
+omitted.
+
+For a proved event bound `Arrival(m,q)-Service(sqrt m,sqrt q) <= e_q`, set
+`K=-D(sqrt m)+e_q`. The exact service envelope is
+
+```text
+max(K-(P(u)-P(sqrt q)),0).
+```
+
+Its unique monotone cutoff `h` gives the kernel-checked cost
+
+```text
+2*(K+P(sqrt q))*log(h/sqrt q)
+  - A(2*log h) + A(log q).
+```
+
+The module also proves an explicitly evaluable `5/3`-linear upper cost.
+`SuzukiFiniteEventProfileCertificate` consequently asks only for finitely
+many event inequalities, one starting-reserve lower bound, and one finite
+total-cost comparison. Interpolation, integrability, all-prefix control, and
+gluing are theorems rather than certificate fields. Its first concrete
+inhabitant re-certifies the complete second cell. That is proved finite
+coverage, not a universal tail certificate.
+
+The one-sided arithmetic envelope now respects jumps. If `[q,r)` contains no
+Mangoldt event and `R(q)<=rho`, Lean proves
+
+```text
+R(x) <= q + rho - x,
+integral_[sqrt q,sqrt r] ((q+rho)/u^2 - 1) du
+  = (q+rho)*(1/sqrt q-1/sqrt r) - (sqrt r-sqrt q).
+```
+
+The exact sample `rho=R(q)` gives equality; adding a proved nonnegative
+allowance gives a genuinely conservative local coarsening without changing
+the slope. A finite exact event table is valid checked prefix data when its
+entries are proved, but it is not a universal arithmetic estimate.
+
+The ten-million numerical regression reproduces 10,341 completed periods,
+including 7,872 successes and 2,469 failures for the old smeared affine
+envelope. The new exact-service implementation has maximum direct-integration
+residual about `1.7e-9`; rounding each event sample upward by `0.001` has
+maximum pointwise gap below `0.001`. For `324431 -> 361201`, the new sampled
+event cost is about `0.0314698` and remaining reserve about `0.0358176`. For
+the old worst failure `8573249 -> 8906237`, the cost is about `0.00805105`
+and remaining reserve about `0.0404986`. These are `NumericalEvidence`; the
+missing universal theorem is still a proved local upper bound for every event
+excess strong enough to make the finite cost sum fit the reserve.
+
+## Initial interval closed
+
+`RHGarden.SuzukiInitialInterval` kernel-checks the proposed nine-term
+quarter-lattice proof. The rational polynomial has second derivative at least
+one and its exact sample bounds imply `P(w)>151/20000` on `[0,1]`. A separate
+calculus lemma proves the cubic lower bound for `log w`. Together they give
+
+```text
+A(t) >= (151/20000)*(exp(t/2)-1),  t>=0.
+```
+
+Thus `suzukiInitialNonnegative_proved : SuzukiInitialNonnegative` is now an
+actual theorem, and `Psi(t)>0` for `0<t<=log 3`. The discrete RH equivalences
+can omit the compact initial conjunct, but their infinite block-margin family
+remains open.
