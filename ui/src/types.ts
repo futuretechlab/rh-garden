@@ -146,6 +146,11 @@ export interface BusyPeriod {
   chebyshev_increment_slope_required: number
   anchored_linear_envelope_epsilon_budget: number
   anchored_linear_envelope_slack: number
+  finite_event_exact_cost: number
+  finite_event_linear_cost: number
+  finite_event_cost_residual: number
+  finite_event_reserve_remaining: number
+  jump_aware_max_gap: number
   pinned_prefix_arrival_upper: number
   pinned_bound_over_arrival: number | null
   pinned_bound_excess_over_service: number
@@ -166,6 +171,13 @@ export interface ChebyshevProfilePoint {
   decomposition_residual: number
   backlog: number
   weighted_loss: number
+  jump_aware_upper: number
+  jump_aware_gap: number
+  outgoing_service: number
+  outgoing_exact_cost: number
+  outgoing_linear_cost: number
+  cumulative_exact_cost: number
+  remaining_reserve: number
 }
 
 export interface ExplorerSlice {

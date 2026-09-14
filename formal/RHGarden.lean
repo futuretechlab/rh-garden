@@ -48,3 +48,4 @@ import RHGarden.SuzukiRootDynamics
 import RHGarden.SuzukiRootDiscrepancy
 import RHGarden.SuzukiBusyPeriods
 import RHGarden.SuzukiChebyshevProfiles
+import RHGarden.SuzukiFiniteEventCertificates

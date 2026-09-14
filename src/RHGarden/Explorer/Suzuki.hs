@@ -33,7 +33,7 @@ module RHGarden.Explorer.Suzuki
 
 import Data.Char (toLower)
 import Data.List (intercalate, isSuffixOf, maximumBy, minimumBy,
-  nubBy, sort, sortOn)
+  nubBy, sort, sortOn, zipWith4)
 import Data.Ord (comparing)
 import Numeric (showFFloat)
 import Text.Read (readMaybe)
@@ -273,6 +273,13 @@ data ChebyshevProfilePoint = ChebyshevProfilePoint
   , profileDecompositionResidual :: Double
   , profileBacklog :: Double
   , profileWeightedLoss :: Double
+  , profileJumpAwareUpper :: Double
+  , profileJumpAwareGap :: Double
+  , profileOutgoingService :: Double
+  , profileOutgoingExactCost :: Double
+  , profileOutgoingLinearCost :: Double
+  , profileCumulativeExactCost :: Double
+  , profileRemainingReserve :: Double
   } deriving (Eq, Show)
 
 -- | A maximal numerically detected interval on which the right-continuous
@@ -327,6 +334,11 @@ data BusyPeriod = BusyPeriod
   , busyChebyshevIncrementSlopeRequired :: Double
   , busyAnchoredLinearEnvelopeEpsilonBudget :: Double
   , busyAnchoredLinearEnvelopeSlack :: Double
+  , busyFiniteEventExactCost :: Double
+  , busyFiniteEventLinearCost :: Double
+  , busyFiniteEventCostResidual :: Double
+  , busyFiniteEventReserveRemaining :: Double
+  , busyJumpAwareMaxGap :: Double
   , busyChebyshevProfile :: [ChebyshevProfilePoint]
   } deriving (Eq, Show)
 
@@ -653,6 +665,11 @@ buildBusyPeriods = seek
       , busyChebyshevIncrementSlopeRequired = incrementSlopeRequired
       , busyAnchoredLinearEnvelopeEpsilonBudget = anchoredEnvelopeBudget
       , busyAnchoredLinearEnvelopeSlack = anchoredEnvelopeBudget - incrementSlopeRequired
+      , busyFiniteEventExactCost = finiteExactCost
+      , busyFiniteEventLinearCost = finiteLinearCost
+      , busyFiniteEventCostResidual = finiteExactCost - loss
+      , busyFiniteEventReserveRemaining = psiStart - finiteExactCost
+      , busyJumpAwareMaxGap = maximum (0 : map profileJumpAwareGap chebyshevProfile)
       , busyChebyshevProfile = chebyshevProfile
       }
       where
@@ -715,7 +732,32 @@ buildBusyPeriods = seek
               (endpointRoot - leftRoot)
         eventIntegrals = scanl (+) 0
           [segmentIntegral row (dualSqrtNextEvent row) | row <- initialRows]
-        eventPoint row integralContribution =
+        outgoingEndpointRoots = map dualSqrtNextEvent initialRows ++ [rootEnd]
+        coarsenedSampleUpper row =
+          let q = fromIntegral (dualEvent row)
+              rValue = dualChebyshevPsi row - q
+          in fromIntegral (ceiling (1000 * rValue) :: Integer) / 1000
+        cellCosts row endpointRoot =
+          let leftRoot = dualSqrtEvent row
+              k = max 0 (-dualDeficit row)
+              rootCutoff = min endpointRoot (max leftRoot (dualRootOptimizer row))
+              linearCutoff = min endpointRoot (leftRoot + 3 * k / 5)
+              pLeft = dualSlope row + dualDeficit row
+              archAt v = integrateArchDerivative 0 (2 * log v)
+              exactCost = 2 * (k + pLeft) * log (rootCutoff / leftRoot) -
+                archAt rootCutoff + archAt leftRoot
+              linearCost = 2 * (k + 5 * leftRoot / 3) *
+                log (linearCutoff / leftRoot) -
+                10 * (linearCutoff - leftRoot) / 3
+          in (max 0 exactCost, max 0 linearCost,
+              archimedeanDerivative (2 * log endpointRoot) - pLeft)
+        outgoingCosts = zipWith cellCosts rows outgoingEndpointRoots
+        exactCosts = [cost | (cost, _, _) <- outgoingCosts]
+        linearCosts = [cost | (_, cost, _) <- outgoingCosts]
+        cumulativeBefore = init (scanl (+) 0 exactCosts)
+        finiteExactCost = sum exactCosts
+        finiteLinearCost = sum linearCosts
+        eventPoint row integralContribution endpointRoot cumulativeCost =
           let root = dualSqrtEvent row
               x = fromIntegral (dualEvent row)
               errorValue = dualChebyshevPsi row - x
@@ -724,6 +766,9 @@ buildBusyPeriods = seek
               archDefect = 2 * (root - rootStart) - serviceToRoot
               transformed = boundary + integralContribution + archDefect
               exactExcess = startD - dualDeficit row
+              rhoUpper = coarsenedSampleUpper row
+              jumpUpper = fromIntegral (dualEvent row) + rhoUpper - x
+              (outCost, outLinearCost, outService) = cellCosts row endpointRoot
           in ChebyshevProfilePoint
             { profileRoot = root
             , profileIntegerX = x
@@ -736,8 +781,16 @@ buildBusyPeriods = seek
             , profileDecompositionResidual = transformed - exactExcess
             , profileBacklog = max (-dualDeficit row) 0
             , profileWeightedLoss = psiStart - dualEventValue row
+            , profileJumpAwareUpper = jumpUpper
+            , profileJumpAwareGap = jumpUpper - errorValue
+            , profileOutgoingService = outService
+            , profileOutgoingExactCost = outCost
+            , profileOutgoingLinearCost = outLinearCost
+            , profileCumulativeExactCost = cumulativeCost
+            , profileRemainingReserve = psiStart - cumulativeCost
             }
-        eventProfile = zipWith eventPoint rows eventIntegrals
+        eventProfile = zipWith4 eventPoint rows eventIntegrals
+          outgoingEndpointRoots cumulativeBefore
         integralBeforeFinal = last eventIntegrals
         recoveryIntegral = integralBeforeFinal + segmentIntegral final rootEnd
         recoveryX = rootEnd * rootEnd
@@ -758,6 +811,15 @@ buildBusyPeriods = seek
           , profileDecompositionResidual = recoveryTransformed - startD
           , profileBacklog = 0
           , profileWeightedLoss = loss
+          , profileJumpAwareUpper = fromIntegral (dualEvent final) +
+              coarsenedSampleUpper final - recoveryX
+          , profileJumpAwareGap = fromIntegral (dualEvent final) +
+              coarsenedSampleUpper final - recoveryX - recoveryError
+          , profileOutgoingService = 0
+          , profileOutgoingExactCost = 0
+          , profileOutgoingLinearCost = 0
+          , profileCumulativeExactCost = finiteExactCost
+          , profileRemainingReserve = psiStart - finiteExactCost
           }
         chebyshevProfile = eventProfile ++ [recoveryPoint]
         startX = fromIntegral (dualEvent first)
@@ -1813,7 +1875,7 @@ renderExplorerAscii report = unlines $
   [ ""
   , "Candidate certificate statuses are sampled numerical results only."
   , "Lean-certified cells: unshifted cell 2, [log 2, log 3]."
-  , "Separate local coverage: [0,q] for some certified rational q>0; the gap to log 2 is open."
+  , "Lean-certified initial coverage: [0,log 2], with strict positivity on (0,log 3]."
   , "Tail status: unknown."
   ]
   where
@@ -2134,6 +2196,15 @@ renderExplorerAscii report = unlines $
             (minimumBy (comparing busyAnchoredLinearEnvelopeSlack) linearFeasible)
           worstFailure = if null linearFailures then Nothing else Just
             (minimumBy (comparing busyAnchoredLinearEnvelopeSlack) linearFailures)
+          maxFiniteResidual = maximum (0 : map (abs . busyFiniteEventCostResidual) periods)
+          maxJumpGap = maximum (0 : map busyJumpAwareMaxGap periods)
+          findStart q = case filter ((== q) . busyStartEvent) periods of
+            period : _ -> "q=" ++ show q ++
+              " exactCost=" ++ fmt 9 (busyFiniteEventExactCost period) ++
+              " linearCost=" ++ fmt 9 (busyFiniteEventLinearCost period) ++
+              " reserveRemaining=" ++ fmt 9 (busyFiniteEventReserveRemaining period) ++
+              " oldLinearSlack=" ++ fmt 9 (busyAnchoredLinearEnvelopeSlack period)
+            [] -> "q=" ++ show q ++ " not completed in this scan"
           renderCandidate period =
             "q=" ++ show (busyStartEvent period) ++
             " required eps=" ++ fmt 9 (busyChebyshevIncrementSlopeRequired period) ++
@@ -2147,6 +2218,11 @@ renderExplorerAscii report = unlines $
          , "  tightest feasible linear envelope: " ++ maybe "none" renderCandidate tightest
          , "  worst failed linear envelope: " ++ maybe "none" renderCandidate worstFailure
          , "  epsilon required checks R(x)-R(m)<=epsilon*(x-m) at event prefixes; epsilon budget is the largest trapezoidal profile budget."
+         , "  finite event exact-service cost residual versus exact loss: " ++ fmt 12 maxFiniteResidual
+         , "  jump-aware coarsening maximum R-envelope gap: " ++ fmt 9 maxJumpGap
+         , "  324431 regression: " ++ findStart 324431
+         , "  8573249 regression: " ++ findStart 8573249
+         , "  jump-aware samples use rho_i=ceil(1000*R(q_i))/1000; they are NumericalEvidence candidates, not proved sample bounds."
          ]
     busyRankingSection =
       let periods = reportBusyPeriods report
@@ -2563,7 +2639,14 @@ chebyshevProfileJson point = "{" ++ intercalate ", "
   ,jsonField "exact_excess" (num (profileExactExcess point))
   ,jsonField "decomposition_residual" (num (profileDecompositionResidual point))
   ,jsonField "backlog" (num (profileBacklog point))
-  ,jsonField "weighted_loss" (num (profileWeightedLoss point))] ++ "}"
+  ,jsonField "weighted_loss" (num (profileWeightedLoss point))
+  ,jsonField "jump_aware_upper" (num (profileJumpAwareUpper point))
+  ,jsonField "jump_aware_gap" (num (profileJumpAwareGap point))
+  ,jsonField "outgoing_service" (num (profileOutgoingService point))
+  ,jsonField "outgoing_exact_cost" (num (profileOutgoingExactCost point))
+  ,jsonField "outgoing_linear_cost" (num (profileOutgoingLinearCost point))
+  ,jsonField "cumulative_exact_cost" (num (profileCumulativeExactCost point))
+  ,jsonField "remaining_reserve" (num (profileRemainingReserve point))] ++ "}"
 
 busyJson :: BusyPeriod -> String
 busyJson period = "{" ++ intercalate ", "
@@ -2619,6 +2702,13 @@ busyJson period = "{" ++ intercalate ", "
       (num (busyAnchoredLinearEnvelopeEpsilonBudget period))
   ,jsonField "anchored_linear_envelope_slack"
       (num (busyAnchoredLinearEnvelopeSlack period))
+  ,jsonField "finite_event_exact_cost" (num (busyFiniteEventExactCost period))
+  ,jsonField "finite_event_linear_cost" (num (busyFiniteEventLinearCost period))
+  ,jsonField "finite_event_cost_residual"
+      (num (busyFiniteEventCostResidual period))
+  ,jsonField "finite_event_reserve_remaining"
+      (num (busyFiniteEventReserveRemaining period))
+  ,jsonField "jump_aware_max_gap" (num (busyJumpAwareMaxGap period))
   ,jsonField "pinned_prefix_arrival_upper"
       (num (busyPinnedPrefixArrivalUpper period))
   ,jsonField "pinned_bound_over_arrival"

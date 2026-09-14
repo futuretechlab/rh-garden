@@ -308,9 +308,39 @@ main = do
           busyAnchoredLinearEnvelopeEpsilonBudget period >= 0 &&
           abs (busyAnchoredLinearEnvelopeSlack period -
             (busyAnchoredLinearEnvelopeEpsilonBudget period -
-              busyChebyshevIncrementSlopeRequired period)) < 1e-12)
+              busyChebyshevIncrementSlopeRequired period)) < 1e-12 &&
+          abs (busyFiniteEventCostResidual period) < 1e-7 &&
+          busyFiniteEventLinearCost period + 1e-9 >=
+            busyFiniteEventExactCost period &&
+          busyJumpAwareMaxGap period >= -1e-10 &&
+          busyJumpAwareMaxGap period <= 0.0010001 &&
+          all (\point -> profileOutgoingExactCost point >= -1e-10 &&
+            profileOutgoingLinearCost point + 1e-9 >=
+              profileOutgoingExactCost point &&
+            profileJumpAwareGap point >= -1e-10)
+            (busyChebyshevProfile period))
           (reportBusyPeriods report) &&
-        any ((> 1) . busyEventCount) (reportBusyPeriods report)
+        any ((> 1) . busyEventCount) (reportBusyPeriods report) &&
+        any (\period -> abs (busyRootStart period ^ (2 :: Int) -
+          fromIntegral (busyStartEvent period)) < 1e-7)
+          (reportBusyPeriods report) &&
+        any (\period -> busyRootEnd period ^ (2 :: Int) <
+          fromIntegral (busyRecoveryBeforeEvent period) - 1e-7)
+          (reportBusyPeriods report) &&
+        any (any ((< 0) . profileExactExcess) . busyChebyshevProfile)
+          (reportBusyPeriods report)
+      Left _ -> False
+  check "Suzuki event arithmetic includes prime-square impulses" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = DualMode
+        , explorerOmegas = [0]
+        , explorerTMin = log 2
+        , explorerTMax = log 10
+        , explorerSamples = 101
+        , explorerPrimeCells = True
+        } of
+      Right report -> any (\row -> dualEvent row == 4 && dualLambda row > 0)
+        (reportDualDynamics report)
       Left _ -> False
   check "UI garden export contains live registry nodes and trust metadata" $
     "RHGardenNavigator" `isInfixOf` gardenJson &&
@@ -322,8 +352,8 @@ main = do
     "NumericalEvidence" `isInfixOf` gardenJson
   check "UI frontier export names the exact busy-period blocker" $
     "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
-    "every root prefix" `isInfixOf` frontiersJson &&
-    "transformed (psi(x)-x)" `isInfixOf` frontiersJson &&
+    "finite local arithmetic inequality" `isInfixOf` frontiersJson &&
+    "SuzukiFiniteEventProfileCertificate" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

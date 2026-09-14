@@ -761,3 +761,30 @@ periods.  Its worst failure starts at `8573249`: the atomic error increment
 requires slope about `6.98208`, whereas smearing that slope continuously
 through the profile budgets only `0.02264`.  This points toward a discrete
 event-prefix envelope, not another constant terminal bound.
+
+## Finite event-cost mode
+
+Busy-period output now evaluates the finite architecture checked in
+`SuzukiFiniteEventCertificates.lean`. Each event row records its outgoing
+service, exact monotone-cutoff cost, conservative `5/3`-linear cost,
+cumulative cost, and remaining reserve. Event samples use the exploratory
+coarsening
+
+```text
+rho_q = ceil(1000*R(q))/1000,
+R(x) <= q+rho_q-x on [q,nextEvent),
+```
+
+so the displayed table is still `NumericalEvidence`: Lean proves the
+construction, but floating event values are not imported as proof. The exact
+cost retains the `2/u` density. A regression integrates the same envelope
+independently and rejects residuals above tolerance; the ten-million scan
+reports a maximum residual near `1.7e-9`.
+
+The two baseline failures remain explicit. On `324431 -> 361201`, the old
+terminal slack is positive while its constant prefix slack is negative; the
+finite sampled cost is approximately `0.0314698`. On
+`8573249 -> 8906237`, where the old anchored envelope fails worst, the finite
+sampled cost is approximately `0.00805105`. These successes diagnose the
+smearing error in the old ansatz; they do not prove the event samples or a
+tail theorem.
