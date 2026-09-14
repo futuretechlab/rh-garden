@@ -72,6 +72,14 @@ the cockpit points to
 `SuzukiWeightedShortIntervalProfileBound` and
 `busyPeriod_safe_of_weightedMangoldt_profile`.
 
+The busy-period inspector now plots the exact arrival/service excess beside
+the transformed Chebyshev remainder, the explicit archimedean defect, and the
+resulting backlog.  It also displays the regression residual and the
+anchored `U_m(x)=R(m)+epsilon*(x-m)` required/budget comparison.  The formal cockpit anchor is
+`arrivalServiceExcess_eq_chebyshevError` followed by
+`busyPeriod_safe_of_chebyshev_error_profile`; all plotted values and envelope
+budgets remain visibly `NumericalEvidence`.
+
 The exported UI data deliberately uses two scan sizes: a smaller full event
 trace for responsive sawtooth inspection and a ten-million-period summary for
 the arithmetic scatter and frontier rankings. Both remain

@@ -730,3 +730,34 @@ about `16.7814`.
 LeanChecked local-width theorem, not `n log n`. The output ranks reserve
 consumption, prefix precision, local-bound gap, and interval exponent
 independently because these select different periods.
+
+## Chebyshev-error profiles
+
+Busy mode also exports `chebyshev_profile` points.  Each point contains
+
+```text
+R(x)
+R(x)/sqrt(x) endpoint contribution
+integral R(s^2)/s^2 contribution
+explicit archimedean defect
+exact Arrival-Service
+backlog and weighted loss
+decomposition residual.
+```
+
+The residual cross-checks the direct event recurrence against the independent
+root partial-summation formula.  A ten-million scan reports a worst absolute
+residual of roughly `8.7e-11`.
+
+For the exploratory anchored family
+`U_m(x)=R(m)+epsilon*(x-m)`, the fields
+`chebyshev_increment_slope_required`,
+`anchored_linear_envelope_epsilon_budget`, and
+`anchored_linear_envelope_slack` compare the largest observed Chebyshev-error
+secant slope with the numerically integrated profile budget.  These values are
+`NumericalEvidence`; Lean accepts only a proof of the envelope and of the
+weighted loss inequality.  The family passes 7,872 of 10,341 completed
+periods.  Its worst failure starts at `8573249`: the atomic error increment
+requires slope about `6.98208`, whereas smearing that slope continuously
+through the profile budgets only `0.02264`.  This points toward a discrete
+event-prefix envelope, not another constant terminal bound.

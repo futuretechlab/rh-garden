@@ -13,6 +13,7 @@ module RHGarden.Explorer.Suzuki
   , CellMargin(..)
   , BlockMargin(..)
   , DualDynamics(..)
+  , ChebyshevProfilePoint(..)
   , BusyPeriod(..)
   , CandidateCertificate(..)
   , defaultExplorerOptions
@@ -254,6 +255,24 @@ data DualDynamics = DualDynamics
   , dualRootKickOverGap :: Double
   , dualNormalizedRootImpulse :: Double
   , dualCrudeGapCondition :: Bool
+  , dualChebyshevPsi :: Double
+  } deriving (Eq, Show)
+
+-- | Numerically evaluated terms in the Lean-checked identity
+-- Arrival - Service = transformed Chebyshev error + archimedean defect.
+-- The residual is a regression diagnostic, never proof evidence.
+data ChebyshevProfilePoint = ChebyshevProfilePoint
+  { profileRoot :: Double
+  , profileIntegerX :: Double
+  , profileChebyshevError :: Double
+  , profileBoundaryContribution :: Double
+  , profileIntegralContribution :: Double
+  , profileArchDefect :: Double
+  , profileTransformedExcess :: Double
+  , profileExactExcess :: Double
+  , profileDecompositionResidual :: Double
+  , profileBacklog :: Double
+  , profileWeightedLoss :: Double
   } deriving (Eq, Show)
 
 -- | A maximal numerically detected interval on which the right-continuous
@@ -304,6 +323,11 @@ data BusyPeriod = BusyPeriod
   , busyCheckedElementaryArrivalUpper :: Double
   , busyArithmeticBoundFactor :: Double
   , busyArithmeticBoundExcess :: Double
+  , busyProfileMaxResidual :: Double
+  , busyChebyshevIncrementSlopeRequired :: Double
+  , busyAnchoredLinearEnvelopeEpsilonBudget :: Double
+  , busyAnchoredLinearEnvelopeSlack :: Double
+  , busyChebyshevProfile :: [ChebyshevProfilePoint]
   } deriving (Eq, Show)
 
 data CandidateCertificate = CandidateCertificate
@@ -624,6 +648,12 @@ buildBusyPeriods = seek
       , busyArithmeticBoundFactor = safeRatio checkedElementaryUpper
           requiredArrivalUpper
       , busyArithmeticBoundExcess = checkedElementaryUpper - requiredArrivalUpper
+      , busyProfileMaxResidual = maximum
+          (map (abs . profileDecompositionResidual) chebyshevProfile)
+      , busyChebyshevIncrementSlopeRequired = incrementSlopeRequired
+      , busyAnchoredLinearEnvelopeEpsilonBudget = anchoredEnvelopeBudget
+      , busyAnchoredLinearEnvelopeSlack = anchoredEnvelopeBudget - incrementSlopeRequired
+      , busyChebyshevProfile = chebyshevProfile
       }
       where
         first = head rows
@@ -676,6 +706,92 @@ buildBusyPeriods = seek
           | intervalEnd > 1 = checkedWidth * log checkedEndpoint /
               sqrt (checkedStart + 1)
           | otherwise = 0
+        startChebyshevError = dualChebyshevPsi first - fromIntegral (dualEvent first)
+        startArchSlope = dualSlope first + dualDeficit first
+        segmentIntegral row endpointRoot =
+          let leftRoot = dualSqrtEvent row
+              chebyshev = dualChebyshevPsi row
+          in chebyshev * (1 / leftRoot - 1 / endpointRoot) -
+              (endpointRoot - leftRoot)
+        eventIntegrals = scanl (+) 0
+          [segmentIntegral row (dualSqrtNextEvent row) | row <- initialRows]
+        eventPoint row integralContribution =
+          let root = dualSqrtEvent row
+              x = fromIntegral (dualEvent row)
+              errorValue = dualChebyshevPsi row - x
+              boundary = errorValue / root - startChebyshevError / rootStart
+              serviceToRoot = dualSlope row + dualDeficit row - startArchSlope
+              archDefect = 2 * (root - rootStart) - serviceToRoot
+              transformed = boundary + integralContribution + archDefect
+              exactExcess = startD - dualDeficit row
+          in ChebyshevProfilePoint
+            { profileRoot = root
+            , profileIntegerX = x
+            , profileChebyshevError = errorValue
+            , profileBoundaryContribution = boundary
+            , profileIntegralContribution = integralContribution
+            , profileArchDefect = archDefect
+            , profileTransformedExcess = transformed
+            , profileExactExcess = exactExcess
+            , profileDecompositionResidual = transformed - exactExcess
+            , profileBacklog = max (-dualDeficit row) 0
+            , profileWeightedLoss = psiStart - dualEventValue row
+            }
+        eventProfile = zipWith eventPoint rows eventIntegrals
+        integralBeforeFinal = last eventIntegrals
+        recoveryIntegral = integralBeforeFinal + segmentIntegral final rootEnd
+        recoveryX = rootEnd * rootEnd
+        recoveryError = dualChebyshevPsi final - recoveryX
+        recoveryBoundary = recoveryError / rootEnd - startChebyshevError / rootStart
+        recoveryService = dualSlope final - startArchSlope
+        recoveryDefect = 2 * (rootEnd - rootStart) - recoveryService
+        recoveryTransformed = recoveryBoundary + recoveryIntegral + recoveryDefect
+        recoveryPoint = ChebyshevProfilePoint
+          { profileRoot = rootEnd
+          , profileIntegerX = recoveryX
+          , profileChebyshevError = recoveryError
+          , profileBoundaryContribution = recoveryBoundary
+          , profileIntegralContribution = recoveryIntegral
+          , profileArchDefect = recoveryDefect
+          , profileTransformedExcess = recoveryTransformed
+          , profileExactExcess = startD
+          , profileDecompositionResidual = recoveryTransformed - startD
+          , profileBacklog = 0
+          , profileWeightedLoss = loss
+          }
+        chebyshevProfile = eventProfile ++ [recoveryPoint]
+        startX = fromIntegral (dualEvent first)
+        incrementSlopeRequired = maximum (0 :
+          [max 0 ((profileChebyshevError point - startChebyshevError) /
+            (profileIntegerX point - startX))
+          | point <- chebyshevProfile, profileIntegerX point > startX])
+        -- Numerical audit for the anchored family
+        -- U_m(x)=R(m)+eps*(x-m), which preserves the exact start value used by
+        -- the Lean certificate.  Its transformed error profile is exactly
+        -- 2*eps*(u-sqrt(m)); only quadrature of the positive-part loss remains
+        -- numerical here.
+        anchoredEnvelopeLoss epsilon = trapezoidArea
+          [(profileRoot point,
+            2 / profileRoot point * max 0
+              (initialBacklog + 2 * epsilon *
+                (profileRoot point - rootStart) + profileArchDefect point))
+          | point <- chebyshevProfile]
+        anchoredEnvelopeBudget = bisectIncreasing 0 (findUpper 1e-6) (60 :: Int)
+          (\epsilon -> anchoredEnvelopeLoss epsilon <= psiStart)
+        findUpper upper
+          | upper >= 1 = upper
+          | anchoredEnvelopeLoss upper > psiStart = upper
+          | otherwise = findUpper (2 * upper)
+        bisectIncreasing lower _upper 0 _ = lower
+        bisectIncreasing lower upper iterations predicate
+          | predicate midpoint = bisectIncreasing midpoint upper
+              (iterations - 1) predicate
+          | otherwise = bisectIncreasing lower midpoint
+              (iterations - 1) predicate
+          where midpoint = (lower + upper) / 2
+        trapezoidArea points = sum
+          [ (x1 - x0) * (y0 + y1) / 2
+          | ((x0, y0), (x1, y1)) <- zip points (drop 1 points)]
         safeRatio numerator denominator
           | abs denominator < 1e-15 = 0 / 0
           | otherwise = numerator / denominator
@@ -683,22 +799,23 @@ buildBusyPeriods = seek
 buildDualDynamics :: ExplorerOptions -> [PrimeEvent] -> [DualDynamics]
 buildDualDynamics options events = case events of
     [] -> []
-    firstEvent : _ -> go 0 0
+    firstEvent : _ -> go 0 0 0
       (integrateArchDerivative 0 (eventLogN firstEvent)) events
   where
-    go _ _ _ [] = []
-    go _ _ _ [_] = []
-    go preSlope preIntercept archLeft (event : nextEvent : rest) =
+    go _ _ _ _ [] = []
+    go _ _ _ _ [_] = []
+    go preSlope preIntercept preChebyshev archLeft (event : nextEvent : rest) =
       let slope = preSlope + eventWeight event
           intercept = preIntercept + eventWeight event * eventLogN event
+          chebyshev = preChebyshev + eventMangoldt event
           archRight = archLeft + integrateArchDerivative
             (eventLogN event) (eventLogN nextEvent)
-          remaining = go slope intercept archRight (nextEvent : rest)
+          remaining = go slope intercept chebyshev archRight (nextEvent : rest)
       in if eventLogN nextEvent < explorerTMin options - 1e-12 ||
             eventLogN event > explorerTMax options + 1e-12
           then remaining
-          else build slope intercept archLeft archRight event nextEvent : remaining
-    build slope intercept archLeft archRight event nextEvent = DualDynamics
+          else build slope intercept chebyshev archLeft archRight event nextEvent : remaining
+    build slope intercept chebyshev archLeft archRight event nextEvent = DualDynamics
           { dualEvent = eventN event
           , dualNextEvent = eventN nextEvent
           , dualLambda = eventWeight event
@@ -753,6 +870,7 @@ buildDualDynamics options events = case events of
           , dualNormalizedRootImpulse = safeRatio rootKick sqrtNextEvent
           , dualCrudeGapCondition = fromIntegral (eventN nextEvent - eventN event) >=
               (6 / 5) * eventMangoldt nextEvent
+          , dualChebyshevPsi = chebyshev
           }
       where
         optimizerFor s
@@ -1761,7 +1879,7 @@ renderExplorerAscii report = unlines $
       , "start    recover<  events  x          h        theta     epsilon req   loss/reserve  elementary/required"
       , "---------------------------------------------------------------------------------------------------------"
       ] ++ map renderBusy busyRowsForDisplay ++ busySummarySection ++
-        busyScaleSection ++ busyRankingSection
+        busyScaleSection ++ busyProfileSection ++ busyRankingSection
     criticalSection =
       [ ""
       , "Detected interior critical points:"
@@ -2007,6 +2125,29 @@ renderExplorerAscii report = unlines $
          , "  theta <= 1/2:  " ++ show (countAtMost (1 / 2))
          , "  logarithmic start bins:"
          ] ++ map renderDecade decades
+    busyProfileSection =
+      let periods = reportBusyPeriods report
+          maxResidual = maximum (0 : map busyProfileMaxResidual periods)
+          linearFeasible = [p | p <- periods, busyAnchoredLinearEnvelopeSlack p >= 0]
+          linearFailures = [p | p <- periods, busyAnchoredLinearEnvelopeSlack p < 0]
+          tightest = if null linearFeasible then Nothing else Just
+            (minimumBy (comparing busyAnchoredLinearEnvelopeSlack) linearFeasible)
+          worstFailure = if null linearFailures then Nothing else Just
+            (minimumBy (comparing busyAnchoredLinearEnvelopeSlack) linearFailures)
+          renderCandidate period =
+            "q=" ++ show (busyStartEvent period) ++
+            " required eps=" ++ fmt 9 (busyChebyshevIncrementSlopeRequired period) ++
+            " budget eps=" ++ fmt 9 (busyAnchoredLinearEnvelopeEpsilonBudget period) ++
+            " slack=" ++ fmt 9 (busyAnchoredLinearEnvelopeSlack period)
+      in [ ""
+         , "Chebyshev-error profile audit (NumericalEvidence):"
+         , "  exact decomposition max residual: " ++ fmt 12 maxResidual
+         , "  U_m(x)=R(m)+epsilon*(x-m) profile-feasible completed periods: " ++
+             show (length linearFeasible) ++ "/" ++ show (length periods)
+         , "  tightest feasible linear envelope: " ++ maybe "none" renderCandidate tightest
+         , "  worst failed linear envelope: " ++ maybe "none" renderCandidate worstFailure
+         , "  epsilon required checks R(x)-R(m)<=epsilon*(x-m) at event prefixes; epsilon budget is the largest trapezoidal profile budget."
+         ]
     busyRankingSection =
       let periods = reportBusyPeriods report
           comparable = [p | p <- periods, busyArrivalMass p > 1e-12,
@@ -2407,7 +2548,22 @@ dualJson row = "{" ++ intercalate ", "
   ,jsonField "sqrt_gap" (num (dualSqrtGap row))
   ,jsonField "root_kick_over_gap" (num (dualRootKickOverGap row))
   ,jsonField "normalized_root_impulse" (num (dualNormalizedRootImpulse row))
-  ,jsonField "crude_gap_condition" (jsonBool (dualCrudeGapCondition row))] ++ "}"
+  ,jsonField "crude_gap_condition" (jsonBool (dualCrudeGapCondition row))
+  ,jsonField "chebyshev_psi" (num (dualChebyshevPsi row))] ++ "}"
+
+chebyshevProfileJson :: ChebyshevProfilePoint -> String
+chebyshevProfileJson point = "{" ++ intercalate ", "
+  [jsonField "root" (num (profileRoot point))
+  ,jsonField "x" (num (profileIntegerX point))
+  ,jsonField "chebyshev_error" (num (profileChebyshevError point))
+  ,jsonField "boundary_contribution" (num (profileBoundaryContribution point))
+  ,jsonField "integral_contribution" (num (profileIntegralContribution point))
+  ,jsonField "arch_defect" (num (profileArchDefect point))
+  ,jsonField "transformed_excess" (num (profileTransformedExcess point))
+  ,jsonField "exact_excess" (num (profileExactExcess point))
+  ,jsonField "decomposition_residual" (num (profileDecompositionResidual point))
+  ,jsonField "backlog" (num (profileBacklog point))
+  ,jsonField "weighted_loss" (num (profileWeightedLoss point))] ++ "}"
 
 busyJson :: BusyPeriod -> String
 busyJson period = "{" ++ intercalate ", "
@@ -2456,6 +2612,13 @@ busyJson period = "{" ++ intercalate ", "
       (num (busyCheckedElementaryArrivalUpper period))
   ,jsonField "arithmetic_bound_factor" (num (busyArithmeticBoundFactor period))
   ,jsonField "arithmetic_bound_excess" (num (busyArithmeticBoundExcess period))
+  ,jsonField "profile_max_residual" (num (busyProfileMaxResidual period))
+  ,jsonField "chebyshev_increment_slope_required"
+      (num (busyChebyshevIncrementSlopeRequired period))
+  ,jsonField "anchored_linear_envelope_epsilon_budget"
+      (num (busyAnchoredLinearEnvelopeEpsilonBudget period))
+  ,jsonField "anchored_linear_envelope_slack"
+      (num (busyAnchoredLinearEnvelopeSlack period))
   ,jsonField "pinned_prefix_arrival_upper"
       (num (busyPinnedPrefixArrivalUpper period))
   ,jsonField "pinned_bound_over_arrival"
@@ -2465,7 +2628,24 @@ busyJson period = "{" ++ intercalate ", "
   ,jsonField "pinned_bound_over_required"
       (num (busyPinnedBoundOverRequired period))
   ,jsonField "pinned_bound_excess_over_required"
-      (num (busyPinnedBoundExcessOverRequired period))] ++ "}"
+      (num (busyPinnedBoundExcessOverRequired period))
+  ,jsonField "chebyshev_profile" ("[" ++ intercalate ","
+      (map chebyshevProfileJson (sampleProfile 160
+        (busyChebyshevProfile period))) ++ "]")] ++ "}"
+  where
+    sampleProfile limit points
+      | length points <= limit = points
+      | otherwise =
+          let stride = max 1 (length points `div` (limit - 1))
+              sampled = [point | (index, point) <- zip [0 :: Int ..] points,
+                index `mod` stride == 0]
+              finalPoint = case reverse points of
+                point : _ -> Just point
+                [] -> Nothing
+          in case (reverse sampled, finalPoint) of
+            (point : _, Just final) | point == final -> sampled
+            (_, Just final) -> sampled ++ [final]
+            (_, Nothing) -> sampled
 
 criticalJson :: CriticalPoint -> String
 criticalJson point = "{" ++ intercalate ", "

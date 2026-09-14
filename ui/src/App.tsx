@@ -191,6 +191,8 @@ function FrontierCockpit({data, periods}: {data: FrontierData; periods: BusyPeri
       Number.isFinite(period.prefix_epsilon_required))
   const hardest = precisionRows.length ? [...precisionRows].sort((a,b) =>
     a.prefix_epsilon_required - b.prefix_epsilon_required)[0] : null
+  const profileHardest = periods.length ? [...periods].sort((a,b) =>
+    a.anchored_linear_envelope_slack - b.anchored_linear_envelope_slack)[0] : null
   return <section className="screen">
     <ScreenHeading eyebrow="OPEN MATHEMATICS / EXACTLY LOCATED" title="Frontier cockpit" blurb="The first missing inequality is displayed as a mathematical interface, not hidden behind a project-status label." />
     <div className="frontier-grid">{data.frontiers.map((frontier, index) => <article className={`frontier-card ${index === 0 ? 'headline' : ''}`} key={frontier.id}>
@@ -203,6 +205,7 @@ function FrontierCockpit({data, periods}: {data: FrontierData; periods: BusyPeri
     </article>)}</div>
     {tightest && <div className="metric-band panel"><div><small>PINNED PREFIX BOUND / ACTUAL ARRIVAL</small><strong>{format(tightest.pinned_bound_over_arrival)}×</strong></div><p>Even the tightest interval in this exported scan inherits a global-prefix bound this much larger than its actual local arrival. The issue is structural: the theorem discards the starting prefix.</p><div><small>AT BUSY PERIOD</small><strong>{tightest.start_event} → {tightest.recovery_before_event}</strong></div></div>}
     {hardest && <div className="frontier-target panel"><div><small>HARDEST EXPORTED PREFIX-ENVELOPE TARGET</small><strong>{hardest.start_event} -&gt; {hardest.recovery_before_event}</strong><span>x={hardest.interval_start.toLocaleString()} / h={hardest.interval_width.toLocaleString()} / theta={format(hardest.theta_eff)}</span></div><div><small>FORMAL TARGET</small><code>SuzukiWeightedShortIntervalProfileBound</code><code>busyPeriod_safe_of_weightedMangoldt_profile</code></div><div><small>{hardest.prefix_epsilon_required < 0 ? 'CONSTANT ENVELOPE STATUS' : 'PREFIX RELATIVE SLACK'}</small><strong>{hardest.prefix_epsilon_required < 0 ? 'INFEASIBLE' : `${format(hardest.prefix_epsilon_required * 100)}%`}</strong><span>{hardest.prefix_epsilon_required < 0 ? 'the constant rectangle loses too much before arithmetic estimation' : 'prefix-uniform arrival excess over smooth service'}</span></div></div>}
+    {profileHardest && <div className="frontier-target panel"><div><small>CANONICAL CHEBYSHEV PROFILE TARGET</small><strong>{profileHardest.start_event} -&gt; {profileHardest.recovery_before_event}</strong><span>exact decomposition residual {format(profileHardest.profile_max_residual)}</span></div><div><small>LEANCHECKED INTERFACE</small><code>arrivalServiceExcess_eq_chebyshevError</code><code>busyPeriod_safe_of_chebyshev_error_profile</code></div><div><small>ANCHORED LINEAR U_m NUMERICAL AUDIT</small><strong>{profileHardest.anchored_linear_envelope_slack < 0 ? 'TOO COARSE' : 'FITS'}</strong><span>required ε={format(profileHardest.chebyshev_increment_slope_required)} / budget ε={format(profileHardest.anchored_linear_envelope_epsilon_budget)}</span></div></div>}
     <MilestoneStrip />
   </section>
 }
@@ -260,6 +263,7 @@ function DiscrepancyView({explorer, proofMode}: {explorer: ExplorerData; proofMo
 
 function BusyInspector({period}: {period: BusyPeriod | null}) {
   if (!period) return null
+  const profile = period.chebyshev_profile ?? []
   return <aside className="busy-inspector panel">
     <small>NEGATIVE EXCURSION / NUMERICAL EVIDENCE</small>
     <h2>{period.start_event} → {period.recovery_before_event}</h2>
@@ -276,7 +280,22 @@ function BusyInspector({period}: {period: BusyPeriod | null}) {
     <Metric label="prefix-envelope slack" value={format(period.prefix_envelope_slack)}/>
     <Metric label="terminal epsilonRequired" value={format(period.epsilon_required)}/>
     <Metric label="prefix relative slack" value={format(period.prefix_epsilon_required)}/>
+    <Metric label="required ΔR/Δx envelope" value={format(period.chebyshev_increment_slope_required)}/>
+    <Metric label="anchored U_m profile budget" value={format(period.anchored_linear_envelope_epsilon_budget)}/>
+    <Metric label="anchored-envelope slack" value={format(period.anchored_linear_envelope_slack)}/>
     <ArrivalGauge period={period}/>
+    {profile.length > 1 && <div className="chebyshev-profile">
+      <small>EXACT CHEBYSHEV-ERROR PROFILE / NUMERICAL EVALUATION</small>
+      <div className="mini-profile-chart"><Chart zeroLine series={[
+        {name: 'arrival − service', color: '#f2bc57', points: profile.map(p => ({x:p.root,y:p.exact_excess}))},
+        {name: 'R transform', color: '#7da8ff', points: profile.map(p => ({x:p.root,y:p.boundary_contribution+p.integral_contribution}))},
+        {name: 'arch defect', color: '#c893ff', points: profile.map(p => ({x:p.root,y:p.arch_defect}))},
+        {name: 'backlog', color: '#ff607e', points: profile.map(p => ({x:p.root,y:p.backlog}))},
+      ]}/></div>
+      <div className="profile-legend"><span className="arrival">arrival − service</span><span className="transform">transformed R</span><span className="defect">arch defect</span><span className="backlog">backlog</span></div>
+      <Metric label="max decomposition residual" value={format(period.profile_max_residual)}/>
+      <p><code>Arrival − Service = Δ(R(x)/√x) + ∫R(s²)/s² ds + ArchDefect</code></p>
+    </div>}
     <div className="literature-note"><TrustBadge trust="LiteratureCertified"/><b>17/30 is external context only</b><p>Guth–Maynard, arXiv:2405.20552. The asymptotic all-interval scale is not formalized or made effective here; almost-all interval results cannot certify every busy period.</p></div>
   </aside>
 }
@@ -342,7 +361,7 @@ function CertificateWorkbench({busy}: {busy: BusyPeriod[]}) {
     <div className="certificate-grid">
       <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Prime cell 2</h2><code>suzukiPsi_pos_cell_two</code><p>Ψ(t) &gt; 0 on [log 2, log 3]. This is finite certified coverage, not a tail theorem.</p><div className="certificate-margin">COMPLETE CELL <strong>✓</strong></div></article>
       <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Busy-period verifier</h2><code>SuzukiBusyPeriodCertificate.psiRoot_nonnegative</code><p>Reserve lower bound + excursion loss upper bound + exact ordering imply ΨRoot ≥ 0 throughout the interval.</p><div className="certificate-margin">INTERFACE <strong>READY</strong></div></article>
-      <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Weighted-arrival verifier</h2><code>busyPeriod_safe_of_weightedMangoldt_profile</code><p>A prefix-uniform arrival ≤ service + E(u) estimate and its 2/u-weighted reserve inequality certify the full interval. The constant rectangle is only a coarser specialization.</p><div className="certificate-margin">ARITHMETIC INPUT <strong>EXPOSED</strong></div></article>
+      <article className="certificate formal"><TrustBadge trust="LeanChecked"/><h2>Chebyshev profile verifier</h2><code>busyPeriod_safe_of_chebyshev_error_profile</code><p>A one-sided envelope for ψ(x)−x controls every arrival/service prefix. Its weighted positive-part profile must fit inside the exact starting reserve.</p><div className="certificate-margin">ONE-SIDED INPUT <strong>EXPOSED</strong></div></article>
       {candidates.map(candidate => <article className="certificate candidate" key={candidate.start_event}><TrustBadge trust="NumericalEvidence"/><h2>{candidate.start_event} → {candidate.recovery_before_event}</h2><p>{candidate.event_count} event states · proposed exact loss envelope still missing.</p><Metric label="reserve" value={format(candidate.psi_start)}/><Metric label="loss" value={format(candidate.weighted_loss)}/><Metric label="candidate slack" value={format(candidate.psi_start - candidate.weighted_loss)}/><div className="certificate-margin">STATUS <strong>CANDIDATE</strong></div></article>)}
     </div>
     <div className="tail-strip"><span>FINITE CERTIFIED COVERAGE</span><b>[log 2, log 3]</b><i /><span>UNCERTIFIED TAIL</span><b>[log 3, ∞)</b></div>

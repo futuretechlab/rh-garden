@@ -301,7 +301,14 @@ main = do
             busyArrivalMass period &&
           busyPinnedPrefixArrivalUpper period >= busyArrivalMass period &&
           (busyArrivalMass period <= 1e-12 ||
-            busyPinnedBoundOverArrival period >= 1))
+            busyPinnedBoundOverArrival period >= 1) &&
+          not (null (busyChebyshevProfile period)) &&
+          busyProfileMaxResidual period < 1e-7 &&
+          busyChebyshevIncrementSlopeRequired period >= 0 &&
+          busyAnchoredLinearEnvelopeEpsilonBudget period >= 0 &&
+          abs (busyAnchoredLinearEnvelopeSlack period -
+            (busyAnchoredLinearEnvelopeEpsilonBudget period -
+              busyChebyshevIncrementSlopeRequired period)) < 1e-12)
           (reportBusyPeriods report) &&
         any ((> 1) . busyEventCount) (reportBusyPeriods report)
       Left _ -> False
@@ -309,11 +316,14 @@ main = do
     "RHGardenNavigator" `isInfixOf` gardenJson &&
     "SuzukiWeightedShortIntervalFrontier" `isInfixOf` gardenJson &&
     "SuzukiBusyPeriodArithmeticCertificate" `isInfixOf` gardenJson &&
+    "SuzukiChebyshevErrorProfile" `isInfixOf` gardenJson &&
+    "SuzukiChebyshevBusyPeriodCertificate" `isInfixOf` gardenJson &&
     "LeanChecked" `isInfixOf` gardenJson &&
     "NumericalEvidence" `isInfixOf` gardenJson
   check "UI frontier export names the exact busy-period blocker" $
     "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
     "every root prefix" `isInfixOf` frontiersJson &&
+    "transformed (psi(x)-x)" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

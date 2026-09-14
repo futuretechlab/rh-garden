@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_commit": "aad4d12f5584f1ffe941873999009a853063e955",
+  "snapshot_commit": "5e2e278b1ccdfe45c7954baa745cd60fd912afab",
   "snapshot_note": "Refresh with cabal run rh-garden -- ui-export; validation fields are not inferred by the frontend.",
   "formal_build": "not_checked_by_export",
   "cabal_test": "not_checked_by_export",
@@ -8,8 +8,8 @@
   "submission_ready": false,
   "counts": {
     "criteria": 13,
-    "representations": 96,
-    "lean_checked_edges": 105,
+    "representations": 98,
+    "lean_checked_edges": 108,
     "literature_edges": 17,
     "numerical_edges": 5,
     "open_edges": 1

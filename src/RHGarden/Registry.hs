@@ -253,6 +253,17 @@ suzukiWeightedShortIntervalRef = Reference
       "the interval. A constant-E rectangle remains available as a coarser corollary."
   }
 
+suzukiChebyshevProfileRef :: Reference
+suzukiChebyshevProfileRef = Reference
+  { refShort = "RHGarden.arrivalServiceExcess_eq_chebyshevError"
+  , refCitation =
+      "Lean theorems in formal/RHGarden/SuzukiChebyshevProfiles.lean rewrite " ++
+      "every weighted Mangoldt arrival/service prefix exactly as an endpoint " ++
+      "Chebyshev error term, its root-coordinate integral, and an explicit " ++
+      "nonnegative archimedean defect. The proof-carrying certificate uses only " ++
+      "a one-sided upper envelope for psi(x)-x and retains the start error exactly."
+  }
+
 guthMaynardShortIntervalRef :: Reference
 guthMaynardShortIntervalRef = Reference
   { refShort = "Guth--Maynard short-interval reference scale"
@@ -1177,6 +1188,33 @@ suzukiWeightedFrontierToArithmeticCertificate = eraseRepresentationEdge $ repres
   (NoReconstruction "A successful safety certificate does not determine the exact local arrivals.")
   Nothing
 
+suzukiWeightedFrontierToChebyshevProfile :: RuntimeRepresentationEdge
+suzukiWeightedFrontierToChebyshevProfile = eraseRepresentationEdge $ representationEdge
+  SSuzukiWeightedShortIntervalFrontier SSuzukiChebyshevErrorProfile
+  "apply exact Abel summation in square-root coordinates and subtract the explicit service defect"
+  ExactRepresentation leanCheckedTrust 1 suzukiChebyshevProfileRef
+  "RHGarden.arrivalServiceExcess_eq_chebyshevError is LeanChecked; it is an identity, not an estimate for the Chebyshev error."
+  (ExactInverse "Adding the service term recovers the weighted Mangoldt arrival at each prefix.")
+  Nothing
+
+suzukiChebyshevProfileToCertificate :: RuntimeRepresentationEdge
+suzukiChebyshevProfileToCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiChebyshevErrorProfile SSuzukiChebyshevBusyPeriodCertificate
+  "majorize the moving Chebyshev error by a one-sided envelope and integrate the resulting positive-part backlog profile"
+  SufficientReduction leanCheckedTrust 1 suzukiChebyshevProfileRef
+  "RHGarden.busyPeriod_safe_of_chebyshev_error_profile is LeanChecked. The required one-sided tail envelope remains open."
+  (NoReconstruction "A safe upper envelope need not determine the exact Chebyshev error or backlog path.")
+  Nothing
+
+suzukiChebyshevCertificateToBusyCertificate :: RuntimeRepresentationEdge
+suzukiChebyshevCertificateToBusyCertificate = eraseRepresentationEdge $ representationEdge
+  SSuzukiChebyshevBusyPeriodCertificate SSuzukiBusyPeriodCertificates
+  "forget the specialized arithmetic envelope after its checked weighted-loss conclusion"
+  SufficientReduction leanCheckedTrust 1 suzukiChebyshevProfileRef
+  "SuzukiChebyshevBusyPeriodCertificate.psiRoot_nonnegative produces the same interval-safety conclusion as the generic busy-period verifier."
+  (NoReconstruction "The generic interval conclusion does not reconstruct the Chebyshev envelope proof.")
+  Nothing
+
 shortIntervalLiteratureToWeightedFrontier :: RuntimeRepresentationEdge
 shortIntervalLiteratureToWeightedFrontier = eraseRepresentationEdge $ representationEdge
   SShortIntervalPrimeTheory SSuzukiWeightedShortIntervalFrontier
@@ -1557,6 +1595,9 @@ representationGraph =
   , suzukiRootPrefixAreaToBusyLoss, suzukiBusyLossToCertificates
   , suzukiRootDiscrepancyToWeightedFrontier
   , suzukiWeightedFrontierToArithmeticCertificate
+  , suzukiWeightedFrontierToChebyshevProfile
+  , suzukiChebyshevProfileToCertificate
+  , suzukiChebyshevCertificateToBusyCertificate
   , shortIntervalLiteratureToWeightedFrontier
   , suzukiExplorerToCellCandidate, suzukiExplorerToMinimumBranches
   , suzukiMinimumBranchesToEnvelopeCrossings, suzukiExplorerToTailCandidate

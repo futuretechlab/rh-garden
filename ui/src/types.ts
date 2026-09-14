@@ -105,6 +105,7 @@ export interface DualRow {
   root_optimizer_after: number
   root_displacement: number
   root_ratio: number
+  chebyshev_psi: number
 }
 
 export interface BusyPeriod {
@@ -141,11 +142,30 @@ export interface BusyPeriod {
   checked_elementary_arrival_upper: number
   arithmetic_bound_factor: number | null
   arithmetic_bound_excess: number
+  profile_max_residual: number
+  chebyshev_increment_slope_required: number
+  anchored_linear_envelope_epsilon_budget: number
+  anchored_linear_envelope_slack: number
   pinned_prefix_arrival_upper: number
   pinned_bound_over_arrival: number | null
   pinned_bound_excess_over_service: number
   pinned_bound_over_required: number | null
   pinned_bound_excess_over_required: number
+  chebyshev_profile: ChebyshevProfilePoint[]
+}
+
+export interface ChebyshevProfilePoint {
+  root: number
+  x: number
+  chebyshev_error: number
+  boundary_contribution: number
+  integral_contribution: number
+  arch_defect: number
+  transformed_excess: number
+  exact_excess: number
+  decomposition_residual: number
+  backlog: number
+  weighted_loss: number
 }
 
 export interface ExplorerSlice {

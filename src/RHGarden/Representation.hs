@@ -92,6 +92,8 @@ data Representation
   | SuzukiBusyPeriodCertificates
   | SuzukiWeightedShortIntervalFrontier
   | SuzukiBusyPeriodArithmeticCertificate
+  | SuzukiChebyshevErrorProfile
+  | SuzukiChebyshevBusyPeriodCertificate
   | ShortIntervalPrimeTheory
   | SuzukiMinimumBranches
   | SuzukiEnvelopeCrossings
@@ -191,6 +193,8 @@ data SRepresentation (r :: Representation) where
   SSuzukiBusyPeriodCertificates :: SRepresentation 'SuzukiBusyPeriodCertificates
   SSuzukiWeightedShortIntervalFrontier :: SRepresentation 'SuzukiWeightedShortIntervalFrontier
   SSuzukiBusyPeriodArithmeticCertificate :: SRepresentation 'SuzukiBusyPeriodArithmeticCertificate
+  SSuzukiChebyshevErrorProfile :: SRepresentation 'SuzukiChebyshevErrorProfile
+  SSuzukiChebyshevBusyPeriodCertificate :: SRepresentation 'SuzukiChebyshevBusyPeriodCertificate
   SShortIntervalPrimeTheory :: SRepresentation 'ShortIntervalPrimeTheory
   SSuzukiMinimumBranches :: SRepresentation 'SuzukiMinimumBranches
   SSuzukiEnvelopeCrossings :: SRepresentation 'SuzukiEnvelopeCrossings
@@ -291,6 +295,8 @@ representationValue SSuzukiBusyPeriodLoss = SuzukiBusyPeriodLoss
 representationValue SSuzukiBusyPeriodCertificates = SuzukiBusyPeriodCertificates
 representationValue SSuzukiWeightedShortIntervalFrontier = SuzukiWeightedShortIntervalFrontier
 representationValue SSuzukiBusyPeriodArithmeticCertificate = SuzukiBusyPeriodArithmeticCertificate
+representationValue SSuzukiChebyshevErrorProfile = SuzukiChebyshevErrorProfile
+representationValue SSuzukiChebyshevBusyPeriodCertificate = SuzukiChebyshevBusyPeriodCertificate
 representationValue SShortIntervalPrimeTheory = ShortIntervalPrimeTheory
 representationValue SSuzukiMinimumBranches = SuzukiMinimumBranches
 representationValue SSuzukiEnvelopeCrossings = SuzukiEnvelopeCrossings
@@ -389,6 +395,8 @@ representationLabel SuzukiBusyPeriodLoss = "exact weighted backlog loss during n
 representationLabel SuzukiBusyPeriodCertificates = "kernel-checkable multi-event busy-period certificate interface"
 representationLabel SuzukiWeightedShortIntervalFrontier = "prefix-uniform weighted Mangoldt arrival/service frontier"
 representationLabel SuzukiBusyPeriodArithmeticCertificate = "busy-period safety certificate from one explicit local arrival envelope"
+representationLabel SuzukiChebyshevErrorProfile = "exact arrival/service profile in terms of the one-sided Chebyshev error"
+representationLabel SuzukiChebyshevBusyPeriodCertificate = "busy-period certificate from a one-sided Chebyshev error envelope"
 representationLabel ShortIntervalPrimeTheory = "external all-interval and almost-all short-interval prime theory"
 representationLabel SuzukiMinimumBranches = "numerically continued local-minimum branches of shifted Suzuki Psi"
 representationLabel SuzukiEnvelopeCrossings = "candidate crossings of the numerical shifted-Psi lower envelope"

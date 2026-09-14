@@ -693,3 +693,62 @@ about `0.003997`. The next plausible architecture is consequently two-regime
 and profile-valued: a local discrete bound for narrow intervals plus an
 all-interval PNT-quality profile for long intervals. This is an exploratory
 design constraint, not a theorem or evidence for RH.
+
+## Canonical Chebyshev-error profile
+
+`RHGarden.SuzukiChebyshevProfiles` now removes the intermediate arrival
+notation from the open arithmetic edge.  With
+
+```text
+R(x) = psi(x) - x,
+```
+
+Lean checks, for every root prefix `u >= sqrt(m)`, the exact identity
+
+```text
+Arrival(m,u) - Service(sqrt(m),u)
+  = R(u^2)/u - R(m)/sqrt(m)
+    + integral_[sqrt(m),u] R(v^2)/v^2 dv
+    + ArchDefect(sqrt(m),u),
+
+ArchDefect(a,b)
+  = integral_[a,b] 2/(v^2(v^4-1)) dv >= 0.
+```
+
+The start error `R(m)` is retained exactly.  Consequently the formal input
+needed at moving prefixes is only a one-sided theorem `R(x) <= U(x)`, not an
+absolute PNT error estimate.  `rootSlopeBacklog_eq_chebyshevProfile` rewrites
+the backlog as the positive part of this profile, and
+`busyPeriod_safe_of_chebyshev_error_profile` checks that its `2/u`-weighted
+area fits inside the exact starting reserve.  A tail envelope restricts
+directly to the local certificate via
+`SuzukiChebyshevTailEnvelope.toErrorUpperEnvelope`; the envelope itself is
+open.
+
+The ten-million numerical regression evaluates both sides independently at
+every event prefix.  Across 10,341 completed busy periods its maximum absolute
+decomposition residual is about `8.7e-11`.  This is a floating consistency
+check only.
+
+The simplest local family that genuinely retains the exact start is
+
+```text
+U_m(x) = R(m) + epsilon*(x-m).
+```
+
+Its transformed error profile simplifies exactly to
+`2*epsilon*(u-sqrt(m))`; the Explorer compares the largest observed secant
+slope `(R(x)-R(m))/(x-m)` with the largest epsilon whose weighted profile fits
+the reserve.  This family is too rigid: only 7,872 of 10,341 completed periods
+pass in the ten-million scan.  Its worst failure starts at `8573249`, where a
+single event-scale jump requires slope about `6.98208` while the smeared
+linear profile budgets only about `0.02264`.  The conclusion is structural:
+a continuous constant-slope envelope pays for an atomic Mangoldt jump across
+the whole interval.  The next useful certificate should be event-indexed or
+piecewise, so it charges such jumps at their actual root locations.
+
+The pinned audit found
+Mathlib's explicit global `psi` bounds, Zeta23's precise weighted-prefix
+bound, and Zeta23's non-effective `MediumPNT` big-O statement of shape
+`x*exp(-c*(log x)^(1/10))`.  None supplies explicit, prefix-sensitive constants
+for this certificate.  No short-interval or RH-strength estimate is assumed.

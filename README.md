@@ -106,7 +106,9 @@ not mathematical evidence, and never promote Explorer output to
 The Navigator's Arithmetic Frontier view uses a ten-million-range busy-period
 summary. It shows effective interval exponents, the external Guth--Maynard
 `17/30` reference scale, the LeanChecked local-width bound, and the exact
-profile-valued formal target. Literature shading and finite scans remain
+Chebyshev-error profile target. A synchronized plot decomposes
+`Arrival-Service` into transformed `psi(x)-x` and the explicit archimedean
+defect. Literature shading and finite scans remain
 visibly separate from kernel-checked implications.
 
 The formal graph now includes Lean-checked equivalences between mathlib's RH,
