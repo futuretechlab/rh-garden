@@ -211,6 +211,13 @@ event-log coarsening passes 10,340; the local-width bound passes 10,147.
 Maximum exact-cost/net-loss residual is `1.524e-9`; maximum rounded-envelope
 cost excess over exact-state cost is `4.8613e-6`.
 
+The separate `ui-export` scan uses `t_max=log(10000000)` and reports its
+actual cutoff **10,000,000** explicitly in the JSON. It also contains 10,341
+completed periods. The refreshed four-file snapshot was JSON-validated and
+the production UI rebuilt successfully; it identifies source commit
+`b681424e0f3e033ccf8a25859551a8f134ad9d14`. The exporter deliberately does
+not infer formal-build or test success from a static metadata label.
+
 Important correction to the earlier report: its displayed rounded samples
 were not propagated into its cost calculation. Those earlier costs were
 **exact-state** costs. The new exporter separates those from the genuinely
