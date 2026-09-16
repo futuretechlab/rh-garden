@@ -25,10 +25,13 @@ module RHGarden.Explorer.Suzuki
   , renderBusyPeriodsJson
   , renderCertificatesJson
   , runSuzukiExplorer
+  , runSuzukiEventRegression
   , suzukiPsiNumeric
   , psiShiftedNumeric
   , dPsiDt
   , d2PsiDt2
+  , serviceDecayCellCostsNumeric
+  , serviceDecayCellQuadratureNumeric
   ) where
 
 import Data.Char (toLower)
@@ -280,6 +283,16 @@ data ChebyshevProfilePoint = ChebyshevProfilePoint
   , profileOutgoingLinearCost :: Double
   , profileCumulativeExactCost :: Double
   , profileRemainingReserve :: Double
+  , profileEventExcessUpper :: Double
+  , profileTransformedGap :: Double
+  , profileOutgoingEnvelopeCost :: Double
+  , profileOutgoingEnvelopeLinearCost :: Double
+  , profileCumulativeEnvelopeCost :: Double
+  , profileEnvelopeReserveRemaining :: Double
+  , profileLocalWidthExcessUpper :: Double
+  , profileOutgoingLocalWidthCost :: Double
+  , profileEventLogExcessUpper :: Double
+  , profileOutgoingEventLogCost :: Double
   } deriving (Eq, Show)
 
 -- | A maximal numerically detected interval on which the right-continuous
@@ -339,6 +352,18 @@ data BusyPeriod = BusyPeriod
   , busyFiniteEventCostResidual :: Double
   , busyFiniteEventReserveRemaining :: Double
   , busyJumpAwareMaxGap :: Double
+  , busyEnvelopeCost :: Double
+  , busyEnvelopeLinearCost :: Double
+  , busyEnvelopeCostGap :: Double
+  , busyEnvelopeReserveRemaining :: Double
+  , busyEnvelopeMaxExcessGap :: Double
+  , busyEnvelopeFirstFailingCell :: Maybe Int
+  , busyLocalWidthCost :: Double
+  , busyLocalWidthReserveRemaining :: Double
+  , busyLocalWidthFirstFailingCell :: Maybe Int
+  , busyEventLogCost :: Double
+  , busyEventLogReserveRemaining :: Double
+  , busyEventLogFirstFailingCell :: Maybe Int
   , busyChebyshevProfile :: [ChebyshevProfilePoint]
   } deriving (Eq, Show)
 
@@ -670,6 +695,18 @@ buildBusyPeriods = seek
       , busyFiniteEventCostResidual = finiteExactCost - loss
       , busyFiniteEventReserveRemaining = psiStart - finiteExactCost
       , busyJumpAwareMaxGap = maximum (0 : map profileJumpAwareGap chebyshevProfile)
+      , busyEnvelopeCost = envelopeCost
+      , busyEnvelopeLinearCost = sum envelopeLinearCosts
+      , busyEnvelopeCostGap = envelopeCost - finiteExactCost
+      , busyEnvelopeReserveRemaining = psiStart - envelopeCost
+      , busyEnvelopeMaxExcessGap = maximum (0 : eventExcessGaps)
+      , busyEnvelopeFirstFailingCell = firstFailingCell envelopeCosts
+      , busyLocalWidthCost = sum localWidthCosts
+      , busyLocalWidthReserveRemaining = psiStart - sum localWidthCosts
+      , busyLocalWidthFirstFailingCell = firstFailingCell localWidthCosts
+      , busyEventLogCost = sum eventLogCosts
+      , busyEventLogReserveRemaining = psiStart - sum eventLogCosts
+      , busyEventLogFirstFailingCell = firstFailingCell eventLogCosts
       , busyChebyshevProfile = chebyshevProfile
       }
       where
@@ -736,20 +773,53 @@ buildBusyPeriods = seek
         coarsenedSampleUpper row =
           let q = fromIntegral (dualEvent row)
               rValue = dualChebyshevPsi row - q
-          in fromIntegral (ceiling (1000 * rValue) :: Integer) / 1000
+          in if dualEvent row == dualEvent first then rValue
+             else fromIntegral (ceiling (1000 * rValue) :: Integer) / 1000
+        sampleGap row = coarsenedSampleUpper row -
+          (dualChebyshevPsi row - fromIntegral (dualEvent row))
+        integralGaps = scanl (+) 0
+          [sampleGap row * (1 / dualSqrtEvent row - 1 / dualSqrtNextEvent row)
+          | row <- initialRows]
+        -- The exact anchor R(m) is subtracted, never rounded. Every sample
+        -- allowance is charged both at its endpoint and in earlier cells.
+        eventExcessGaps = zipWith (\row ig -> sampleGap row / dualSqrtEvent row + ig)
+          rows integralGaps
+        envelopeCostsAndLinear = zipWith3
+          (\row endpointRoot gap -> serviceDecayCellCostsNumeric
+            (dualSqrtEvent row) endpointRoot (-dualDeficit row + gap))
+          rows outgoingEndpointRoots eventExcessGaps
+        envelopeCosts = map fst envelopeCostsAndLinear
+        envelopeLinearCosts = map snd envelopeCostsAndLinear
+        envelopeCost = sum envelopeCosts
+        envelopeCumulativeBefore = init (scanl (+) 0 envelopeCosts)
+        localWidthExcess row =
+          let q = fromIntegral (dualEvent row)
+              m = fromIntegral (dualEvent first)
+              serviceToRoot = dualSlope row + dualDeficit row - startArchSlope
+          in (q - m) * log q / sqrt (m + 1) - serviceToRoot
+        localWidthCosts = zipWith (\row endpointRoot -> fst
+          (serviceDecayCellCostsNumeric (dualSqrtEvent row) endpointRoot
+            (-startD + localWidthExcess row))) rows outgoingEndpointRoots
+        -- Pinned vonMangoldt_le_log, applied only at complete event roots.
+        -- Prime powers are deliberately overcharged by log(q), while the
+        -- anchor jump is excluded. This is a conservative finite coarsening.
+        eventLogGaps = scanl (+) 0
+          [log (fromIntegral (dualNextEvent row)) / dualSqrtNextEvent row -
+            dualNextImpulse row | row <- initialRows]
+        eventLogCosts = zipWith3 (\row endpointRoot gap -> fst
+          (serviceDecayCellCostsNumeric (dualSqrtEvent row) endpointRoot
+            (-dualDeficit row + gap))) rows outgoingEndpointRoots eventLogGaps
+        firstFailingCell costs = case
+            [dualEvent row | (row, total) <- zip rows (drop 1 (scanl (+) 0 costs)),
+              total > psiStart + 1e-10] of
+          [] -> Nothing
+          q : _ -> Just q
         cellCosts row endpointRoot =
           let leftRoot = dualSqrtEvent row
-              k = max 0 (-dualDeficit row)
-              rootCutoff = min endpointRoot (max leftRoot (dualRootOptimizer row))
-              linearCutoff = min endpointRoot (leftRoot + 3 * k / 5)
               pLeft = dualSlope row + dualDeficit row
-              archAt v = integrateArchDerivative 0 (2 * log v)
-              exactCost = 2 * (k + pLeft) * log (rootCutoff / leftRoot) -
-                archAt rootCutoff + archAt leftRoot
-              linearCost = 2 * (k + 5 * leftRoot / 3) *
-                log (linearCutoff / leftRoot) -
-                10 * (linearCutoff - leftRoot) / 3
-          in (max 0 exactCost, max 0 linearCost,
+              (exactCost, linearCost) = serviceDecayCellCostsNumeric
+                leftRoot endpointRoot (-dualDeficit row)
+          in (exactCost, linearCost,
               archimedeanDerivative (2 * log endpointRoot) - pLeft)
         outgoingCosts = zipWith cellCosts rows outgoingEndpointRoots
         exactCosts = [cost | (cost, _, _) <- outgoingCosts]
@@ -788,9 +858,33 @@ buildBusyPeriods = seek
             , profileOutgoingLinearCost = outLinearCost
             , profileCumulativeExactCost = cumulativeCost
             , profileRemainingReserve = psiStart - cumulativeCost
+            , profileEventExcessUpper = exactExcess
+            , profileTransformedGap = 0
+            , profileOutgoingEnvelopeCost = 0
+            , profileOutgoingEnvelopeLinearCost = 0
+            , profileCumulativeEnvelopeCost = 0
+            , profileEnvelopeReserveRemaining = psiStart
+            , profileLocalWidthExcessUpper = localWidthExcess row
+            , profileOutgoingLocalWidthCost = 0
+            , profileEventLogExcessUpper = exactExcess
+            , profileOutgoingEventLogCost = 0
             }
-        eventProfile = zipWith4 eventPoint rows eventIntegrals
+        exactEventProfile = zipWith4 eventPoint rows eventIntegrals
           outgoingEndpointRoots cumulativeBefore
+        roundedEventProfile = zipWith4 (\point gap (cost, linearCost, localCost) cumulative -> point
+          { profileEventExcessUpper = profileExactExcess point + gap
+          , profileTransformedGap = gap
+          , profileOutgoingEnvelopeCost = cost
+          , profileOutgoingEnvelopeLinearCost = linearCost
+          , profileCumulativeEnvelopeCost = cumulative
+          , profileEnvelopeReserveRemaining = psiStart - cumulative
+          , profileOutgoingLocalWidthCost = localCost
+          }) exactEventProfile eventExcessGaps
+          (zip3 envelopeCosts envelopeLinearCosts localWidthCosts) envelopeCumulativeBefore
+        eventProfile = zipWith3 (\point gap cost -> point
+          { profileEventLogExcessUpper = profileExactExcess point + gap
+          , profileOutgoingEventLogCost = cost
+          }) roundedEventProfile eventLogGaps eventLogCosts
         integralBeforeFinal = last eventIntegrals
         recoveryIntegral = integralBeforeFinal + segmentIntegral final rootEnd
         recoveryX = rootEnd * rootEnd
@@ -820,7 +914,19 @@ buildBusyPeriods = seek
           , profileOutgoingLinearCost = 0
           , profileCumulativeExactCost = finiteExactCost
           , profileRemainingReserve = psiStart - finiteExactCost
+          , profileEventExcessUpper = startD + recoveryGap
+          , profileTransformedGap = recoveryGap
+          , profileOutgoingEnvelopeCost = 0
+          , profileOutgoingEnvelopeLinearCost = 0
+          , profileCumulativeEnvelopeCost = envelopeCost
+          , profileEnvelopeReserveRemaining = psiStart - envelopeCost
+          , profileLocalWidthExcessUpper = checkedElementaryUpper - service
+          , profileOutgoingLocalWidthCost = 0
+          , profileEventLogExcessUpper = startD + last eventLogGaps
+          , profileOutgoingEventLogCost = 0
           }
+        recoveryGap = last integralGaps + sampleGap final *
+          (1 / dualSqrtEvent final - 1 / rootEnd) + sampleGap final / rootEnd
         chebyshevProfile = eventProfile ++ [recoveryPoint]
         startX = fromIntegral (dualEvent first)
         incrementSlopeRequired = maximum (0 :
@@ -1081,6 +1187,39 @@ bisectArchSlope depth slope lo hi =
       then bisectArchSlope (depth - 1) slope lo middle
       else bisectArchSlope (depth - 1) slope middle hi
 
+-- | Exploratory Double evaluation of the proved real cell formula. This
+-- uses a numerical cutoff, not outward bounds or a Lean certificate.
+-- The state k is signed: surplus is retained until the positive part.
+serviceDecayCellCostsNumeric :: Double -> Double -> Double -> (Double, Double)
+serviceDecayCellCostsNumeric r s k
+  | s <= r || k <= 0 = (0, 0)
+  | otherwise = (max 0 exactCost, max 0 linearCost)
+  where
+    p = archimedeanDerivative (2 * log r)
+    h = serviceCutoffNumeric r s k
+    hl = min s (r + 3 * k / 5)
+    -- Integrating the archimedean increment directly avoids subtracting
+    -- two large evaluations of A in a very narrow cell.
+    exactCost = 2 * (k + p) * log (h / r) -
+      integrateArchDerivative (2 * log r) (2 * log h)
+    linearCost = 2 * (k + 5 * r / 3) * log (hl / r) - 10 * (hl - r) / 3
+
+serviceCutoffNumeric :: Double -> Double -> Double -> Double
+serviceCutoffNumeric r s k
+  | k <= 0 || s <= r = r
+  | archimedeanDerivative (2 * log s) <= target = s
+  | otherwise = exp (bisectArchSlope 60 target (2 * log r) (2 * log s) / 2)
+  where target = archimedeanDerivative (2 * log r) + k
+
+-- | Independent integration of the weighted density, for regression only.
+serviceDecayCellQuadratureNumeric :: Double -> Double -> Double -> Double
+serviceDecayCellQuadratureNumeric r s k
+  | s <= r || k <= 0 = 0
+  | otherwise = adaptiveSimpson 1e-12 18 density r (serviceCutoffNumeric r s k)
+  where
+    p = archimedeanDerivative (2 * log r)
+    density u = 2 / u * max 0 (k - (archimedeanDerivative (2 * log u) - p))
+
 runSuzukiExplorer :: ExplorerOptions -> IO ()
 runSuzukiExplorer options = case exploreSuzuki options of
   Left err -> putStrLn ("Suzuki Explorer error: " ++ err)
@@ -1101,6 +1240,56 @@ renderSelected :: OutputFormat -> ExplorerReport -> String
 renderSelected OutputAscii = renderExplorerAscii
 renderSelected OutputCsv = renderExplorerCsv
 renderSelected OutputJson = renderExplorerJson
+
+-- | Reproduce the reported scan and retain every event row of the two
+-- named regressions. The ordinary UI export deliberately samples rows.
+runSuzukiEventRegression :: FilePath -> IO ()
+runSuzukiEventRegression path = case exploreSuzuki options of
+  Left err -> ioError (userError err)
+  Right report -> do
+    let periods = reportBusyPeriods report
+        selected = filter (\p -> busyStartEvent p `elem` [324431, 8573249]) periods
+        eventLogFailures = filter ((< (-1e-10)) . busyEventLogReserveRemaining) periods
+        oldPass = length (filter ((>= 0) . busyAnchoredLinearEnvelopeSlack) periods)
+        newPass = length (filter ((>= (-1e-10)) . busyEnvelopeReserveRemaining) periods)
+        localPass = length (filter ((>= (-1e-10)) . busyLocalWidthReserveRemaining) periods)
+        eventLogPass = length (filter ((>= (-1e-10)) . busyEventLogReserveRemaining) periods)
+        valid = length periods == 10341 && oldPass == 7872 && length selected == 2 &&
+          newPass == 10341 && localPass == 10147 && eventLogPass == 10340 &&
+          map busyStartEvent eventLogFailures == [31] &&
+          all ((< 1e-7) . abs . busyFiniteEventCostResidual) periods &&
+          all (\p -> busyEnvelopeCostGap p >= -1e-8 &&
+            busyEventLogCost p + 1e-8 >= busyFiniteEventExactCost p &&
+            busyEnvelopeMaxExcessGap p <= 0.0010001 / busyRootStart p &&
+            busyEnvelopeLinearCost p + 1e-8 >= busyEnvelopeCost p) periods &&
+          any (\p -> busyStartEvent p == 324431 && busyRecoveryBeforeEvent p == 361201 &&
+            busyArrivalSlack p > 0 && busyPrefixEnvelopeSlack p < 0) selected &&
+          any (\p -> busyStartEvent p == 8573249 && busyRecoveryBeforeEvent p == 8906237 &&
+            busyAnchoredLinearEnvelopeSlack p < -6) selected
+        summary = "{" ++ intercalate ", "
+          [jsonStringField "trust" "NumericalEvidence"
+          ,jsonField "t_max" (num (explorerTMax options))
+          ,jsonField "actual_cutoff" (show (floor (exp (explorerTMax options)) :: Int))
+          ,jsonField "periods" (show (length periods))
+          ,jsonField "old_affine_pass" (show oldPass)
+          ,jsonField "old_affine_fail" (show (length periods - oldPass))
+          ,jsonField "jump_sample_pass" (show newPass)
+          ,jsonField "local_width_pass" (show localPass)
+          ,jsonField "event_log_pass" (show eventLogPass)
+          ,jsonField "max_cost_residual" (num (maximum (0 : map (abs . busyFiniteEventCostResidual) periods)))
+          ,jsonField "max_envelope_cost_gap" (num (maximum (0 : map busyEnvelopeCostGap periods)))
+          ,jsonField "regressions_pass" (jsonBool valid)] ++ "}"
+    putStrLn summary
+    if valid then pure () else ioError (userError "Suzuki numerical regression failed")
+    writeFile path ("{\n\"summary\": " ++ summary ++ ",\n\"regressions\": [\n" ++
+      intercalate ",\n" (map (busyJsonWithProfile True) selected) ++
+      "\n],\n\"event_log_failures\": [\n" ++
+      intercalate ",\n" (map (busyJsonWithProfile True) eventLogFailures) ++ "\n]}\n")
+    putStrLn ("Wrote full NumericalEvidence event diagnostics to " ++ path)
+  where
+    options = defaultExplorerOptions
+      { explorerMode = BusyMode, explorerOmegas = [0], explorerTMin = log 2
+      , explorerTMax = 16.118095, explorerSamples = 401, explorerPrimeCells = True }
 
 explorationNodes :: ExplorerOptions -> Int -> [Double]
 explorationNodes options nMax = dedupeSorted $ sort $
@@ -1874,7 +2063,7 @@ renderExplorerAscii report = unlines $
   modeSpecific ++
   [ ""
   , "Candidate certificate statuses are sampled numerical results only."
-  , "Lean-certified cells: unshifted cell 2, [log 2, log 3]."
+  , "Lean-certified cells: unshifted cell 2 and the finite event certificate on [log 3, log 5]."
   , "Lean-certified initial coverage: [0,log 2], with strict positivity on (0,log 3]."
   , "Tail status: unknown."
   ]
@@ -2203,6 +2392,10 @@ renderExplorerAscii report = unlines $
               " exactCost=" ++ fmt 9 (busyFiniteEventExactCost period) ++
               " linearCost=" ++ fmt 9 (busyFiniteEventLinearCost period) ++
               " reserveRemaining=" ++ fmt 9 (busyFiniteEventReserveRemaining period) ++
+              " envelopeCost=" ++ fmt 9 (busyEnvelopeCost period) ++
+              " envelopeRemaining=" ++ fmt 9 (busyEnvelopeReserveRemaining period) ++
+              " localWidthCost=" ++ fmt 9 (busyLocalWidthCost period) ++
+              " localWidthFirstFailure=" ++ show (busyLocalWidthFirstFailingCell period) ++
               " oldLinearSlack=" ++ fmt 9 (busyAnchoredLinearEnvelopeSlack period)
             [] -> "q=" ++ show q ++ " not completed in this scan"
           renderCandidate period =
@@ -2220,9 +2413,15 @@ renderExplorerAscii report = unlines $
          , "  epsilon required checks R(x)-R(m)<=epsilon*(x-m) at event prefixes; epsilon budget is the largest trapezoidal profile budget."
          , "  finite event exact-service cost residual versus exact loss: " ++ fmt 12 maxFiniteResidual
          , "  jump-aware coarsening maximum R-envelope gap: " ++ fmt 9 maxJumpGap
+         , "  jump-aware total-cost feasible periods: " ++ show
+             (length (filter ((>= (-1e-10)) . busyEnvelopeReserveRemaining) periods)) ++
+             "/" ++ show (length periods)
+         , "  local-width total-cost feasible periods: " ++ show
+             (length (filter ((>= (-1e-10)) . busyLocalWidthReserveRemaining) periods)) ++
+             "/" ++ show (length periods)
          , "  324431 regression: " ++ findStart 324431
          , "  8573249 regression: " ++ findStart 8573249
-         , "  jump-aware samples use rho_i=ceil(1000*R(q_i))/1000; they are NumericalEvidence candidates, not proved sample bounds."
+         , "  jump-aware samples keep R(m) exact and round later R(q_i) upward by 0.001; transformed allowances and their costs are NumericalEvidence, not outward-certified bounds."
          ]
     busyRankingSection =
       let periods = reportBusyPeriods report
@@ -2646,10 +2845,23 @@ chebyshevProfileJson point = "{" ++ intercalate ", "
   ,jsonField "outgoing_exact_cost" (num (profileOutgoingExactCost point))
   ,jsonField "outgoing_linear_cost" (num (profileOutgoingLinearCost point))
   ,jsonField "cumulative_exact_cost" (num (profileCumulativeExactCost point))
-  ,jsonField "remaining_reserve" (num (profileRemainingReserve point))] ++ "}"
+  ,jsonField "remaining_reserve" (num (profileRemainingReserve point))
+  ,jsonField "event_excess_upper" (num (profileEventExcessUpper point))
+  ,jsonField "transformed_gap" (num (profileTransformedGap point))
+  ,jsonField "outgoing_envelope_cost" (num (profileOutgoingEnvelopeCost point))
+  ,jsonField "outgoing_envelope_linear_cost" (num (profileOutgoingEnvelopeLinearCost point))
+  ,jsonField "cumulative_envelope_cost" (num (profileCumulativeEnvelopeCost point))
+  ,jsonField "envelope_reserve_remaining" (num (profileEnvelopeReserveRemaining point))
+  ,jsonField "local_width_excess_upper" (num (profileLocalWidthExcessUpper point))
+  ,jsonField "outgoing_local_width_cost" (num (profileOutgoingLocalWidthCost point))
+  ,jsonField "event_log_excess_upper" (num (profileEventLogExcessUpper point))
+  ,jsonField "outgoing_event_log_cost" (num (profileOutgoingEventLogCost point))] ++ "}"
 
 busyJson :: BusyPeriod -> String
-busyJson period = "{" ++ intercalate ", "
+busyJson = busyJsonWithProfile False
+
+busyJsonWithProfile :: Bool -> BusyPeriod -> String
+busyJsonWithProfile fullProfile period = "{" ++ intercalate ", "
   [jsonStringField "trust" "NumericalEvidence"
   ,jsonStringField "status" "candidate"
   ,jsonField "start_event" (show (busyStartEvent period))
@@ -2709,6 +2921,20 @@ busyJson period = "{" ++ intercalate ", "
   ,jsonField "finite_event_reserve_remaining"
       (num (busyFiniteEventReserveRemaining period))
   ,jsonField "jump_aware_max_gap" (num (busyJumpAwareMaxGap period))
+  ,jsonField "envelope_cost" (num (busyEnvelopeCost period))
+  ,jsonField "envelope_linear_cost" (num (busyEnvelopeLinearCost period))
+  ,jsonField "envelope_cost_gap" (num (busyEnvelopeCostGap period))
+  ,jsonField "envelope_reserve_remaining" (num (busyEnvelopeReserveRemaining period))
+  ,jsonField "envelope_max_excess_gap" (num (busyEnvelopeMaxExcessGap period))
+  ,jsonField "envelope_first_failing_cell" (maybe "null" show (busyEnvelopeFirstFailingCell period))
+  ,jsonField "local_width_cost" (num (busyLocalWidthCost period))
+  ,jsonField "local_width_reserve_remaining" (num (busyLocalWidthReserveRemaining period))
+  ,jsonField "local_width_first_failing_cell" (maybe "null" show (busyLocalWidthFirstFailingCell period))
+  ,jsonField "event_log_cost" (num (busyEventLogCost period))
+  ,jsonField "event_log_reserve_remaining" (num (busyEventLogReserveRemaining period))
+  ,jsonField "event_log_first_failing_cell" (maybe "null" show (busyEventLogFirstFailingCell period))
+  ,jsonStringField "failure_interpretation"
+      "A negative envelope reserve means the chosen sample bounds or reserve do not meet the sufficient total-cost inequality; all evaluations use Double, not proved outward bounds."
   ,jsonField "pinned_prefix_arrival_upper"
       (num (busyPinnedPrefixArrivalUpper period))
   ,jsonField "pinned_bound_over_arrival"
@@ -2720,8 +2946,8 @@ busyJson period = "{" ++ intercalate ", "
   ,jsonField "pinned_bound_excess_over_required"
       (num (busyPinnedBoundExcessOverRequired period))
   ,jsonField "chebyshev_profile" ("[" ++ intercalate ","
-      (map chebyshevProfileJson (sampleProfile 160
-        (busyChebyshevProfile period))) ++ "]")] ++ "}"
+      (map chebyshevProfileJson (if fullProfile then busyChebyshevProfile period
+        else sampleProfile 160 (busyChebyshevProfile period))) ++ "]")] ++ "}"
   where
     sampleProfile limit points
       | length points <= limit = points

@@ -50,3 +50,6 @@ import RHGarden.SuzukiBusyPeriods
 import RHGarden.SuzukiChebyshevProfiles
 import RHGarden.SuzukiFiniteEventCertificates
 import RHGarden.SuzukiInitialInterval
+import RHGarden.SuzukiEventArithmetic
+import RHGarden.SuzukiEventPartition
+import RHGarden.SuzukiConcreteEvents

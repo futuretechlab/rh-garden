@@ -755,6 +755,12 @@ for this certificate.  No short-interval or RH-strength estimate is assumed.
 
 ## Finite event certificates and the jump-aware frontier
 
+Continuation note: [SUZUKI_EVENTS.md](SUZUKI_EVENTS.md) records the current
+arbitrary-endpoint partition theorem, finite sample integration, inhabited
+conservative `3,4,5` certificate, and reproducible diagnostics. The earlier
+rounded samples below were displayed alongside **exact-state** costs; the
+new exporter propagates their allowances into distinct envelope costs.
+
 `RHGarden.SuzukiFiniteEventCertificates` replaces the continuum of profile
 inputs by a finite, complete Mangoldt-event chain. The checked signed state is
 
@@ -805,14 +811,15 @@ allowance gives a genuinely conservative local coarsening without changing
 the slope. A finite exact event table is valid checked prefix data when its
 entries are proved, but it is not a universal arithmetic estimate.
 
-The ten-million numerical regression reproduces 10,341 completed periods,
+The earlier ten-million numerical regression reproduces 10,341 completed periods,
 including 7,872 successes and 2,469 failures for the old smeared affine
 envelope. The new exact-service implementation has maximum direct-integration
 residual about `1.7e-9`; rounding each event sample upward by `0.001` has
 maximum pointwise gap below `0.001`. For `324431 -> 361201`, the new sampled
 event cost is about `0.0314698` and remaining reserve about `0.0358176`. For
 the old worst failure `8573249 -> 8906237`, the cost is about `0.00805105`
-and remaining reserve about `0.0404986`. These are `NumericalEvidence`; the
+and remaining reserve about `0.0404986`. These costs used exact states, not
+the displayed rounded samples. They are `NumericalEvidence`; the
 missing universal theorem is still a proved local upper bound for every event
 excess strong enough to make the finite cost sum fit the reserve.
 

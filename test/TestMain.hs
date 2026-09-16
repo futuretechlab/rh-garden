@@ -314,10 +314,20 @@ main = do
             busyFiniteEventExactCost period &&
           busyJumpAwareMaxGap period >= -1e-10 &&
           busyJumpAwareMaxGap period <= 0.0010001 &&
+          busyEnvelopeCostGap period >= -1e-8 &&
+          busyEventLogCost period + 1e-8 >= busyFiniteEventExactCost period &&
+          busyEnvelopeLinearCost period + 1e-8 >= busyEnvelopeCost period &&
+          busyEnvelopeMaxExcessGap period <= 0.0010001 / busyRootStart period &&
+          abs (busyEnvelopeReserveRemaining period -
+            (busyPsiStart period - busyEnvelopeCost period)) < 1e-10 &&
           all (\point -> profileOutgoingExactCost point >= -1e-10 &&
             profileOutgoingLinearCost point + 1e-9 >=
               profileOutgoingExactCost point &&
-            profileJumpAwareGap point >= -1e-10)
+            profileJumpAwareGap point >= -1e-10 &&
+            profileTransformedGap point >= -1e-10 &&
+            profileEventExcessUpper point + 1e-10 >= profileExactExcess point &&
+            profileOutgoingEnvelopeCost point + 1e-8 >= profileOutgoingExactCost point &&
+            profileOutgoingEnvelopeLinearCost point + 1e-8 >= profileOutgoingEnvelopeCost point)
             (busyChebyshevProfile period))
           (reportBusyPeriods report) &&
         any ((> 1) . busyEventCount) (reportBusyPeriods report) &&
@@ -330,6 +340,35 @@ main = do
         any (any ((< 0) . profileExactExcess) . busyChebyshevProfile)
           (reportBusyPeriods report)
       Left _ -> False
+  check "Suzuki weighted cell formula agrees with independent density integration" $
+    all (\(r, s, k) ->
+      let (cost, conservative) = serviceDecayCellCostsNumeric r s k
+          direct = serviceDecayCellQuadratureNumeric r s k
+      in abs (cost - direct) < 1e-8 && conservative + 1e-8 >= cost)
+      [(sqrt 2, sqrt 3, 0.265), (sqrt 3, 2, 1/3), (2, sqrt 5, 0.18),
+       (2, 3, 0.1), (2, 2.01, 10), (2, 3, 0), (2, 3, -0.1),
+       (2, 2, 10), (500, 500.1, 0.4)]
+  check "Suzuki signed surplus survives the next event instead of reflecting" $
+    let signedAfterService = -0.4 - 0.1
+        signedAfterKick = signedAfterService + 0.2
+        reflectedAfterKick = max 0 signedAfterService + 0.2
+    in fst (serviceDecayCellCostsNumeric 2 3 signedAfterKick) == 0 &&
+       fst (serviceDecayCellCostsNumeric 2 3 reflectedAfterKick) > 0
+  check "Suzuki actual event states obey signed, unreflected recurrence" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = RootsMode, explorerOmegas = [0]
+        , explorerTMin = log 2, explorerTMax = 7, explorerSamples = 101 } of
+      Right report -> any (\(row, next) ->
+        dualDeficit row > 0.01 &&
+        abs (-dualDeficit next - (-dualDeficit row - dualArchDrift row +
+          dualNextImpulse row)) < 1e-8 &&
+        abs (-dualDeficit next - (max 0 (-dualDeficit row - dualArchDrift row) +
+          dualNextImpulse row)) > 0.01)
+        (zip (reportDualDynamics report) (drop 1 (reportDualDynamics report)))
+      Left _ -> False
+  check "Suzuki recovery inside a cell stops its positive-part cost" $
+    abs (fst (serviceDecayCellCostsNumeric 2 3 0.1) -
+      fst (serviceDecayCellCostsNumeric 2 2.2 0.1)) < 1e-10
   check "Suzuki event arithmetic includes prime-square impulses" $
     case exploreSuzuki defaultExplorerOptions
         { explorerMode = DualMode
@@ -353,7 +392,7 @@ main = do
   check "UI frontier export names the exact busy-period blocker" $
     "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
     "finite local arithmetic inequality" `isInfixOf` frontiersJson &&
-    "SuzukiFiniteEventProfileCertificate" `isInfixOf` frontiersJson &&
+    "SuzukiFinitePartitionCertificate" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

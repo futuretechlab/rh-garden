@@ -236,7 +236,7 @@ def IsSuzukiServiceCutoff (r s K h : ℝ) : Prop :=
       (0 < K ∧ K < suzukiRootService r s ∧
         suzukiRootService r h = K))
 
-private theorem continuousOn_suzukiRootService
+theorem continuousOn_suzukiRootService
     {r s : ℝ} (hr : Real.sqrt 2 ≤ r) (hrs : r ≤ s) :
     ContinuousOn (suzukiRootService r) (Icc r s) := by
   intro u hu
@@ -363,7 +363,7 @@ theorem integral_serviceDecay_untruncated
   rw [Real.log_div hh0 hr0]
   ring
 
-private theorem intervalIntegrable_weighted_serviceDecayEnvelope
+theorem intervalIntegrable_weighted_serviceDecayEnvelope
     {r s K : ℝ} (hr : Real.sqrt 2 ≤ r) (hrs : r ≤ s) :
     IntervalIntegrable
       (fun u => 2 / u * suzukiServiceDecayEnvelope r K u) volume r s := by

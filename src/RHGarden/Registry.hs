@@ -267,14 +267,19 @@ suzukiChebyshevProfileRef = Reference
 
 suzukiFiniteEventRef :: Reference
 suzukiFiniteEventRef = Reference
-  { refShort = "RHGarden.SuzukiFiniteEventProfileCertificate.psiRoot_nonnegative"
+  { refShort = "RHGarden.SuzukiFinitePartitionCertificate.nonnegative"
   , refCitation =
       "Lean theorems in formal/RHGarden/SuzukiFiniteEventCertificates.lean: " ++
       "the canonical finite partition contains every nonzero von-Mangoldt event; " ++
       "signed event states interpolate by exact service decay; exact and 5/3-linear " ++
       "cell costs retain the 2/u weight; and a finite list of event bounds plus one " ++
       "finite total-cost inequality certifies every point of the interval. The same " ++
-      "module proves the slope-minus-one jump-aware Chebyshev envelope."
+      "module proves the slope-minus-one jump-aware Chebyshev envelope. " ++
+      "SuzukiEventPartition.lean extends gluing to arbitrary integer endpoints; " ++
+      "SuzukiEventArithmetic.lean glues sample-error integrals and bounds " ++
+      "event-only arrivals using vonMangoldt_le_log; SuzukiConcreteEvents.lean " ++
+      "constructs a conservative certificate for events 3,4,5 with reserve " ++
+      "43/1000 and cell-cost bounds 34/1000 and 9/1000."
   }
 
 suzukiInitialIntervalRef :: Reference
@@ -1253,7 +1258,7 @@ suzukiChebyshevProfileToFiniteEventCertificate = eraseRepresentationEdge $ repre
   SSuzukiChebyshevErrorProfile SSuzukiBusyPeriodArithmeticCertificate
   "replace continuum profile obligations by a complete finite Mangoldt-event chain"
   SufficientReduction leanCheckedTrust 1 suzukiFiniteEventRef
-  "RHGarden.SuzukiFiniteEventProfileCertificate requires only finite left-event excess bounds, a reserve lower bound, and one finite total-cost inequality. Between-event interpolation, integrability, exact 2/u costs, and finite gluing are proved theorems."
+  "RHGarden.SuzukiFinitePartitionCertificate requires only finite left-event excess bounds, finite cost bounds, a reserve lower bound, and one finite total-cost inequality. Arbitrary integer endpoints, event completeness, integrability, exact 2/u costs, and all-prefix finite gluing are proved theorems. A conservative certificate for events 3,4,5 is inhabited."
   (NoReconstruction "Finite upper bounds and their total cost do not reconstruct the exact Chebyshev-error path.")
   Nothing
 
@@ -1262,7 +1267,7 @@ suzukiFiniteEventCertificateToBusyCertificate = eraseRepresentationEdge $ repres
   SSuzukiBusyPeriodArithmeticCertificate SSuzukiBusyPeriodCertificates
   "forget the event table after its exact finite-cost verifier proves interval positivity"
   SufficientReduction leanCheckedTrust 1 suzukiFiniteEventRef
-  "RHGarden.SuzukiFiniteEventProfileCertificate.toBusyPeriodCertificate constructs the established generic certificate with its continuum loss field discharged by the finite chain theorem."
+  "RHGarden.SuzukiFinitePartitionCertificate.toBusyPeriodCertificate constructs the established generic certificate with its continuum loss field discharged by the finite chain theorem."
   (NoReconstruction "The generic interval conclusion does not recover the finite event bounds or cutoff costs.")
   Nothing
 

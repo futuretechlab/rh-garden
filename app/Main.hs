@@ -30,6 +30,7 @@ main = do
     ["formal-status"] -> formalStatus
     ["garden"] -> garden LiteratureMode
     ["ui-export"] -> writeUiExport "."
+    ["suzuki-event-regression", path] -> runSuzukiEventRegression path
     "explore-suzuki" : explorerArgs ->
       case parseExplorerOptions explorerArgs of
         Left err -> putStrLn err >> suzukiExplorerUsage
@@ -55,6 +56,7 @@ overview = do
   putStrLn "  rh-garden check-mobius"
   putStrLn "  rh-garden garden"
   putStrLn "  rh-garden ui-export"
+  putStrLn "  rh-garden suzuki-event-regression .cabal-work/event-diagnostics.json"
   putStrLn "  rh-garden explore-suzuki --omega 0.5 --t-max 6 --samples 801 --prime-cells"
   putStrLn "  rh-garden explore-suzuki blocks --t-max 5.71 --samples 3001"
   putStrLn "  rh-garden explore-suzuki busy --t-max 14.5 --samples 801"
@@ -642,6 +644,21 @@ formalStatus = do
     , "suzukiChebyshevError_le_jumpAwareEnvelope"
     , "suzukiChebyshevError_le_jumpAwareCoarsening"
     , "integral_jumpAwareChebyshevEventCell"
+    , "SuzukiEventChain.exists_canonical"
+    , "signedRootState_nonEvent_terminal"
+    , "SuzukiEventChain.loss_le_backlog_integral"
+    , "SuzukiEventChain.backlog_aestronglyMeasurable"
+    , "SuzukiFinitePartitionCertificate.nonnegative"
+    , "SuzukiMangoldtBlockChain.arrivalServiceExcess_le_jumpSamples"
+    , "SuzukiMangoldtBlockChain.transformed_uniform_sample_allowance"
+    , "SuzukiEventChain.excess_le_logArrival_sub_service"
+    , "signedRootState_terminal_six"
+    , "psiRoot_sqrt_three_reserve"
+    , "neg_discrepancy_sqrt_three_le"
+    , "neg_discrepancy_sqrt_four_le"
+    , "suzukiFinitePartitionCertificate_three_five"
+    , "suzukiPsi_nonnegative_zero_to_log_five"
+    , "suzukiPrefixFivePlusTail"
     , "suzukiInitialPolynomial_gt"
     , "log_ge_initial_cubic"
     , "suzukiPsiArchimedean_ge_exp_sub_one"

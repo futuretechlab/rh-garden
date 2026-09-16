@@ -151,6 +151,18 @@ export interface BusyPeriod {
   finite_event_cost_residual: number
   finite_event_reserve_remaining: number
   jump_aware_max_gap: number
+  envelope_cost: number
+  envelope_linear_cost: number
+  envelope_cost_gap: number
+  envelope_reserve_remaining: number
+  envelope_max_excess_gap: number
+  envelope_first_failing_cell: number | null
+  local_width_cost: number
+  local_width_reserve_remaining: number
+  local_width_first_failing_cell: number | null
+  event_log_cost: number
+  event_log_reserve_remaining: number
+  event_log_first_failing_cell: number | null
   pinned_prefix_arrival_upper: number
   pinned_bound_over_arrival: number | null
   pinned_bound_excess_over_service: number
@@ -178,6 +190,16 @@ export interface ChebyshevProfilePoint {
   outgoing_linear_cost: number
   cumulative_exact_cost: number
   remaining_reserve: number
+  event_excess_upper: number
+  transformed_gap: number
+  outgoing_envelope_cost: number
+  outgoing_envelope_linear_cost: number
+  cumulative_envelope_cost: number
+  envelope_reserve_remaining: number
+  local_width_excess_upper: number
+  outgoing_local_width_cost: number
+  event_log_excess_upper: number
+  outgoing_event_log_cost: number
 }
 
 export interface ExplorerSlice {
@@ -191,6 +213,7 @@ export interface ExplorerSlice {
 export interface ExplorerData {
   trust: Trust
   warning: string
+  arithmetic_frontier_actual_cutoff: number
   field_samples: FieldSample[]
   scan: ExplorerSlice
   busy: ExplorerSlice

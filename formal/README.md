@@ -1,7 +1,8 @@
 # RH Garden formal layer
 
-This Lake project pins mathlib `v4.33.0` and uses the Lean toolchain named by
-`lean-toolchain` (`leanprover/lean4:v4.33.0`). It imports
+This Lake project pins mathlib commit `51e6992efd06126df61a496bebf8f49482a4e129`
+and uses the Lean toolchain named by `lean-toolchain`
+(`leanprover/lean4:v4.33.0-rc2`). It imports
 `Mathlib.NumberTheory.LSeries.RiemannZeta` and uses mathlib's own
 `RiemannHypothesis`; it does not redefine that proposition.
 
@@ -157,7 +158,7 @@ Thus `classicalLiCoefficient_im_eq_zero` and
 `classicalLiRealCoefficient n` corresponds to classical `lambda_(n+1)`;
 `LiPositive` is defined on this sequence but deliberately unproved.
 
-`RHGarden/PowerSeriesAPI.lean` records the pinned API. In mathlib v4.33.0,
+`RHGarden/PowerSeriesAPI.lean` records the pinned mathlib API. In this pin,
 composition is `PowerSeries.subst` under `PowerSeries.HasSubst`, not a method
 named `comp`; field inversion uses `PowerSeries.inv`/`(·)⁻¹`.
 

@@ -87,11 +87,14 @@ frontiersJson = unlines
       , stringField "trust" "Open"
       , stringField "known_chain" "Complete finite Mangoldt-event partition -> signed event-state bounds -> exact monotone service interpolation -> exact 2/u-weighted cell costs -> one finite total-cost comparison"
       , stringField "exact_blocker" "For every universal-tail event q_i, prove the finite local arithmetic inequality Arrival(m,q_i)-Service(sqrt(m),sqrt(q_i)) <= e_i strongly enough that the sum of exact service-decay cell costs stays below the starting Psi reserve."
-      , stringField "current_bound" "SuzukiFiniteEventProfileCertificate is LeanChecked and removes every continuum input obligation. Exact finite event samples and a proved slope-minus-one jump-aware Chebyshev envelope work on bounded scans, but pinned unconditional prefix estimates remain quantitatively too coarse for a universal tail."
+      , stringField "current_bound" "SuzukiFinitePartitionCertificate handles arbitrary integer endpoints with proved canonical event completeness, integrability and all-prefix loss control. A concrete conservative certificate for events 3,4,5 extends proved finite coverage to [0,log 5]. Numerical costs now charge rounded sample allowances. Universal event bounds and their reserve comparison remain open."
       , arrayField "source_modules"
           ["formal/RHGarden/SuzukiBusyPeriods.lean",
            "formal/RHGarden/SuzukiChebyshevProfiles.lean",
            "formal/RHGarden/SuzukiFiniteEventCertificates.lean",
+           "formal/RHGarden/SuzukiEventPartition.lean",
+           "formal/RHGarden/SuzukiEventArithmetic.lean",
+           "formal/RHGarden/SuzukiConcreteEvents.lean",
            "formal/RHGarden/SuzukiRootDiscrepancy.lean",
            "src/RHGarden/Explorer/Suzuki.hs"]
       , arrayField "candidate_approaches"
@@ -140,6 +143,8 @@ explorerSummaryJson scanReport busyReport frontierReport = unlines
   , "  \"schema_version\": 1,"
   , "  \"trust\": \"NumericalEvidence\","
   , "  \"warning\": \"Numerical positivity over a finite range is not sufficient evidence for RH.\","
+  , "  \"arithmetic_frontier_actual_cutoff\": " ++ show
+      (floor (exp (explorerTMax (reportOptions frontierReport))) :: Int) ++ ","
   , "  \"field_samples\": ["
   , intercalate ",\n" (map (indent 4 . fieldSampleJson) fieldSamples)
   , "  ],"

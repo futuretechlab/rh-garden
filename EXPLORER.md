@@ -764,10 +764,20 @@ event-prefix envelope, not another constant terminal bound.
 
 ## Finite event-cost mode
 
+The current formulas, proof terms, counts and complete required-case tables
+are documented in [SUZUKI_EVENTS.md](SUZUKI_EVENTS.md). Run
+`cabal run rh-garden -- suzuki-event-regression .cabal-work/event-diagnostics.json`
+then `node scripts/suzuki-event-report.mjs .cabal-work/event-diagnostics.json`.
+This fixes the actual cutoff at `9,999,993` and retains every row of both
+required cases, plus the event-log failure at `31 -> 37`.
+
 Busy-period output now evaluates the finite architecture checked in
 `SuzukiFiniteEventCertificates.lean`. Each event row records its outgoing
 service, exact monotone-cutoff cost, conservative `5/3`-linear cost,
-cumulative cost, and remaining reserve. Event samples use the exploratory
+cumulative cost, and remaining reserve. Exact-state costs are separate from
+the new rounded-sample envelope costs: the latter propagate sample allowances
+through both terms of the transformed profile before integration. Event
+samples (except the exact anchor) use the exploratory
 coarsening
 
 ```text
@@ -783,8 +793,11 @@ reports a maximum residual near `1.7e-9`.
 
 The two baseline failures remain explicit. On `324431 -> 361201`, the old
 terminal slack is positive while its constant prefix slack is negative; the
-finite sampled cost is approximately `0.0314698`. On
+finite exact-state cost is approximately `0.0314698`. On
 `8573249 -> 8906237`, where the old anchored envelope fails worst, the finite
-sampled cost is approximately `0.00805105`. These successes diagnose the
+exact-state cost is approximately `0.00805105`. The actual rounded-envelope
+costs are `0.031469922417` and `0.008051058653`. The rounded-sample envelope
+passes all 10,341 periods numerically. The event-only `log q` coarsening
+passes 10,340; the pinned local-width bound passes 10,147. These successes diagnose the
 smearing error in the old ansatz; they do not prove the event samples or a
 tail theorem.
