@@ -1,0 +1,22 @@
+import RHGarden.SuzukiArithmeticSieve
+
+/- Copyright (c) 2026 Future Technologies Laboratory LLC. -/
+#print axioms RHGarden.anchoredError_prime_predecessor
+#print axioms RHGarden.intervalIntegrable_anchoredIntegral
+#print axioms RHGarden.anchoredIntegral_eq_logArrival_sub_main
+#print axioms RHGarden.integratedArchDefect_eq
+#print axioms RHGarden.suzukiPsiRoot_eq_signed_anchoredIntegral
+#print axioms RHGarden.anchoredIntegral_le_accuracy_budget
+#print axioms RHGarden.suzukiSieveWeight_prime
+#print axioms RHGarden.prime_weight_sum_le_sieve
+#print axioms RHGarden.weighted_sieve_eq_quadratic
+#print axioms RHGarden.unit_sieve_eq_count_quadratic
+#print axioms RHGarden.count_multiples_real_Ioc
+#print axioms RHGarden.weightedMangoldt_le_prime_add_allBasePowers
+#print axioms RHGarden.weightedMangoldt_le_sieve_add_allBasePowers
+#print axioms RHGarden.anchoredIntegral_le_sieve
+#print axioms RHGarden.anchoredIntegral_le_parity
+#print axioms RHGarden.parityIntegralUpper_lt_baseline
+#print axioms RHGarden.anchoredIntegral_ten_fifteen_le_sieve
+#print axioms RHGarden.sieveIntegralUpper_ten_fifteen_eq
+#print axioms RHGarden.sieve_ten_fifteen_strictly_improves_baseline

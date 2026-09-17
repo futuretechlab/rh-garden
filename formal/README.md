@@ -17,6 +17,16 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The [effective arithmetic screen](../SUZUKI_SIEVE.md) is implemented in
+`SuzukiAnchoredIntegral.lean`, `SuzukiFiniteSieve.lean`, and
+`SuzukiArithmeticSieve.lean`. They prove the arbitrary-finite-interval signed
+reserve identity, the real-endpoint anchored Abel integral, its accuracy
+budget, a finite rational divisor-square sieve with exact lcm matrix, and
+the all-base proper-power majorant. The instantiated `10 -> 15` sieve bound
+strictly improves the all-integer baseline. Its correctness does not imply
+universal reserve compatibility. Run `lake env lean AuditSuzukiArithmeticSieve.lean`
+for the principal 19 declarations. Floating-point screens are not proof terms.
+
 The September 2026 surcharge continuation is documented in
 [`SUZUKI_SURCHARGE_ASYMPTOTICS.md`](../SUZUKI_SURCHARGE_ASYMPTOTICS.md).
 `RHGarden/SuzukiSurchargeUniform.lean` imports the complete finite quantitative

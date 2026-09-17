@@ -881,3 +881,28 @@ reserve lower bound, or universal event-log safety theorem follows.
 Research returns to the correctly weighted signed Mangoldt increments and
 their comparison with an independently proved reserve. The universal
 arithmetic positivity theorem remains open. NO PROOF OF RH IS CLAIMED.
+
+## Effective anchored arithmetic screen (September 2026)
+
+The [sieve report](SUZUKI_SIEVE.md) now implements that next step. Lean proves
+the arbitrary-real-endpoint signed identity
+`V(sqrt(x))=V(sqrt(m))+D(sqrt(m))*log(x/m)-Adef-I_m(x)`, the anchored Abel
+formula, its finite density/burst accuracy budget, and the prime-predecessor
+jump obstruction to uniformly small pure-slope allowances.
+
+A rational divisor-square sieve is proved with exact lcm residue counts,
+signed quadratic coefficients, and an all-integer-base proper-power
+majorant. Its information boundary excludes unknown future prime samples.
+The explicit `{1,2}` specialization gives a proved finite bound at `10 -> 15`
+which strictly improves the all-integer baseline. A second universal parity
+Mangoldt majorant also strictly improves that baseline in a stated regime.
+
+Correctness is not adequacy: numerical weighted optimization reproduces
+the favorable exact-proper-power screens 3.11901 and 2.30291. With the
+sample-independent proper-power overcount, the bounds become 3.13608 and
+2.30558 against available signed budgets 0.06613 and 0.04844. The dominant
+gap is in the prime part, not the artificial event-log surcharge. These
+failures do not exclude other sieves. No effective tail-positivity estimate,
+recovery theorem, or all-prefix reserve cover has been obtained. The
+surcharge branch, proved prefix through log 37, and submission status are
+unchanged. NO PROOF OF RH IS CLAIMED.
