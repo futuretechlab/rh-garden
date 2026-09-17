@@ -300,3 +300,16 @@ cutoffs inside excursions and every finite prefix of an excursion which
 never recovers. The arbitrary-finite-interval identity removes a recovery
 assumption from the formula, not these arithmetic coverage obligations.
 No universal threshold at 37 or universal tail positivity is asserted.
+
+## Correction to the one-percent calibration
+
+The [two-scale report](SUZUKI_TWO_SCALE.md) corrects the illustrative
+endpoint calibration above. Although the two measured recovery endpoints
+pass the proposed target numerically, eligible earlier prefixes do not:
+`324431 -> 339360` and `8573249 -> 8620438` have positive gaps exceeding
+0.0053 and 0.00017. Their exact integer widths satisfy `h^3>=m^2` and
+`8h<=m`. No larger threshold or retuned coefficient is asserted here.
+These failures do not rule out an eventual theorem and do not contradict
+Suzuki positivity or RH. The continuation separates finite failure
+certificates, a conditional two-scale transfer, an unconditional fixed-
+relative-width global-PNT corollary, and the absent short-interval input.

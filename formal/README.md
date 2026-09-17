@@ -17,6 +17,18 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The [two-scale continuation](../SUZUKI_TWO_SCALE.md) implements
+`SuzukiTwoScale.lean`, `SuzukiIntervalSubdivision.lean`, and
+`SuzukiGlobalIntegralPNT.lean`. A finite increment premise above H controls
+shorter-prefix contributions by a triangular allowance; the coefficient
+1403/160000 is proved. Subdivision handles the source's .99 upper range.
+The pinned global PNT gives unconditional uniform control only on fixed
+relative-width windows. The missing moving-scale short-interval theorem
+is not supplied by a citation or an axiom. `SuzukiOnePercentFailures.lean`
+exports the kernel-checked strict counterexamples at 324431 and 8573249,
+using certified prime subsets and rational enclosures. Run
+`lake env lean AuditSuzukiTwoScale.lean` for the principal axiom audit.
+
 The [effective arithmetic screen](../SUZUKI_SIEVE.md) is implemented in
 `SuzukiAnchoredIntegral.lean`, `SuzukiFiniteSieve.lean`, and
 `SuzukiArithmeticSieve.lean`. They prove the arbitrary-finite-interval signed

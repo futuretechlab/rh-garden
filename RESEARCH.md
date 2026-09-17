@@ -906,3 +906,19 @@ failures do not exclude other sieves. No effective tail-positivity estimate,
 recovery theorem, or all-prefix reserve cover has been obtained. The
 surcharge branch, proved prefix through log 37, and submission status are
 unchanged. NO PROOF OF RH IS CLAIMED.
+
+## Two-scale anchored-integral calibration (September 2026)
+
+The [two-scale report](SUZUKI_TWO_SCALE.md) corrects the one-percent target's
+finite calibration: its two large recovery endpoints pass numerically,
+but eligible prefixes at 339360 and 8620438 fail. Explicit prime lower
+certificates are kept separate from sample-independent upper bounds.
+
+The finite transfer uses a short-interval increment premise only at
+lengths at least H; monotonicity charges shorter lengths by a triangular
+allowance. At H/h<=1/20 and density error 1/200, the integrated coefficient
+is 1403/160000<1/100. The geometric condition m>=20^15 is not a PNT cutoff.
+The pinned global PNT unconditionally yields uniform I<=eta*C on every
+fixed relative range rho*m<=h<=m/8, with a non-effective threshold. It
+does not supply the moving-scale short-interval theorem. Signed reserve
+compatibility and coverage remain separate and open. NO PROOF OF RH IS CLAIMED.

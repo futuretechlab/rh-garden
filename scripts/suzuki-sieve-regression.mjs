@@ -7,6 +7,8 @@ const data=JSON.parse(readFileSync(process.argv[2], 'utf8'));
 const periods=[31,324431,8573249].map(m=>data.regressions.find(p=>p.start_event===m));
 assert.ok(periods.every(Boolean));
 const cases=[...periods.map(p=>({m:p.start_event,x:p.recovery_square,label:'measured recovery (validation only)'})),
+  {m:324431,x:339360,label:'one-percent target counterexample'},
+  {m:8573249,x:8620438,label:'one-percent target counterexample'},
   {m:324432,x:361197.6403415228,label:'cutoff inside pre-existing excursion'},
   {m:19999981,x:19999999,label:'unfinished cutoff window'},
   {m:30,x:31,label:'one-integer prime endpoint'},
@@ -56,6 +58,14 @@ for(const spec of cases) {
    const v=lambda[n]/Math.sqrt(n)*Math.log(x/n); if(isPrime[n]) prime+=v;else pp+=v;
  }
  const I=prime+pp-referenceCost(m,x),budget=st.V+signed-Adef;
+ const target=bound.C/100+Math.log(x)/Math.sqrt(m)*Math.log(x/m);
+ if(spec.label==='one-percent target counterexample') {
+   const H=BigInt(x-m),M=BigInt(m);
+   assert.ok(H**3n>=M**2n && 8n*H<=M);
+   assert.ok(I-target>(m===324431?0.0053:0.00017));
+   if(m===324431) assert.ok(prime-bound.C-target>0.0047);
+   else assert.equal(pp,0);
+ }
  const integratedI=integrateAnchoredError(m,x),end=states.get(Math.floor(x));
  const endpointV=arch(x)-end.T*Math.log(x)+end.L;
  assert.ok(Math.abs(integratedI-I)<1e-8,`anchored integral residual m=${m}: ${integratedI-I}`);
@@ -72,16 +82,27 @@ for(const spec of cases) {
  assert.ok(Math.abs(bound.quadratic_residual)<1e-8);
  const count=candidate(m,x,{mode:'count'});
  // Predetermined prefixes: do not select coefficients/level from observed events.
- let firstFail=null;
- const prefixes=[...new Set([m,Math.min(x,m+0.5),Math.min(x,m+1),...Array.from({length:32},(_,i)=>m+(x-m)*(i+1)/32)])].sort((a,b)=>a-b);
+ let firstFail=null,firstTargetFailure=null;
+ const witness=m===324431?339360:m===8573249?8620438:null;
+ const prefixes=[...new Set([m,Math.min(x,m+0.5),Math.min(x,m+1),
+   ...(witness!==null && witness<=x?[witness]:[]),
+   ...Array.from({length:32},(_,i)=>m+(x-m)*(i+1)/32)])].sort((a,b)=>a-b);
  for(const y of prefixes) {
    const v=candidate(m,y),B=st.V+st.D*Math.log(y/m)-defectCharge(m,y);
    if(v.I_upper>B+1e-10 && firstFail===null) firstFail={x:y,I_upper:v.I_upper,budget:B};
+   if((y-m)**3>=m*m && 8*(y-m)<=m) {
+     // Validation-only future samples: never supplied to candidate().
+     let arrivals=0;for(let q=m+1;q<=y;q++)arrivals+=lambda[q]/Math.sqrt(q)*Math.log(y/q);
+     const Iy=arrivals-referenceCost(m,y),Ty=v.C/100+Math.log(y)/Math.sqrt(m)*Math.log(y/m);
+     if(Iy>Ty+1e-10 && firstTargetFailure===null)
+       firstTargetFailure={x:y,h:y-m,true_I:Iy,target:Ty,gap:Iy-Ty,available_budget:B};
+   }
  }
  reports.push({...spec,z:bound.z,support_size:bound.support.length,
    starting_reserve:st.V,starting_signed_D:st.D,terminal_signed_D:slope(x)-end.T,
    signed_log_contribution:signed,arch_defect_charge:Adef,
    available_budget:budget,true_I:I,actual_endpoint_reserve:budget-I,
+   one_percent_target:target,arithmetic_target_gap:I-target,target_reserve_deficit:target-budget,
    anchored_integral_residual:integratedI-I,signed_identity_residual:endpointV-(budget-I),
    continuous_main_term_C:bound.C,actual_prime_part:prime,actual_proper_power_part:pp,
    sieve_prime_part:bound.prime_bound,all_base_proper_power_part:bound.proper_power_bound,
@@ -92,7 +113,8 @@ for(const spec of cases) {
    parity_I_upper:bound.parity_I_upper,all_integer_I_upper:bound.all_integer_I_upper,
    count_optimized_I_upper:count.I_upper,count_first_log_x_I_upper:count.count_first_log_x_I_upper,
    reserve_deficit:bound.I_upper-budget,parity_reserve_deficit:bound.parity_I_upper-budget,
-   first_failing_tested_prefix:firstFail,coefficient_rounding:'exact rational proposal, denominator 1000000',
+   first_failing_tested_prefix:firstFail,first_eligible_target_failing_tested_prefix:firstTargetFailure,
+   coefficient_rounding:'exact rational proposal, denominator 1000000',
    divisor_support:bound.support,coefficient_numerators:bound.coefficient_numerators,
    quadratic_residual:bound.quadratic_residual,numerical_enclosure_error:null});
 }

@@ -1,0 +1,30 @@
+import RHGarden.SuzukiGlobalIntegralPNT
+import RHGarden.SuzukiIntervalSubdivision
+import RHGarden.SuzukiOnePercentFailures
+
+-- Future Technologies Laboratory LLC. The declarations, not this list, are proofs.
+#print axioms RHGarden.anchoredError_le_twoScale
+#print axioms RHGarden.integratedKernel_antitone
+#print axioms RHGarden.integral_shiftedIntegratedKernel_moment
+#print axioms RHGarden.anchoredIntegral_le_twoScale_explicit
+#print axioms RHGarden.integratedMainTerm_lower_rpow
+#print axioms RHGarden.anchoredIntegral_div_main_le_twoScale
+#print axioms RHGarden.anchoredIntegral_le_onePercent_of_twoScale
+#print axioms RHGarden.threeFifths_twoThirds_scale
+#print axioms RHGarden.anchoredIntegral_lt_onePercent_of_shortInterval
+#print axioms RHGarden.integratedMainTerm_fixed_ratio
+#print axioms RHGarden.increment_le_of_block_range
+#print axioms RHGarden.threeFifths_blocks_fit_point99
+#print axioms RHGarden.increment_le_from_threeFifths_to_point99
+#print axioms RHGarden.anchoredError_le_global_error
+#print axioms RHGarden.anchoredIntegral_le_global_relative
+#print axioms RHGarden.eventually_psi_relative_bound
+#print axioms RHGarden.anchoredIntegral_eventually_le_relative_main
+#print axioms RHGarden.primeSubset_logArrival_lower
+#print axioms RHGarden.primeSubset_primeLogArrival_lower
+#print axioms RHGarden.primeSubset_logArrival_lower_with_extras
+#print axioms RHGarden.onePercent_failure1_even_without_proper_powers
+#print axioms RHGarden.onePercent_failure_324431
+#print axioms RHGarden.onePercent_failure_8573249
+#print axioms RHGarden.onePercent_witness1_eligible
+#print axioms RHGarden.onePercent_witness2_eligible
