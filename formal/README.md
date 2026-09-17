@@ -17,6 +17,15 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The September 2026 surcharge continuation is documented in
+[`SUZUKI_SURCHARGE_ASYMPTOTICS.md`](../SUZUKI_SURCHARGE_ASYMPTOTICS.md).
+`RHGarden/SuzukiSurchargeUniform.lean` imports the complete finite quantitative
+branch and the unconditional pinned PNT adapter. Its two uniform bounded-window
+theorems and fixed-ratio corollaries are kernel checked. Run
+`lake env lean AuditSuzukiSurchargeAsymptotics.lean` for the 20-declaration audit.
+These calibrate the artificial prime-power surcharge; they do not prove
+Suzuki tail positivity, and they supply no effective numerical cutoff.
+
 `RHGarden/MathlibAPI.lean` compile-time checks the requested upstream names:
 `riemannZeta`, `completedRiemannZeta`, `completedRiemannZeta₀`,
 `differentiable_completedZeta₀`, `completedRiemannZeta₀_one_sub`,

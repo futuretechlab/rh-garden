@@ -157,8 +157,11 @@ Delta_m(lambda*m) -> (1/2)log(lambda),
 J_m(sqrt(lambda*m)) -> (1/4)log(lambda)^2.
 ```
 
-These two limit statements are **not yet LeanChecked** in this checkout.
-Here is the derivation and the exact remaining formal work.
+These two limit statements are now **LeanChecked**, as corollaries of the
+stronger finite quantitative estimates and bounded-log-window uniform
+convergence in [SUZUKI_SURCHARGE_ASYMPTOTICS.md](SUZUKI_SURCHARGE_ASYMPTOTICS.md).
+The historical derivation below explains their constants; the formal J proof
+now integrates Delta instead of repeating partial summation for a second kernel.
 
 Put `x=sqrt(m)`, `y=c*x`, `c=sqrt(lambda)`. Squares contribute
 `sum_(x<p<=y)log(p)/p`. Write `theta(t)=t(1+e(t))` with `e(t)->0`.
@@ -198,13 +201,13 @@ double higher-power series converges. Its mass above `m` tends to zero;
 the J factor on `(m,lambda*m]` is between zero and `log(lambda)`, so its
 weighted tail also vanishes.
 
-The missing formal bridge is the prime-power reindexing/moving-tail limit
-and the two moving-window partial-summation limits from `theta(t)/t->1`.
-The pinned `Chebyshev.MediumPNT` in `Zeta23/FromPNTPlus/MediumPNT.lean` supplies an existential
-positive constant in a global psi error estimate; Mathlib's
-`Chebyshev.psi_sub_theta_le` transfers PNT to theta. These contain no
-explicit usable cutoff for this task. No new dependency or RH assumption
-has been introduced. This derivation does **not** assert that actual
+The prime-power reindexing, moving-tail limit, and theta adapter are now
+formalized. The actual pinned name is global `MediumPNT` (not
+`Chebyshev.MediumPNT`) in `Zeta23/FromPNTPlus/MediumPNT.lean`; it supplies an
+existential positive constant in a global psi error estimate. The adapter
+uses Mathlib's `Chebyshev.isBigO_psi_sub_theta_sqrt`. These contain no
+explicit usable cutoff for this task. No dependency pin or RH assumption
+has been changed. This derivation does **not** assert that actual
 excursions have fixed relative width or that their budgets fail eventually.
 It does show why proper-prime-power overcharge cannot simply be declared
 negligible by raising a fixed threshold.
@@ -312,11 +315,9 @@ strengthening for completed periods would still need coverage of all
 other points and nonrecovering periods. The prime-power-corrected profile
 removes artificial cost but does not supply a tail estimate.
 
-The next precise formal arithmetic theorem justified by this work is:
-for every real `lambda>1`, as natural `m->infinity`,
-`suzukiPrimePowerSurcharge m (sqrt(lambda*m)) -> (log(lambda))²/4`.
-The written proof above identifies its missing PNT/partial-summation
-bridge. For *positivity*, genuinely new effective anchored short-interval
+The formerly proposed fixed-ratio theorem is now proved, together with
+uniform convergence and its finite quantitative precursor; see the linked
+continuation report. For *positivity*, genuinely new effective anchored short-interval
 control, with enough information to compare true weighted loss against a
 proved reserve, is still needed; neither this asymptotic nor the global
 prefix bound provides it.

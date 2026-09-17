@@ -855,7 +855,29 @@ terminal excursion explicitly.
 The corrected profile equals the exact signed discrepancy and is not an
 independent arithmetic estimate. An explicit pinned global-prefix bound,
 with the exact anchor subtracted, is formally valid but fails the local
-cost budgets quantitatively. Higher-power summability ingredients are
-LeanChecked; the fixed-relative-window surcharge limits have a written
-PNT derivation, with the moving-window partial-summation formal bridge
-still open. The universal arithmetic positivity theorem remains open.
+cost budgets quantitatively.
+
+## Surcharge asymptotics closed (September 2026)
+
+The [quantitative surcharge report](SUZUKI_SURCHARGE_ASYMPTOTICS.md) closes
+the previously open formal bridge without changing dependency pins.
+For `m>=1`, `0<=s<=S`, and a finite bound
+`|theta(x)-x|<=epsilon*x` throughout the square-root window, Lean proves
+
+```text
+|Delta_m(m*exp(s))-s/2| <= epsilon*(2+s/2)+H3(m),
+|J_m(sqrt(m*exp(s)))-s²/4| <= epsilon*(2s+s²/4)+s*H3(m).
+```
+
+The finite ramp identity, real-endpoint Abel formula, square reindexing,
+double higher-power summability, and `H3(m)->0` all have proof terms.
+The J estimate integrates the Delta estimate. The unchanged pinned global
+`MediumPNT` and Mathlib's `psi-theta=O(sqrt(x))` discharge the theta premise
+eventually. Both profiles converge uniformly on every bounded nonnegative
+logarithmic window; the fixed-ratio limits are corollaries. No effective
+threshold, relative asymptotics on shrinking windows, recovery theorem,
+reserve lower bound, or universal event-log safety theorem follows.
+
+Research returns to the correctly weighted signed Mangoldt increments and
+their comparison with an independently proved reserve. The universal
+arithmetic positivity theorem remains open. NO PROOF OF RH IS CLAIMED.

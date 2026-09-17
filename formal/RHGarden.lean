@@ -57,3 +57,4 @@ import RHGarden.SuzukiPrimePowerSurcharge
 import RHGarden.SuzukiObstruction31
 import RHGarden.SuzukiSurchargeSummability
 import RHGarden.SuzukiPinnedEventBound
+import RHGarden.SuzukiSurchargeUniform
