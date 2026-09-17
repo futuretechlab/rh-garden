@@ -220,4 +220,42 @@ theorem recovery31_true_excursion_safe {b : ℝ}
   exact suzukiPsi_nonnegative_zero_to_log_thirtySeven
     ((Real.log_nonneg (by norm_num : (1 : ℝ) ≤ 31)).trans ht.1) ht.2
 
+/-- The event at 31 actually starts the negative excursion: its pre-jump
+state is positive and its right-continuous post-jump state is negative. -/
+theorem event31_crosses_from_positive_to_negative :
+    0 < suzukiRootArchSlope (Real.sqrt 31) - suzukiMangoldtSlope 30 ∧
+    suzukiRootSlopeDiscrepancy (Real.sqrt 31) < 0 := by
+  have hsq := finite_sqrt_31
+  have hu : (1 : ℝ) < Real.sqrt 31 := by linarith [hsq.1]
+  have hlo := (rootSlope_rational_enclosure hu).1
+  have hhi := (rootSlope_rational_enclosure (by norm_num : (1 : ℝ) < 28 / 5)).2
+  have h231 : Real.sqrt 2 ≤ Real.sqrt (31 : ℝ) := Real.sqrt_le_sqrt (by norm_num)
+  have h3156 : Real.sqrt (31 : ℝ) ≤ 28 / 5 := by linarith [hsq.2]
+  have hmono := strictMonoOn_suzukiRootArchSlope.monotoneOn
+    h231 (h231.trans h3156) h3156
+  norm_num at hhi
+  constructor
+  · linarith [hsq.1, small_state_30.1.2]
+  · change suzukiRootArchSlope (Real.sqrt 31) -
+      suzukiMangoldtSlope ⌊(Real.sqrt (31 : ℝ)) ^ 2⌋₊ < 0
+    rw [Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 31)]
+    norm_num
+    linarith [small_state_31.1.1]
+
+/-- Uniqueness holds on the entire event-free recovery cell, not just on
+the smaller rational isolating interval. -/
+theorem exists_unique_recovery31_in_block :
+    ∃! b : ℝ, b ∈ Ioo (Real.sqrt 32) (Real.sqrt 37) ∧
+      suzukiRootSlopeDiscrepancy b = 0 := by
+  obtain ⟨b, ⟨hb, he⟩, _⟩ := exists_unique_recovery31
+  have hr := recovery31_root_bounds hb
+  have hz := (recovery31_negative_excursion hb he).2
+  refine ⟨b, ⟨⟨hr.1, hr.2.1⟩, hz⟩, ?_⟩
+  intro u hu
+  have h2 : Real.sqrt 2 ≤ Real.sqrt (32 : ℝ) := Real.sqrt_le_sqrt (by norm_num)
+  have hue := hu.2
+  rw [suzukiRootSlopeDiscrepancy_eq_on_block block_thirtyTwo_thirtySeven hu.1.1.le hu.1.2] at hue
+  apply strictMonoOn_suzukiRootArchSlope.injOn (h2.trans hu.1.1.le) (h2.trans hr.1.le)
+  linarith
+
 end RHGarden

@@ -106,6 +106,11 @@ distinct prime divisors; no sieve output is trusted. The event at
 `(sqrt(32),sqrt(37))`, with `floor(b²)=34`.
 `recovery31_first_recovery` proves `D(u)<0` for every
 `sqrt(31)<=u<b`; `recovery31_negative_excursion` also proves `D(b)=0`.
+`event31_crosses_from_positive_to_negative` proves
+`0<S(sqrt(31))-T(30)` and `D(sqrt(31))<0`: this is an actual excursion
+start, not just a negative interior anchor.
+`exists_unique_recovery31_in_block` proves uniqueness on the entire open
+cell `(sqrt(32),sqrt(37))`, not only inside the rational bracket.
 
 The inhabited theorem `suzuki_eventLog_obstruction_thirtyOne` proves
 
@@ -319,7 +324,7 @@ prefix bound provides it.
 ## Trust and validation
 
 The full pinned Lean build succeeds (3908 jobs). The axiom audit command
-`lake env lean AuditSuzukiSurcharge.lean` prints, for each of its 25
+`lake env lean AuditSuzukiSurcharge.lean` prints, for each of its 27
 principal declarations, exactly:
 
 ```text
@@ -336,5 +341,7 @@ established `formal-status`, `garden`, `kernel`, and `submission` commands
 pass. The first Cabal test run caught a stale frontier-text assertion;
 the interface description and stronger assertions were updated and the
 complete suite passed on rerun. Both numerical scans and the event-report
-assertions pass. Existing Lean linter and Haskell partial-function warnings
+assertions pass. `ui-export` and JSON checks pass, including 11,018 exported
+period records and their surcharge residuals; snapshot metadata names its
+source commit. Existing Lean linter and Haskell partial-function warnings
 remain; no new proof assumption is hidden by those warnings.

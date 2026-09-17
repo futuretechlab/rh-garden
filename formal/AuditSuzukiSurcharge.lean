@@ -17,6 +17,8 @@ import RHGarden.SuzukiPinnedEventBound
 #print axioms RHGarden.arch_root_rational_enclosure
 #print axioms RHGarden.rootSlope_rational_enclosure
 #print axioms RHGarden.exists_unique_recovery31
+#print axioms RHGarden.event31_crosses_from_positive_to_negative
+#print axioms RHGarden.exists_unique_recovery31_in_block
 #print axioms RHGarden.recovery31_first_recovery
 #print axioms RHGarden.suzuki_eventLog_obstruction_thirtyOne
 #print axioms RHGarden.recovery31_true_excursion_safe
