@@ -266,6 +266,12 @@ export, rather than dropped from the pass count.
 
 ## Next explicit universal arithmetic target (open)
 
+**Subsequent audit:** [SUZUKI_SURCHARGE.md](SUZUKI_SURCHARGE.md) proves that
+this target is exactly `J_m(b) <= V(b)` on a negative excursion. The `m=31`
+failure is now a kernel-checked counterexample to the unrestricted target,
+while true positivity is proved through `log 37`. The proposed threshold
+`37` below is not established by this audit or by the extended scan.
+
 For a complete negative excursion starting just after an event `m`, let
 `a=sqrt(m)` and `b` be its first recovery root. Set
 

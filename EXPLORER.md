@@ -801,3 +801,26 @@ passes all 10,341 periods numerically. The event-only `log q` coarsening
 passes 10,340; the pinned local-width bound passes 10,147. These successes diagnose the
 smearing error in the old ansatz; they do not prove the event samples or a
 tail theorem.
+
+## Exact surcharge diagnostics
+
+The [surcharge audit](SUZUKI_SURCHARGE.md) separates true loss, the exact
+prime-power charge `J`, rounded-sample cost, and conservative service cost.
+`recovery_square` is the actual real recovery coordinate squared;
+`recovery_before_event` is the next-event label and `interval_end` is its
+last integer. The integrated event-log identity is proved in Lean, whereas
+all exported decimal values and residuals remain `NumericalEvidence`.
+
+```powershell
+cabal run rh-garden -- suzuki-event-regression .cabal-work/event-diagnostics.json
+node scripts/suzuki-event-report.mjs .cabal-work/event-diagnostics.json
+cabal run rh-garden -- suzuki-surcharge-scan 20000000 .cabal-work/surcharge-scan.json
+```
+
+The scan starts with the full arithmetic prefix, ranks completed periods
+by `recovery_reserve-J`, and reports the unfinished terminal state rather
+than claiming coverage. Its integer cutoff is exported explicitly because
+floating-point `floor(exp(log(limit)))` can be one below the requested
+limit. `pinned_excess_upper` and `outgoing_pinned_cost` test the explicit
+unconditional global-prefix bound with exact anchored cancellation; their
+failure is an arithmetic-budget failure, not proof of actual negativity.

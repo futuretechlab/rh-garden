@@ -838,3 +838,24 @@ Thus `suzukiInitialNonnegative_proved : SuzukiInitialNonnegative` is now an
 actual theorem, and `Psi(t)>0` for `0<t<=log 3`. The discrete RH equivalences
 can omit the compact initial conjunct, but their infinite block-margin family
 remains open.
+
+## Exact event-log surcharge audit (September 2026)
+
+The subsequent [surcharge report](SUZUKI_SURCHARGE.md) proves the exact
+finite identity `L_log = V(start)-V(end)+J` on negative intervals, with
+`J=sum gamma(q)*log(b²/q)` and `gamma(p^k)=(k-1)log(p)/sqrt(p^k)`.
+The unrestricted event-log cost target has a kernel-checked obstruction
+at 31: the real recovery has positive reserve below 0.035 but surcharge
+above 0.036. The true excursion remains safe. Fresh rational cell reserves
+extend proved coverage through `log 37`; no universal threshold at 37
+is inferred. A full-origin numerical scan through 19,999,999 finds no
+additional completed-excursion counterexample and reports its unfinished
+terminal excursion explicitly.
+
+The corrected profile equals the exact signed discrepancy and is not an
+independent arithmetic estimate. An explicit pinned global-prefix bound,
+with the exact anchor subtracted, is formally valid but fails the local
+cost budgets quantitatively. Higher-power summability ingredients are
+LeanChecked; the fixed-relative-window surcharge limits have a written
+PNT derivation, with the moving-window partial-summation formal bridge
+still open. The universal arithmetic positivity theorem remains open.

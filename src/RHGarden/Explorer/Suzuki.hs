@@ -26,6 +26,7 @@ module RHGarden.Explorer.Suzuki
   , renderCertificatesJson
   , runSuzukiExplorer
   , runSuzukiEventRegression
+  , runSuzukiSurchargeScan
   , suzukiPsiNumeric
   , psiShiftedNumeric
   , dPsiDt
@@ -293,6 +294,8 @@ data ChebyshevProfilePoint = ChebyshevProfilePoint
   , profileOutgoingLocalWidthCost :: Double
   , profileEventLogExcessUpper :: Double
   , profileOutgoingEventLogCost :: Double
+  , profilePinnedExcessUpper :: Double
+  , profileOutgoingPinnedCost :: Double
   } deriving (Eq, Show)
 
 -- | A maximal numerically detected interval on which the right-continuous
@@ -364,6 +367,10 @@ data BusyPeriod = BusyPeriod
   , busyEventLogCost :: Double
   , busyEventLogReserveRemaining :: Double
   , busyEventLogFirstFailingCell :: Maybe Int
+  , busyPrimePowerSurcharge :: Double
+  , busySurchargeIdentityResidual :: Double
+  , busyPinnedAnchoredCost :: Double
+  , busyPinnedAnchoredFirstFailingCell :: Maybe Int
   , busyChebyshevProfile :: [ChebyshevProfilePoint]
   } deriving (Eq, Show)
 
@@ -707,12 +714,20 @@ buildBusyPeriods = seek
       , busyEventLogCost = sum eventLogCosts
       , busyEventLogReserveRemaining = psiStart - sum eventLogCosts
       , busyEventLogFirstFailingCell = firstFailingCell eventLogCosts
+      , busyPrimePowerSurcharge = surcharge
+      , busySurchargeIdentityResidual = sum eventLogCosts - loss - surcharge
+      , busyPinnedAnchoredCost = sum pinnedAnchoredCosts
+      , busyPinnedAnchoredFirstFailingCell = firstFailingCell pinnedAnchoredCosts
       , busyChebyshevProfile = chebyshevProfile
       }
       where
         first = head rows
         final = last rows
         initialRows = init rows
+        surcharge = sum
+          [(log (fromIntegral (dualNextEvent row)) / dualSqrtNextEvent row -
+            dualNextImpulse row) * log (rootEnd * rootEnd / fromIntegral (dualNextEvent row))
+          | row <- initialRows]
         rootStart = dualSqrtEvent first
         rootEnd = dualRootOptimizer final
         intervalStart = ceiling (rootStart * rootStart - 1e-9)
@@ -809,6 +824,16 @@ buildBusyPeriods = seek
         eventLogCosts = zipWith3 (\row endpointRoot gap -> fst
           (serviceDecayCellCostsNumeric (dualSqrtEvent row) endpointRoot
             (-dualDeficit row + gap))) rows outgoingEndpointRoots eventLogGaps
+        -- Exact anchored cancellation is proved in SuzukiPinnedEventBound.
+        -- Keep the starting state exact; only later event bounds use P(q).
+        pinnedSignedUpper row
+          | dualEvent row == dualEvent first = -startD
+          | otherwise = let q = fromIntegral (dualEvent row); lq = log q
+                            p = 2 * log 4 * sqrt q + 2 * lq + lq * lq / 2
+                        in p - (dualSlope row + dualDeficit row)
+        pinnedAnchoredCosts = zipWith (\row endpointRoot -> fst
+          (serviceDecayCellCostsNumeric (dualSqrtEvent row) endpointRoot
+            (pinnedSignedUpper row))) rows outgoingEndpointRoots
         firstFailingCell costs = case
             [dualEvent row | (row, total) <- zip rows (drop 1 (scanl (+) 0 costs)),
               total > psiStart + 1e-10] of
@@ -868,6 +893,8 @@ buildBusyPeriods = seek
             , profileOutgoingLocalWidthCost = 0
             , profileEventLogExcessUpper = exactExcess
             , profileOutgoingEventLogCost = 0
+            , profilePinnedExcessUpper = startD + pinnedSignedUpper row
+            , profileOutgoingPinnedCost = 0
             }
         exactEventProfile = zipWith4 eventPoint rows eventIntegrals
           outgoingEndpointRoots cumulativeBefore
@@ -881,10 +908,11 @@ buildBusyPeriods = seek
           , profileOutgoingLocalWidthCost = localCost
           }) exactEventProfile eventExcessGaps
           (zip3 envelopeCosts envelopeLinearCosts localWidthCosts) envelopeCumulativeBefore
-        eventProfile = zipWith3 (\point gap cost -> point
+        eventProfile = zipWith4 (\point gap cost pinnedCost -> point
           { profileEventLogExcessUpper = profileExactExcess point + gap
           , profileOutgoingEventLogCost = cost
-          }) roundedEventProfile eventLogGaps eventLogCosts
+          , profileOutgoingPinnedCost = pinnedCost
+          }) roundedEventProfile eventLogGaps eventLogCosts pinnedAnchoredCosts
         integralBeforeFinal = last eventIntegrals
         recoveryIntegral = integralBeforeFinal + segmentIntegral final rootEnd
         recoveryX = rootEnd * rootEnd
@@ -924,6 +952,9 @@ buildBusyPeriods = seek
           , profileOutgoingLocalWidthCost = 0
           , profileEventLogExcessUpper = startD + last eventLogGaps
           , profileOutgoingEventLogCost = 0
+          , profilePinnedExcessUpper = startD + pinnedSignedUpper final -
+              (dualSlope final - (dualSlope final + dualDeficit final))
+          , profileOutgoingPinnedCost = 0
           }
         recoveryGap = last integralGaps + sampleGap final *
           (1 / dualSqrtEvent final - 1 / rootEnd) + sampleGap final / rootEnd
@@ -1248,16 +1279,17 @@ runSuzukiEventRegression path = case exploreSuzuki options of
   Left err -> ioError (userError err)
   Right report -> do
     let periods = reportBusyPeriods report
-        selected = filter (\p -> busyStartEvent p `elem` [324431, 8573249]) periods
+        selected = filter (\p -> busyStartEvent p `elem` [31, 324431, 8573249]) periods
         eventLogFailures = filter ((< (-1e-10)) . busyEventLogReserveRemaining) periods
         oldPass = length (filter ((>= 0) . busyAnchoredLinearEnvelopeSlack) periods)
         newPass = length (filter ((>= (-1e-10)) . busyEnvelopeReserveRemaining) periods)
         localPass = length (filter ((>= (-1e-10)) . busyLocalWidthReserveRemaining) periods)
         eventLogPass = length (filter ((>= (-1e-10)) . busyEventLogReserveRemaining) periods)
-        valid = length periods == 10341 && oldPass == 7872 && length selected == 2 &&
+        valid = length periods == 10341 && oldPass == 7872 && length selected == 3 &&
           newPass == 10341 && localPass == 10147 && eventLogPass == 10340 &&
           map busyStartEvent eventLogFailures == [31] &&
           all ((< 1e-7) . abs . busyFiniteEventCostResidual) periods &&
+          all ((< 1e-7) . abs . busySurchargeIdentityResidual) periods &&
           all (\p -> busyEnvelopeCostGap p >= -1e-8 &&
             busyEventLogCost p + 1e-8 >= busyFiniteEventExactCost p &&
             busyEnvelopeMaxExcessGap p <= 0.0010001 / busyRootStart p &&
@@ -1276,6 +1308,8 @@ runSuzukiEventRegression path = case exploreSuzuki options of
           ,jsonField "jump_sample_pass" (show newPass)
           ,jsonField "local_width_pass" (show localPass)
           ,jsonField "event_log_pass" (show eventLogPass)
+          ,jsonField "max_surcharge_identity_residual" (num (maximum
+              (0 : map (abs . busySurchargeIdentityResidual) periods)))
           ,jsonField "max_cost_residual" (num (maximum (0 : map (abs . busyFiniteEventCostResidual) periods)))
           ,jsonField "max_envelope_cost_gap" (num (maximum (0 : map busyEnvelopeCostGap periods)))
           ,jsonField "regressions_pass" (jsonBool valid)] ++ "}"
@@ -1290,6 +1324,53 @@ runSuzukiEventRegression path = case exploreSuzuki options of
     options = defaultExplorerOptions
       { explorerMode = BusyMode, explorerOmegas = [0], explorerTMin = log 2
       , explorerTMax = 16.118095, explorerSamples = 401, explorerPrimeCells = True }
+
+-- | A full-origin scan: every window inherits its actual arithmetic state.
+-- Only completed excursions are ranked; the terminal gap is reported, not
+-- silently promoted to a coverage theorem.
+runSuzukiSurchargeScan :: Int -> FilePath -> IO ()
+runSuzukiSurchargeScan cutoff path = case exploreSuzuki options of
+  Left err -> ioError (userError err)
+  Right report -> do
+    let periods = reportBusyPeriods report
+        gap p = busyPsiEnd p - busyPrimePowerSurcharge p
+        failures = filter ((< (-1e-10)) . gap) periods
+        ranked = take 20 (sortOn gap periods)
+        rows = reportDualDynamics report
+        actualCutoff = floor (exp (explorerTMax options)) :: Int
+        terminal = case reverse rows of
+          row : _ -> let terminalSlope = dualSlope row +
+                           (if dualNextEvent row <= actualCutoff then dualNextImpulse row else 0)
+                         terminalD = archimedeanDerivative (log (fromIntegral actualCutoff)) - terminalSlope
+                     in "{" ++ intercalate ", "
+            [jsonField "last_event" (show (dualEvent row))
+            ,jsonField "next_event" (show (dualNextEvent row))
+            ,jsonField "signed_discrepancy" (num (dualDeficit row))
+            ,jsonField "unrestricted_recovery_square" (num (dualRootOptimizer row ^ (2 :: Int)))
+            ,jsonField "unfinished_at_last_event" (jsonBool (dualDeficit row < 0))
+            ,jsonField "arithmetic_slope_at_cutoff" (num terminalSlope)
+            ,jsonField "signed_discrepancy_at_cutoff" (num terminalD)
+            ,jsonField "unfinished_at_cutoff" (jsonBool (terminalD < 0))] ++ "}"
+          [] -> "null"
+        summary = "{" ++ intercalate ", "
+          [jsonStringField "trust" "NumericalEvidence"
+          ,jsonField "requested_cutoff" (show cutoff)
+          ,jsonField "actual_cutoff" (show (floor (exp (explorerTMax options)) :: Int))
+          ,jsonField "completed_periods" (show (length periods))
+          ,jsonField "surcharge_failures" (show (length failures))
+          ,jsonField "max_identity_residual" (num (maximum
+            (0 : map (abs . busySurchargeIdentityResidual) periods)))
+          ,jsonStringField "coverage" "Completed excursions only; no eventual-recovery assumption or positivity claim for the terminal interval."
+          ,jsonField "terminal_state" terminal] ++ "}"
+    putStrLn summary
+    writeFile path ("{\n\"summary\": " ++ summary ++ ",\n\"worst_margins\": [\n" ++
+      intercalate ",\n" (map busyJson ranked) ++ "\n],\n\"failures\": [\n" ++
+      intercalate ",\n" (map (busyJsonWithProfile True) failures) ++ "\n]}\n")
+  where
+    options = defaultExplorerOptions
+      { explorerMode = BusyMode, explorerOmegas = [0], explorerTMin = log 2
+      , explorerTMax = log (fromIntegral cutoff), explorerSamples = 401
+      , explorerPrimeCells = True }
 
 explorationNodes :: ExplorerOptions -> Int -> [Double]
 explorationNodes options nMax = dedupeSorted $ sort $
@@ -2063,7 +2144,7 @@ renderExplorerAscii report = unlines $
   modeSpecific ++
   [ ""
   , "Candidate certificate statuses are sampled numerical results only."
-  , "Lean-certified cells: unshifted cell 2 and the finite event certificate on [log 3, log 5]."
+  , "Lean-certified finite coverage: [0, log 37], with fresh cell reserves; no infinite tail is proved."
   , "Lean-certified initial coverage: [0,log 2], with strict positivity on (0,log 3]."
   , "Tail status: unknown."
   ]
@@ -2855,7 +2936,9 @@ chebyshevProfileJson point = "{" ++ intercalate ", "
   ,jsonField "local_width_excess_upper" (num (profileLocalWidthExcessUpper point))
   ,jsonField "outgoing_local_width_cost" (num (profileOutgoingLocalWidthCost point))
   ,jsonField "event_log_excess_upper" (num (profileEventLogExcessUpper point))
-  ,jsonField "outgoing_event_log_cost" (num (profileOutgoingEventLogCost point))] ++ "}"
+  ,jsonField "outgoing_event_log_cost" (num (profileOutgoingEventLogCost point))
+  ,jsonField "pinned_excess_upper" (num (profilePinnedExcessUpper point))
+  ,jsonField "outgoing_pinned_cost" (num (profileOutgoingPinnedCost point))] ++ "}"
 
 busyJson :: BusyPeriod -> String
 busyJson = busyJsonWithProfile False
@@ -2876,6 +2959,7 @@ busyJsonWithProfile fullProfile period = "{" ++ intercalate ", "
   ,jsonField "h_over_x_17_30" (num (busyGuthMaynardScaleRatio period))
   ,jsonField "root_start" (num (busyRootStart period))
   ,jsonField "root_end" (num (busyRootEnd period))
+  ,jsonField "recovery_square" (num (busyRootEnd period ^ (2 :: Int)))
   ,jsonField "root_width" (num (busyRootWidth period))
   ,jsonField "t_width" (num (busyTWidth period))
   ,jsonField "starting_discrepancy" (num (busyStartingDiscrepancy period))
@@ -2931,6 +3015,13 @@ busyJsonWithProfile fullProfile period = "{" ++ intercalate ", "
   ,jsonField "local_width_reserve_remaining" (num (busyLocalWidthReserveRemaining period))
   ,jsonField "local_width_first_failing_cell" (maybe "null" show (busyLocalWidthFirstFailingCell period))
   ,jsonField "event_log_cost" (num (busyEventLogCost period))
+  ,jsonField "prime_power_surcharge" (num (busyPrimePowerSurcharge period))
+  ,jsonField "surcharge_identity_residual" (num (busySurchargeIdentityResidual period))
+  ,jsonField "pinned_anchored_cost" (num (busyPinnedAnchoredCost period))
+  ,jsonField "pinned_anchored_first_failing_cell"
+      (maybe "null" show (busyPinnedAnchoredFirstFailingCell period))
+  ,jsonField "corrected_exact_service_cost"
+      (num (busyEventLogCost period - busyPrimePowerSurcharge period))
   ,jsonField "event_log_reserve_remaining" (num (busyEventLogReserveRemaining period))
   ,jsonField "event_log_first_failing_cell" (maybe "null" show (busyEventLogFirstFailingCell period))
   ,jsonStringField "failure_interpretation"

@@ -310,6 +310,9 @@ main = do
             (busyAnchoredLinearEnvelopeEpsilonBudget period -
               busyChebyshevIncrementSlopeRequired period)) < 1e-12 &&
           abs (busyFiniteEventCostResidual period) < 1e-7 &&
+          busyPrimePowerSurcharge period >= -1e-10 &&
+          abs (busySurchargeIdentityResidual period) < 1e-7 &&
+          busyPinnedAnchoredCost period + 1e-8 >= busyFiniteEventExactCost period &&
           busyFiniteEventLinearCost period + 1e-9 >=
             busyFiniteEventExactCost period &&
           busyJumpAwareMaxGap period >= -1e-10 &&
@@ -339,6 +342,21 @@ main = do
           (reportBusyPeriods report) &&
         any (any ((< 0) . profileExactExcess) . busyChebyshevProfile)
           (reportBusyPeriods report)
+      Left _ -> False
+  check "m=31 surcharge defeats event-log but not true excursion reserve" $
+    case exploreSuzuki defaultExplorerOptions
+        { explorerMode = BusyMode, explorerOmegas = [0]
+        , explorerTMin = log 2, explorerTMax = log 40, explorerSamples = 101 } of
+      Right report -> case filter ((== 31) . busyStartEvent) (reportBusyPeriods report) of
+        [p] -> busyRecoveryBeforeEvent p == 37 &&
+          busyRootEnd p > 5.871 && busyRootEnd p < 5.875 &&
+          busyPsiEnd p > 0.01 && busyPsiEnd p < 0.035 &&
+          busyPrimePowerSurcharge p > 0.036 &&
+          busyFiniteEventExactCost p < busyPsiStart p &&
+          busyEventLogCost p > busyPsiStart p &&
+          abs (busySurchargeIdentityResidual p) < 1e-8 &&
+          any ((== 32) . profileIntegerX) (busyChebyshevProfile p)
+        _ -> False
       Left _ -> False
   check "Suzuki weighted cell formula agrees with independent density integration" $
     all (\(r, s, k) ->
@@ -393,6 +411,9 @@ main = do
     "Multi-event weighted-Mangoldt" `isInfixOf` frontiersJson &&
     "finite local arithmetic inequality" `isInfixOf` frontiersJson &&
     "SuzukiFinitePartitionCertificate" `isInfixOf` frontiersJson &&
+    "[0,log 37]" `isInfixOf` frontiersJson &&
+    "kernel-checked m=31" `isInfixOf` frontiersJson &&
+    "never-recovering" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

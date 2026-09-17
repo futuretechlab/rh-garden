@@ -31,6 +31,9 @@ main = do
     ["garden"] -> garden LiteratureMode
     ["ui-export"] -> writeUiExport "."
     ["suzuki-event-regression", path] -> runSuzukiEventRegression path
+    ["suzuki-surcharge-scan", cutoffText, path] -> case readMaybe cutoffText of
+      Just cutoff | cutoff >= 2 && cutoff <= 20000000 -> runSuzukiSurchargeScan cutoff path
+      _ -> usage
     "explore-suzuki" : explorerArgs ->
       case parseExplorerOptions explorerArgs of
         Left err -> putStrLn err >> suzukiExplorerUsage
@@ -57,6 +60,7 @@ overview = do
   putStrLn "  rh-garden garden"
   putStrLn "  rh-garden ui-export"
   putStrLn "  rh-garden suzuki-event-regression .cabal-work/event-diagnostics.json"
+  putStrLn "  rh-garden suzuki-surcharge-scan 20000000 .cabal-work/surcharge-scan.json"
   putStrLn "  rh-garden explore-suzuki --omega 0.5 --t-max 6 --samples 801 --prime-cells"
   putStrLn "  rh-garden explore-suzuki blocks --t-max 5.71 --samples 3001"
   putStrLn "  rh-garden explore-suzuki busy --t-max 14.5 --samples 801"
@@ -658,6 +662,23 @@ formalStatus = do
     , "neg_discrepancy_sqrt_four_le"
     , "suzukiFinitePartitionCertificate_three_five"
     , "suzukiPsi_nonnegative_zero_to_log_five"
+    , "integral_weightedEventError"
+    , "weightedCost_perturbation_bound"
+    , "weightedCost_perturbation_eq_of_negative"
+    , "eventLogWeightedCost_eq_loss_add_surcharge"
+    , "eventLog_cost_safe_iff_surcharge_le_endpoint"
+    , "corrected_cost_safe_iff_endpoint_nonnegative"
+    , "suzukiPrimePowerOvercharge_pos_iff"
+    , "suzuki_eventLog_obstruction_thirtyOne"
+    , "exists_unique_recovery31"
+    , "recovery31_first_recovery"
+    , "recovery31_true_excursion_safe"
+    , "suzukiPsi_nonnegative_zero_to_log_thirtySeven"
+    , "higherPower_geometric_mass"
+    , "summable_log_div_threeHalves"
+    , "summable_higher_primePower_overcharge"
+    , "excess_le_pinnedPrefix_anchored"
+    , "pinnedPrefix_signed_cancellation"
     , "suzukiPrefixFivePlusTail"
     , "suzukiInitialPolynomial_gt"
     , "log_ge_initial_cubic"

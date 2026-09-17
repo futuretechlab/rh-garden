@@ -147,8 +147,11 @@ nine-term rational archimedean certificate, while `suzukiPsi_pos_cell_two`
 certifies the actual unshifted function on `[log 2,log 3]`. The finite-event
 verifier reduces later bounded intervals to finitely many proved event
 inequalities and exact weighted cell costs. The inhabited conservative
-certificate for events `3,4,5` extends nonnegative coverage to `[0,log 5]`;
-see [the finite-event research and validation report](SUZUKI_EVENTS.md).
+certificate for events `3,4,5` is now joined by fresh rational cell reserves
+through `[0,log 37]`. The exact event-log surcharge identity and a proved
+`m=31` obstruction distinguish an oversized envelope from true negativity;
+see [the surcharge audit](SUZUKI_SURCHARGE.md) and
+[the finite-event research report](SUZUKI_EVENTS.md).
 This finite coverage does not
 prove the open universal event bounds, global positivity, or RH. An Euler--Maclaurin remainder estimate proves
 `riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula

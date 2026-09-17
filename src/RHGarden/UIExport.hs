@@ -85,9 +85,9 @@ frontiersJson = unlines
       , stringField "category" "arithmetic"
       , stringField "status" "open"
       , stringField "trust" "Open"
-      , stringField "known_chain" "Complete finite Mangoldt-event partition -> signed event-state bounds -> exact monotone service interpolation -> exact 2/u-weighted cell costs -> one finite total-cost comparison"
+      , stringField "known_chain" "SuzukiFinitePartitionCertificate: complete finite Mangoldt-event partition -> signed event-state bounds -> exact monotone service interpolation -> exact 2/u-weighted cell costs -> one finite total-cost comparison"
       , stringField "exact_blocker" "For every universal-tail event q_i, prove the finite local arithmetic inequality Arrival(m,q_i)-Service(sqrt(m),sqrt(q_i)) <= e_i strongly enough that the sum of exact service-decay cell costs stays below the starting Psi reserve."
-      , stringField "current_bound" "SuzukiFinitePartitionCertificate handles arbitrary integer endpoints with proved canonical event completeness, integrability and all-prefix loss control. A concrete conservative certificate for events 3,4,5 extends proved finite coverage to [0,log 5]. Numerical costs now charge rounded sample allowances. Universal event bounds and their reserve comparison remain open."
+      , stringField "current_bound" "Finite cell reserves prove [0,log 37]. Exact-service event-log cost equals true excursion loss plus J, the prime-power surcharge. A kernel-checked m=31 recovery has 0.01 <= reserve < 0.035 but J > 0.036: event-log fails while true positivity holds. Removing J is an exact reference, not a new tail estimate. Completed excursions alone do not cover a never-recovering or cutoff-straddling excursion."
       , arrayField "source_modules"
           ["formal/RHGarden/SuzukiBusyPeriods.lean",
            "formal/RHGarden/SuzukiChebyshevProfiles.lean",
@@ -95,6 +95,10 @@ frontiersJson = unlines
            "formal/RHGarden/SuzukiEventPartition.lean",
            "formal/RHGarden/SuzukiEventArithmetic.lean",
            "formal/RHGarden/SuzukiConcreteEvents.lean",
+           "formal/RHGarden/SuzukiPrimePowerSurcharge.lean",
+           "formal/RHGarden/SuzukiObstruction31.lean",
+           "formal/RHGarden/SuzukiFinitePrefix37.lean",
+           "formal/RHGarden/SuzukiPinnedEventBound.lean",
            "formal/RHGarden/SuzukiRootDiscrepancy.lean",
            "src/RHGarden/Explorer/Suzuki.hs"]
       , arrayField "candidate_approaches"

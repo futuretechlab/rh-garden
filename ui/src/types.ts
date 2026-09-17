@@ -121,6 +121,7 @@ export interface BusyPeriod {
   h_over_x_17_30: number | null
   root_start: number
   root_end: number
+  recovery_square: number
   root_width: number
   starting_discrepancy: number
   most_negative_discrepancy: number
@@ -161,6 +162,11 @@ export interface BusyPeriod {
   local_width_reserve_remaining: number
   local_width_first_failing_cell: number | null
   event_log_cost: number
+  prime_power_surcharge: number
+  surcharge_identity_residual: number
+  corrected_exact_service_cost: number
+  pinned_anchored_cost: number
+  pinned_anchored_first_failing_cell: number | null
   event_log_reserve_remaining: number
   event_log_first_failing_cell: number | null
   pinned_prefix_arrival_upper: number
@@ -200,6 +206,8 @@ export interface ChebyshevProfilePoint {
   outgoing_local_width_cost: number
   event_log_excess_upper: number
   outgoing_event_log_cost: number
+  pinned_excess_upper: number
+  outgoing_pinned_cost: number
 }
 
 export interface ExplorerSlice {
