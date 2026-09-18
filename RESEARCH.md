@@ -4,6 +4,33 @@
 large representation loop for Riemann xi and the Li test family, but the
 universal positivity proposition remains open.
 
+## Recovery-floor classification and remaining arithmetic
+
+The [recovery-floor branch](SUZUKI_RECOVERY_FLOORS.md) proves a one-sided
+spectral growth principle for the original Psi, not its special shifted
+family. An eventual lower bound `-C exp(sigma*t)` constrains all xi zeros
+to `abs(Re rho-1/2)<=sigma`. Eventual boundedness below, and even an eventual
+polynomial lower bound, imply RH. None of these lower bounds is assumed
+unconditionally.
+
+The actual finite-minimum coverage theorem compares every root-tail value
+to the initial value or an actual recovery, possibly in the future.
+Consequently a constant floor on recovery reserves is RH-equivalent. Every
+actual recovery is proved to lie inside an active complete Mangoldt block,
+where its reserve is `T_q-A_star(S_q)`. A genuine-event cutoff adapter proves
+the equivalence with an eventual constant active-block margin floor, without
+assuming control of extrapolated inactive margins.
+
+A proved explicit arithmetic attempt retains `T_q-log(2)*S_q>=0`, substitutes
+the active relation `S_q=A'(t)`, and applies the pinned global Chebyshev and
+archimedean bounds. Its resulting lower-bound function is at most `-exp(t/2)`
+for `t>=2` and is unbounded below on actual recoveries. This is a failure of
+that estimate, not a proof that the true reserves are negative. The sharper
+existing curvature estimate retains unknown actual reserve/state data.
+The uniform arithmetic floor, explicit 201/200 prime threshold, quantitative
+recovery times, and universal positivity remain open. No larger scan or
+new positivity certificate wrapper is introduced.
+
 ## LeanChecked representation loop
 
 The first analytic loop is closed in Lean:

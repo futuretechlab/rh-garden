@@ -416,6 +416,8 @@ main = do
     "rule out a never-recovering actual excursion" `isInfixOf` frontiersJson &&
     "no effective recovery-time or reserve-safety bound" `isInfixOf` frontiersJson &&
     "unfinished numerical intervals still need verified coverage" `isInfixOf` frontiersJson &&
+    "constant lower floor on actual recoveries" `isInfixOf` frontiersJson &&
+    "no uniform arithmetic floor is supplied" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

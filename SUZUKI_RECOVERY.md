@@ -8,6 +8,10 @@ untracked. Lean, mathlib, and Zeta23 pins are unchanged.
 
 **NO PROOF OF RH IS CLAIMED.**
 
+Continuation: [recovery floors and one-sided spectral growth](SUZUKI_RECOVERY_FLOORS.md)
+classifies the uniform reserve floor that would suffice. Its proved equivalence
+does not supply that arithmetic floor or change this qualitative theorem.
+
 ## Mathematical result and its scope
 
 Write `Psi(t) = suzukiPsi t` and

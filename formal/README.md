@@ -17,6 +17,16 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The [recovery-floor report](../SUZUKI_RECOVERY_FLOORS.md) covers
+`SuzukiOneSidedGrowth.lean`, `SuzukiRecoveryFloor.lean`, and
+`SuzukiRecoveryMarginBounds.lean`. They prove one-sided exponential lower
+growth implies a zero-free strip, eventual boundedness below is RH-equivalent,
+and every tail value dominates the initial value or an actual recovery value.
+A constant recovery floor, equivalently an eventual active-block dual-margin
+floor, is RH-equivalent. No such floor is supplied. The unconditional explicit
+arithmetic lower bound has a proved unbounded deficit even at actual recoveries.
+Run `lake env lean AuditSuzukiRecoveryFloor.lean` for the principal axiom audit.
+
 The [qualitative recovery report](../SUZUKI_RECOVERY.md) describes
 `SuzukiForwardDifference.lean` and `SuzukiRootRecovery.lean`: unconditional
 cofinal positive and negative actual root discrepancies, and a unique finite
