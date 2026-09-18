@@ -1216,8 +1216,9 @@ theorem suzukiPsi_nonnegative_zero_to_log_thirtySeven {t : ℝ}
       (small_affine_state_positive 36 (by norm_num) (by norm_num) h2)
 
 /-- Coverage is explicit at the cutoff, including an excursion that began
-before it or never recovers. No completed-excursion assumption is substituted
-for the universal tail field of the established interface. -/
+before it. Qualitative recovery is now proved separately in
+`SuzukiRootRecovery`; it does not discharge this universal tail-safety field.
+No completed-excursion safety assumption is silently substituted for it. -/
 def suzukiPrefixThirtySevenPlusTail
     (htail : ∀ t, Real.log 37 ≤ t → 0 ≤ suzukiPsi t) : SuzukiExactPrefixPlusTailCertificate where
   cutoff := Real.log 37

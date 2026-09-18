@@ -152,6 +152,10 @@ through `[0,log 37]`. The exact event-log surcharge identity and a proved
 `m=31` obstruction distinguish an oversized envelope from true negativity;
 see [the surcharge audit](SUZUKI_SURCHARGE.md) and
 [the finite-event research report](SUZUKI_EVENTS.md).
+The [qualitative recovery theorem](SUZUKI_RECOVERY.md) now proves cofinal
+positive and negative actual root discrepancies and finite first recovery
+from every negative state above sqrt(2), without RH. It supplies neither
+an effective recovery time nor a reserve-safety bound.
 This finite coverage does not
 prove the open universal event bounds, global positivity, or RH. An Euler--Maclaurin remainder estimate proves
 `riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula

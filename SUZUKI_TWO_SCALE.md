@@ -4,6 +4,10 @@ Future Technologies Laboratory LLC — September 2026.
 
 NO PROOF OF RH IS CLAIMED.
 
+Later continuation: [SUZUKI_RECOVERY.md](SUZUKI_RECOVERY.md) proves qualitative
+finite recovery of the actual discrepancy. It does not change the arithmetic
+estimates, finite failures, or unfinished numerical endpoint reported here.
+
 Baseline: `c95f07025015b334948b52eadb31be2f07786de8`. The checkout, not an
 earlier archive, supplied the definitions. Lean, mathlib and Zeta23 pins
 are unchanged. The surcharge branch, certified obstruction at 31, and

@@ -17,6 +17,17 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The [qualitative recovery report](../SUZUKI_RECOVERY.md) describes
+`SuzukiForwardDifference.lean` and `SuzukiRootRecovery.lean`: unconditional
+cofinal positive and negative actual root discrepancies, and a unique finite
+first recovery after every negative starting state above sqrt(2). The proof
+uses the shifted Laplace/Landau pole obstruction, not RH or short-interval
+PNT. Recovery gives no effective time, depth, or reserve bound and does not
+prove positivity. `SuzukiSmoothCountermodel.lean` is explicitly non-arithmetic;
+its threshold is not a prime-counting threshold. The model's Q(x)/x limit
+is documented separately as a written derivation. Run
+`lake env lean AuditSuzukiRecovery.lean` for the new and retained-witness audits.
+
 The [two-scale continuation](../SUZUKI_TWO_SCALE.md) implements
 `SuzukiTwoScale.lean`, `SuzukiIntervalSubdivision.lean`, and
 `SuzukiGlobalIntegralPNT.lean`. A finite increment premise above H controls

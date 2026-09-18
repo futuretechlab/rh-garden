@@ -1,0 +1,40 @@
+import RHGarden.SuzukiRootRecovery
+import RHGarden.SuzukiSmoothCountermodel
+import RHGarden.SuzukiObstruction31
+import RHGarden.SuzukiOnePercentFailures
+
+-- Future Technologies Laboratory LLC. Names are metadata; these are kernel audits.
+#print axioms RHGarden.xiZeroOccurrence_nonempty
+#print axioms RHGarden.tendsto_mul_logDeriv_riemannXi
+#print axioms RHGarden.suzukiForwardLaplaceContinuation_zero
+#print axioms RHGarden.analyticAt_suzukiForwardLaplaceContinuation_real
+#print axioms RHGarden.complexLaplaceIntegral_suzukiForwardDifference
+#print axioms RHGarden.exists_suzukiForward_surviving_zero
+#print axioms RHGarden.suzukiForwardLaplaceContinuation_residue
+#print axioms RHGarden.suzukiForward_residue_ne_zero
+#print axioms RHGarden.not_eventually_nonnegative_suzukiForwardDifference_mul
+#print axioms RHGarden.suzukiForwardDifference_cofinal_signs
+#print axioms RHGarden.suzukiPsi_not_eventually_monotone
+#print axioms RHGarden.suzukiPsi_not_eventually_antitone
+#print axioms RHGarden.intervalIntegrable_suzukiDiscrepancy_exp_half
+#print axioms RHGarden.suzukiPsi_sub_eq_integral_rootDiscrepancy
+#print axioms RHGarden.suzukiRootSlopeDiscrepancy_cofinal_pos
+#print axioms RHGarden.suzukiRootSlopeDiscrepancy_cofinal_neg
+#print axioms RHGarden.continuousWithinAt_discrepancy_right
+#print axioms RHGarden.first_recovery_before_positive
+#print axioms RHGarden.suzukiRootSlopeDiscrepancy_first_recovery
+#print axioms RHGarden.suzukiRootSlopeDiscrepancy_first_recovery_unique
+#print axioms RHGarden.exists_completed_suzukiRootNegativeExcursion
+#print axioms RHGarden.no_neverRecovering_suzukiRoot_excursion
+#print axioms RHGarden.first_recovery_has_finite_event_cover
+#print axioms RHGarden.SmoothCountermodel.Q_increment_le
+#print axioms RHGarden.SmoothCountermodel.q_nonneg
+#print axioms RHGarden.SmoothCountermodel.d_matches_arrivals
+#print axioms RHGarden.SmoothCountermodel.hasDerivAt_W
+#print axioms RHGarden.SmoothCountermodel.W_finite_failure
+#print axioms RHGarden.SmoothCountermodel.finite_width_regime
+#print axioms RHGarden.suzukiInitialNonnegative_proved
+#print axioms RHGarden.suzuki_eventLog_obstruction_thirtyOne
+#print axioms RHGarden.suzukiPsi_nonnegative_zero_to_log_thirtySeven
+#print axioms RHGarden.onePercent_failure_324431
+#print axioms RHGarden.onePercent_failure_8573249

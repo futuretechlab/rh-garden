@@ -63,3 +63,6 @@ import RHGarden.SuzukiTwoScale
 import RHGarden.SuzukiGlobalIntegralPNT
 import RHGarden.SuzukiIntervalSubdivision
 import RHGarden.SuzukiOnePercentFailures
+import RHGarden.SuzukiForwardDifference
+import RHGarden.SuzukiRootRecovery
+import RHGarden.SuzukiSmoothCountermodel

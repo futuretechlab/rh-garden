@@ -297,25 +297,16 @@ theorem xiNevanlinna_of_XiTZerosReal :
       im_xiSpectralCorrectedTerm_nonneg_of_real hz
         ((xiTZerosReal_iff_spectralParameters_real.mp hRH) a)
 
-/-- At a genuine xi zero, its logarithmic derivative has no finite
-punctured limit.  This is the removable-singularity form of the pole
-obstruction, with multiplicity handled by analytic order. -/
-theorem not_tendsto_logDeriv_riemannXi_of_zero {ρ : ℂ}
-    (hρ : riemannXi ρ = 0) (c : ℂ) :
-    ¬ Tendsto (logDeriv riemannXi)
-      (nhdsWithin ρ ({ρ} : Set ℂ)ᶜ) (nhds c) := by
-  intro hld
+/-- The residue of xi's logarithmic derivative is its actual multiplicity.
+This exposes the finite-order calculation used by the pole obstruction. -/
+theorem tendsto_mul_logDeriv_riemannXi (ρ : ℂ) :
+    Tendsto (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
+      (𝓝[≠] ρ) (𝓝 (xiMultiplicity ρ : ℂ)) := by
+  rw [xiMultiplicity_eq_analyticOrderNatAt]
   have htop := analyticOrderAt_riemannXi_ne_top ρ
   obtain ⟨g, hg, hg0, hfg⟩ :=
     (analyticAt_riemannXi ρ).analyticOrderAt_ne_top.mp htop
   let n : ℕ := analyticOrderNatAt riemannXi ρ
-  have hn : n ≠ 0 := by
-    intro hn0
-    have horder : analyticOrderAt riemannXi ρ = 0 := by
-      rw [show analyticOrderAt riemannXi ρ = (n : ℕ∞) by
-        exact (Nat.cast_analyticOrderNatAt htop).symm, hn0]
-      simp
-    exact (analyticAt_riemannXi ρ).analyticOrderAt_ne_zero.mpr hρ horder
   have hg_ne : ∀ᶠ s in 𝓝 ρ, g s ≠ 0 :=
     hg.continuousAt.eventually_ne hg0
   have hfactor : ∀ᶠ s in 𝓝 ρ,
@@ -351,17 +342,6 @@ theorem not_tendsto_logDeriv_riemannXi_of_zero {ρ : ℂ}
       rw [hpow]
     rw [hlog]
     field_simp [hsρ]
-  have hleft : Tendsto
-      (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
-      (𝓝[≠] ρ) (𝓝 0) := by
-    have hsub : Tendsto (fun s : ℂ => s - ρ)
-        (nhdsWithin ρ ({ρ} : Set ℂ)ᶜ) (nhds 0) := by
-      have hc : Tendsto (fun s : ℂ => s - ρ) (nhds ρ) (nhds 0) := by
-        have hc' : ContinuousAt (fun s : ℂ => s - ρ) ρ :=
-          continuousAt_id.sub continuousAt_const
-        simpa using hc'.tendsto
-      exact hc.mono_left nhdsWithin_le_nhds
-    simpa using hsub.mul hld
   have hglog : ContinuousAt (logDeriv g) ρ := by
     rw [logDeriv]
     exact hg.deriv.continuousAt.div hg.continuousAt hg0
@@ -379,9 +359,35 @@ theorem not_tendsto_logDeriv_riemannXi_of_zero {ρ : ℂ}
   have heq' :
       (fun s : ℂ => (s - ρ) * logDeriv riemannXi s) =ᶠ[𝓝[≠] ρ]
         (fun s : ℂ => (n : ℂ) + (s - ρ) * logDeriv g s) := heq
-  have hright' : Tendsto
-      (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
-      (𝓝[≠] ρ) (𝓝 (n : ℂ)) := hright.congr' heq'.symm
+  exact hright.congr' heq'.symm
+
+/-- At a genuine xi zero, its logarithmic derivative has no finite
+punctured limit. Multiplicity is not assumed to be one. -/
+theorem not_tendsto_logDeriv_riemannXi_of_zero {ρ : ℂ}
+    (hρ : riemannXi ρ = 0) (c : ℂ) :
+    ¬ Tendsto (logDeriv riemannXi)
+      (nhdsWithin ρ ({ρ} : Set ℂ)ᶜ) (nhds c) := by
+  intro hld
+  have htop := analyticOrderAt_riemannXi_ne_top ρ
+  let n : ℕ := analyticOrderNatAt riemannXi ρ
+  have hn : n ≠ 0 := by
+    intro hn0
+    have horder : analyticOrderAt riemannXi ρ = 0 := by
+      rw [show analyticOrderAt riemannXi ρ = (n : ℕ∞) by
+        exact (Nat.cast_analyticOrderNatAt htop).symm, hn0]
+      simp
+    exact (analyticAt_riemannXi ρ).analyticOrderAt_ne_zero.mpr hρ horder
+  have hsub : Tendsto (fun s : ℂ => s - ρ) (𝓝[≠] ρ) (𝓝 0) := by
+    have hc : Tendsto (fun s : ℂ => s - ρ) (𝓝 ρ) (𝓝 0) := by
+      have hc' : ContinuousAt (fun s : ℂ => s - ρ) ρ :=
+        continuousAt_id.sub continuousAt_const
+      simpa using hc'.tendsto
+    exact hc.mono_left nhdsWithin_le_nhds
+  have hleft : Tendsto (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
+      (𝓝[≠] ρ) (𝓝 0) := by simpa using hsub.mul hld
+  have hright' : Tendsto (fun s : ℂ => (s - ρ) * logDeriv riemannXi s)
+      (𝓝[≠] ρ) (𝓝 (n : ℂ)) := by
+    simpa [n, xiMultiplicity_eq_analyticOrderNatAt] using tendsto_mul_logDeriv_riemannXi ρ
   have hzero_n : (0 : ℂ) = n := tendsto_nhds_unique hleft hright'
   have hnzero : (n : ℂ) = 0 := hzero_n.symm
   exact hn (Nat.cast_eq_zero.mp hnzero)

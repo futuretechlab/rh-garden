@@ -413,7 +413,9 @@ main = do
     "SuzukiFinitePartitionCertificate" `isInfixOf` frontiersJson &&
     "[0,log 37]" `isInfixOf` frontiersJson &&
     "kernel-checked m=31" `isInfixOf` frontiersJson &&
-    "never-recovering" `isInfixOf` frontiersJson &&
+    "rule out a never-recovering actual excursion" `isInfixOf` frontiersJson &&
+    "no effective recovery-time or reserve-safety bound" `isInfixOf` frontiersJson &&
+    "unfinished numerical intervals still need verified coverage" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

@@ -922,3 +922,22 @@ The pinned global PNT unconditionally yields uniform I<=eta*C on every
 fixed relative range rho*m<=h<=m/8, with a non-effective threshold. It
 does not supply the moving-scale short-interval theorem. Signed reserve
 compatibility and coverage remain separate and open. NO PROOF OF RH IS CLAIMED.
+
+## Unconditional qualitative recovery (September 2026)
+
+The [recovery report](SUZUKI_RECOVERY.md) closes the previously open
+never-recovering-discrepancy possibility for the actual Suzuki function.
+A continuous forward difference has both signs cofinally, proved by an
+exponentially shifted Landau argument and a surviving nonreal xi pole.
+Finite-interval right-derivative calculus transfers this to both signs of
+the actual root discrepancy. Right continuity and downward jumps then
+give a unique first finite zero after any negative starting state above
+sqrt(2). No RH, short-interval PNT, or eventual-recovery premise is used.
+
+This supersedes earlier reports' lack of a qualitative recovery theorem,
+not their numerical unfinished-terminal status. Reserve depth, arithmetic
+budget compatibility, all-prefix certification, and the actual-prime
+201/200 explicit threshold remain open. The separate smooth model shows
+why its fixed increment bound alone does not ensure reserve safety; its
+PNT-behaviour limit is still a written derivation, not a Lean declaration.
+NO PROOF OF RH IS CLAIMED.
