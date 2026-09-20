@@ -4,6 +4,26 @@
 large representation loop for Riemann xi and the Li test family, but the
 universal positivity proposition remains open.
 
+## Cumulative moment information audit
+
+The [finite moment audit](SUZUKI_CUMULATIVE_MOMENTS.md) freezes the structural
+recovery-floor branch and improves the arithmetic lower bound. The exact
+layer identity optimizes T_q subject to nonnegative real weights, the existing
+cumulative bound P, and a retained scalar S_q. Its exact nonnegative gap and
+attainment are proved. A second, separately proved greedy optimum adds the
+existing parity pointwise cap, without reading unknown intermediate primes.
+For every q>=31 the P-only bound improves log(2)*S_q by at least 4/5.
+
+The retained numerical recovery cases reproduce the reported P-only margins;
+parity improves them but still leaves deficits of about 1.945, 1195.553, and
+4715.024 against the actual reserves. A common archimedean dual is used when
+comparing moments. Numerical enclosure errors are not certified. The written
+asymptotic audit gives the same negative linear leading deficit for both
+relaxations; only the finite results and fixed-prefix comparison are
+LeanChecked. Optimality is restricted to those real-weight relaxations, not
+primes, Euler products, active blocks, or all possible arithmetic methods.
+No uniform floor or smaller zero-free strip is obtained.
+
 ## Recovery-floor classification and remaining arithmetic
 
 The [recovery-floor branch](SUZUKI_RECOVERY_FLOORS.md) proves a one-sided

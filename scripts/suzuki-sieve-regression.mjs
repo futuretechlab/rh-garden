@@ -100,6 +100,7 @@ for(const spec of cases) {
  }
  reports.push({...spec,z:bound.z,support_size:bound.support.length,
    starting_reserve:st.V,starting_signed_D:st.D,terminal_signed_D:slope(x)-end.T,
+   actual_terminal_weighted_mass:end.T,actual_terminal_log_moment:end.L,
    signed_log_contribution:signed,arch_defect_charge:Adef,
    available_budget:budget,true_I:I,actual_endpoint_reserve:budget-I,
    one_percent_target:target,arithmetic_target_gap:I-target,target_reserve_deficit:target-budget,

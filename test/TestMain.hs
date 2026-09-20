@@ -418,6 +418,8 @@ main = do
     "unfinished numerical intervals still need verified coverage" `isInfixOf` frontiersJson &&
     "constant lower floor on actual recoveries" `isInfixOf` frontiersJson &&
     "no uniform arithmetic floor is supplied" `isInfixOf` frontiersJson &&
+    "specified real-weight relaxations only" `isInfixOf` frontiersJson &&
+    "not a LeanChecked limit" `isInfixOf` frontiersJson &&
     "17/30" `isInfixOf` frontiersJson &&
     "Guth and James Maynard" `isInfixOf` frontiersJson
   check "UI status export keeps submission negative" $

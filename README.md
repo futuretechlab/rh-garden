@@ -160,6 +160,9 @@ The [recovery-floor classification](SUZUKI_RECOVERY_FLOORS.md) now proves that
 any eventual constant lower floor on actual recovery reserves is RH-equivalent.
 The one-sided spectral-growth theorem and active-block adapter are checked;
 the explicit arithmetic estimate obtained so far has an unbounded scale deficit.
+The [cumulative-moment audit](SUZUKI_CUMULATIVE_MOMENTS.md) proves finite optimal
+moment bounds for the cumulative-cap and parity-cap real-weight relaxations.
+They improve the previous estimates but do not supply a uniform recovery floor.
 This finite coverage does not
 prove the open universal event bounds, global positivity, or RH. An Euler--Maclaurin remainder estimate proves
 `riemannXi (1/2) != 0`, so every spectral denominator in the zero-side formula

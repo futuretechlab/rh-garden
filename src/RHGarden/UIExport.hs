@@ -87,7 +87,7 @@ frontiersJson = unlines
       , stringField "trust" "Open"
       , stringField "known_chain" "SuzukiFinitePartitionCertificate: complete finite Mangoldt-event partition -> signed event-state bounds -> exact monotone service interpolation -> exact 2/u-weighted cell costs -> one finite total-cost comparison"
       , stringField "exact_blocker" "For every universal-tail event q_i, prove the finite local arithmetic inequality Arrival(m,q_i)-Service(sqrt(m),sqrt(q_i)) <= e_i strongly enough that the sum of exact service-decay cell costs stays below the starting Psi reserve."
-      , stringField "current_bound" "Finite cell reserves prove [0,log 37]. Exact-service event-log cost equals true excursion loss plus J, the prime-power surcharge. A kernel-checked m=31 recovery has 0.01 <= reserve < 0.035 but J > 0.036: event-log fails while true positivity holds. Removing J is an exact reference, not a new tail estimate. Unconditional cofinal discrepancy signs now rule out a never-recovering actual excursion and give a unique finite first recovery. This gives no effective recovery-time or reserve-safety bound. Cutoff-straddling and unfinished numerical intervals still need verified coverage. A constant lower floor on actual recoveries, equivalently eventual active-block dual margins, is now proved RH-equivalent; no uniform arithmetic floor is supplied."
+      , stringField "current_bound" "Finite cell reserves prove [0,log 37]. Exact-service event-log cost equals true excursion loss plus J, the prime-power surcharge. A kernel-checked m=31 recovery has 0.01 <= reserve < 0.035 but J > 0.036: event-log fails while true positivity holds. Removing J is an exact reference, not a new tail estimate. Unconditional cofinal discrepancy signs now rule out a never-recovering actual excursion and give a unique finite first recovery. This gives no effective recovery-time or reserve-safety bound. Cutoff-straddling and unfinished numerical intervals still need verified coverage. A constant lower floor on actual recoveries, equivalently eventual active-block dual margins, is now proved RH-equivalent; no uniform arithmetic floor is supplied. Finite cumulative-cap and parity-cap moment optima improve the arithmetic lower bound but remain insufficient. Optimality is for the specified real-weight relaxations only, not genuine Mangoldt sequences; the asymptotic deficit is written analysis, not a LeanChecked limit."
       , arrayField "source_modules"
           ["formal/RHGarden/SuzukiBusyPeriods.lean",
            "formal/RHGarden/SuzukiChebyshevProfiles.lean",
@@ -105,6 +105,9 @@ frontiersJson = unlines
            "formal/RHGarden/SuzukiOneSidedGrowth.lean",
            "formal/RHGarden/SuzukiRecoveryFloor.lean",
            "formal/RHGarden/SuzukiRecoveryMarginBounds.lean",
+           "formal/RHGarden/SuzukiCumulativeMoment.lean",
+           "formal/RHGarden/SuzukiGreedyMoment.lean",
+           "formal/RHGarden/SuzukiMomentBounds.lean",
            "src/RHGarden/Explorer/Suzuki.hs"]
       , arrayField "candidate_approaches"
           ["finite event-profile inequalities",

@@ -17,6 +17,15 @@ The Lean files and the successful kernel build are authoritative. The Haskell
 
 ## Checked declarations
 
+The [cumulative-moment audit](../SUZUKI_CUMULATIVE_MOMENTS.md) covers
+`SuzukiCumulativeMoment.lean`, `SuzukiGreedyMoment.lean`, and
+`SuzukiMomentBounds.lean`: exact finite layer and gap identities, attainment
+of the prefix-cap and prefix-plus-parity-cap real-weight optima, actual
+Mangoldt instantiations, and a proved improvement of at least 4/5 over
+log(2)*S_q for q>=31. These are not optima among genuine Mangoldt sequences.
+The asymptotic deficit analysis is written mathematics, not a new Lean limit
+theorem. Run `lake env lean AuditSuzukiMomentBounds.lean` for the axiom audit.
+
 The [recovery-floor report](../SUZUKI_RECOVERY_FLOORS.md) covers
 `SuzukiOneSidedGrowth.lean`, `SuzukiRecoveryFloor.lean`, and
 `SuzukiRecoveryMarginBounds.lean`. They prove one-sided exponential lower
