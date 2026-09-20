@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "snapshot_commit": "bccc8e3a08480bfb5d8bce4198c2ac0d07fc6820",
+  "snapshot_commit": "84e336fb0c160f22242d9fdf56b042cf81359d8a",
   "snapshot_note": "Refresh with cabal run rh-garden -- ui-export; validation fields are not inferred by the frontend.",
   "formal_build": "not_checked_by_export",
   "cabal_test": "not_checked_by_export",
